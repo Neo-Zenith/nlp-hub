@@ -1,8 +1,9 @@
 import { UserSchema } from "./user.model";
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
+import { CustomRequest } from "src/request/request.model";
 
 // Set subscription expiry date during account creation
 UserSchema.pre('save', function(next) {
@@ -18,10 +19,11 @@ UserSchema.pre('save', function(next) {
 // Checks for validity of access token
 @Injectable()
 export class CheckAuthMiddleware implements NestMiddleware {
-	use(req: Request, res: Response, next: NextFunction) {
+	use(req: CustomRequest, res: Response, next: NextFunction) {
 		const authHeader = req.headers.authorization;
 		if (!authHeader || !authHeader.startsWith('Bearer ')) {
-			return next();
+			req.payload = {authenticated: false}
+			return this.allowAccessToRoute(req, res, next);
 		}
 
 		const authToken = authHeader.split(' ')[1];
@@ -31,14 +33,34 @@ export class CheckAuthMiddleware implements NestMiddleware {
 	  
 			// Check if the token is expired
 			if (decoded.exp < Date.now() / 1000) {
-				return next();
+				req.payload = {authenticated: false}
+				return this.allowAccessToRoute(req, res, next);
 			}
 			
-			return res.status(400).send({message: 'User has already login', payload: decoded})
+			// token valid, now check if the accessed route is allowed
+			// not allowed routes when authenticated: signup/login
+			// not allowed routes when not authenticated: everything except signup/login
+			req.payload = {authenticated: true}
+			return this.allowAccessToRoute(req, res, next);
 			
-		  } catch (err) {
+		} catch (err) {
 			console.error(err);
+			req.payload = {authenticated: false}
 			return res.status(401).send({ message: 'Invalid token' });
 		}
+	}
+
+	// check if the route is accessible based on the auth status
+	private allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
+		if (req.payload.authenticated) {
+			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
+				return res.status(400).send({message: "User has already logged in"})
+			}
+			return next()
+		}
+		if (req.baseUrl === '/users/login' || req.path === '/users/register') {
+			return next();
+		}
+		return res.status(401).send({message: "User is not authenticated"});
 	}
 }

@@ -15,6 +15,7 @@ export class NlpController {
         @Body('endpoints') apiEndpoints: string[]
     ) {
         // calls nlpService.subscribe(...)
+        return {message: "Registered"}
     }
 
     // route to update NLP API info (version/routes/name)
@@ -27,6 +28,7 @@ export class NlpController {
     ) {
         // calls nlpService.unsubscribe(id)
         // calls nlpService.subscribe(...)
+        return {message: "Updated"}
     }
 
     // route to unsubscribe NLP API from server
@@ -35,17 +37,20 @@ export class NlpController {
         @Body('id') apiID: string
     ) {
         // calls nlpService.unsubscribe(id)
+        return {message: "Unregistered"}
     }
 
     // route to retrieve all NLP services currently available
     @Get()
     listAllServices() {
         // calls nlpService.retrieveAll()
+        return {message: "All services are"}
     }
 
     // route to retrieve specific NLP service
     @Get()
     getService(@Param('id') apiID: string) {
         // calls nlpService.retrieveOne()
+        return {message: "Service 001 is"}
     }
 }
