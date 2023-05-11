@@ -7,6 +7,7 @@ export class UserController {
         private readonly userService: UserService
     ) {}
 
+    // register a user
     @Post('register')
     async register(
         @Body('name') name: string,
@@ -24,6 +25,7 @@ export class UserController {
         return {id: userID};
     }
 
+    // user login
     @Post('login')
     async login(
         @Body('username') username: string,

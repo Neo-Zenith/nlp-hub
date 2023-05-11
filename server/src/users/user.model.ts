@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-
 class DefaultUser extends Document {
     @Prop()
     username: string;
@@ -19,7 +18,7 @@ class DefaultUser extends Document {
     department: string;
 }
 
-// Define the user schema
+// Define the User schema
 @Schema()
 export class User extends DefaultUser {
     @Prop()

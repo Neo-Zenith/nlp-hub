@@ -13,8 +13,7 @@ dotenv.config();
 
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-	  consumer
-		.apply(CheckAuthMiddleware)
-		.forRoutes('*');
+		// access token check applies to all routes
+		consumer.apply(CheckAuthMiddleware).forRoutes('*');
 	}
   }
