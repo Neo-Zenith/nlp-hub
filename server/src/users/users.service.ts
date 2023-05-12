@@ -5,6 +5,7 @@ import * as bcrypt from "bcrypt";
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 import { User } from "./user.model";
+dotenv.config();
 
 @Injectable() 
 export class UserService {
@@ -19,23 +20,8 @@ export class UserService {
                 password: string,
                 department: string) {
         
-        // checks if email has been taken
-        const existingEmail = await this.existingEmail(email);
-        if (existingEmail) {
-            throw new HttpException({
-                status: HttpStatus.CONFLICT,
-                error: 'Email is already taken!',
-            }, HttpStatus.CONFLICT);
-        }
-
-        // checks if username has been taken
-        const existingUsername = await this.existingUsername(username);
-        if (existingUsername) {
-            throw new HttpException({
-                status: HttpStatus.CONFLICT,
-                error: 'Username is already taken!',
-            }, HttpStatus.CONFLICT);
-        }
+        // checks if user is already in the db (username/email)
+        await this.existingUser(email, username);
 
         // hash the password before saving to db
         const hashedPassword = await this.hashPassword(password);
@@ -80,7 +66,6 @@ export class UserService {
 
     // using a random 128-letter string as key to generate access token (expires in 1h)
     private generateAccessToken(username: string, id: string, role: string) {
-        dotenv.config();
         const payload = {username: username, id: id, role: role};
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
         return accessToken as string;
@@ -102,5 +87,26 @@ export class UserService {
             return user;
         }
         return false;
+    }
+
+    // subroutine to check for existing user
+    private async existingUser(email: string, username: string) {
+        // checks if email has been taken
+        const existingEmail = await this.existingEmail(email);
+        if (existingEmail) {
+            throw new HttpException({
+                status: HttpStatus.CONFLICT,
+                error: 'Email is already taken!',
+            }, HttpStatus.CONFLICT);
+        }
+
+        // checks if username has been taken
+        const existingUsername = await this.existingUsername(username);
+        if (existingUsername) {
+            throw new HttpException({
+                status: HttpStatus.CONFLICT,
+                error: 'Username is already taken!',
+            }, HttpStatus.CONFLICT);
+        }
     }
 }

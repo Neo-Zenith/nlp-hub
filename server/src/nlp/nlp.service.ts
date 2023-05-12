@@ -24,10 +24,7 @@ export class NlpService {
 
     // unregister API
     async unsubscribe(apiID: string) {
-        const api = await this.nlpModel.findById(apiID);
-        if (! api) {
-            throw new HttpException("Not found", HttpStatus.NOT_FOUND)
-        }
+        await this.checkApiExistence(apiID);
         await this.nlpModel.deleteOne({_id: apiID});
         return {message: "API unsubscribed from services"}
     }
@@ -40,9 +37,15 @@ export class NlpService {
 
     // get specific API
     async retrieveOne(apiID: string) {
+        const api = await this.checkApiExistence(apiID);
+        return api as Nlp;
+    }
+
+    // subroutine to verify if API is valid in db
+    private async checkApiExistence(apiID: string) {
         const api = await this.nlpModel.findById(apiID);
         if (! api) {
-            throw new HttpException("Not found", HttpStatus.NOT_FOUND)
+            throw new HttpException("API not found", HttpStatus.NOT_FOUND)
         }
         return api as Nlp;
     }

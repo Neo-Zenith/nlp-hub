@@ -58,6 +58,8 @@ export class NlpController {
     @Get('services')
     async listAllServices() {
         const data = await this.nlpService.retrieveAll();
+        
+        // drop sensitive data like api endpoints and rename id before sending to client
         const modifiedData = data.payload.map((item) => ({
             id: item._id,
             name: item.name,
@@ -71,6 +73,8 @@ export class NlpController {
     @Get('services/:id')
     async getService(@Param('id') apiID: string) {
         const data = await this.nlpService.retrieveOne(apiID);
+
+        // drop sensitive data like api endpoints and rename id before sending to client
         const { _id, endpoints, __v, ...rest } = data.toJSON();
         const id = _id.toHexString();
         const responseData = { id, ...rest };

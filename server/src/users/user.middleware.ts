@@ -4,6 +4,7 @@ import { Response, NextFunction } from 'express';
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { CustomRequest } from "src/request/request.model";
+dotenv.config();
 
 // Set subscription expiry date during account creation
 UserSchema.pre('save', function(next) {
@@ -28,7 +29,6 @@ export class CheckAuthMiddleware implements NestMiddleware {
 
 		const authToken = authHeader.split(' ')[1];
 		try {
-			dotenv.config();
 			try {
 				jwt.verify(authToken, process.env.JWT_SECRET);
 				// token valid, now check if the accessed route is allowed
