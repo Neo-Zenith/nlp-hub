@@ -10,6 +10,9 @@ export class Nlp extends Document {
     version: string;
 
     @Prop()
+    description: string;
+
+    @Prop()
     endpoints: string[];
 }
 

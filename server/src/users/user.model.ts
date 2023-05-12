@@ -21,6 +21,9 @@ class DefaultUser extends Document {
 // Define the User schema
 @Schema()
 export class User extends DefaultUser {
+    @Prop({ default: 'user'})
+    role: string;
+
     @Prop()
     subscriptionExpiryDate: Date;
 }

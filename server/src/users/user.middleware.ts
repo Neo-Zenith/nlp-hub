@@ -29,19 +29,19 @@ export class CheckAuthMiddleware implements NestMiddleware {
 		const authToken = authHeader.split(' ')[1];
 		try {
 			dotenv.config();
-			const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-	  
-			// Check if the token is expired
-			if (decoded.exp < Date.now() / 1000) {
+			try {
+				jwt.verify(authToken, process.env.JWT_SECRET);
+				// token valid, now check if the accessed route is allowed
+				// not allowed routes when authenticated: signup/login
+				// not allowed routes when not authenticated: everything except signup/login
+				req.payload = {authenticated: true}
+				return this.allowAccessToRoute(req, res, next);
+			}
+			catch (err) {
+				console.log(err);
 				req.payload = {authenticated: false}
 				return this.allowAccessToRoute(req, res, next);
 			}
-			
-			// token valid, now check if the accessed route is allowed
-			// not allowed routes when authenticated: signup/login
-			// not allowed routes when not authenticated: everything except signup/login
-			req.payload = {authenticated: true}
-			return this.allowAccessToRoute(req, res, next);
 			
 		} catch (err) {
 			console.error(err);
@@ -58,7 +58,8 @@ export class CheckAuthMiddleware implements NestMiddleware {
 			}
 			return next()
 		}
-		if (req.baseUrl === '/users/login' || req.path === '/users/register') {
+		
+		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
 			return next();
 		}
 		return res.status(401).send({message: "User is not authenticated"});

@@ -9,48 +9,71 @@ export class NlpController {
     
     // route to subscribe an NLP API to server
     @Post('register')
-    subscribeNlp(
+    async subscribeNlp(
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
+        @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[]
     ) {
-        // calls nlpService.subscribe(...)
-        return {message: "Registered"}
+        const apiID = await this.nlpService.subscribe(
+            apiName,
+            apiVersion,
+            apiDesc,
+            apiEndpoints);
+        return {id: apiID};
     }
 
     // route to update NLP API info (version/routes/name)
     @Post('update')
-    updateNlp(
+    async updateNlp(
         @Body('id') apiID: string,
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
+        @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[]
     ) {
-        // calls nlpService.unsubscribe(id)
-        // calls nlpService.subscribe(...)
-        return {message: "Updated"}
+        const data = await this.nlpService.unsubscribe(apiID);
+        const newID = await this.nlpService.subscribe(
+            apiName,
+            apiVersion,
+            apiDesc,
+            apiEndpoints
+        )
+        return ({
+            oldAPIStatus: data,
+            newID: newID
+        })
     }
 
     // route to unsubscribe NLP API from server
     @Post('unregister')
-    unsubscribeNlp(
+    async unsubscribeNlp(
         @Body('id') apiID: string
     ) {
-        // calls nlpService.unsubscribe(id)
-        return {message: "Unregistered"}
+        const data = await this.nlpService.unsubscribe(apiID);
+        return data;
     }
 
     // route to retrieve all NLP services currently available
-    @Get()
-    listAllServices() {
-        // calls nlpService.retrieveAll()
-        return {message: "All services are"}
+    @Get('services')
+    async listAllServices() {
+        const data = await this.nlpService.retrieveAll();
+        const modifiedData = data.payload.map((item) => ({
+            id: item._id,
+            name: item.name,
+            version: item.version,
+            description: item.description
+        }));
+        return { payload: modifiedData };
     }
 
     // route to retrieve specific NLP service
-    @Get()
-    getService(@Param('id') apiID: string) {
-        // calls nlpService.retrieveOne()
-        return {message: "Service 001 is"}
+    @Get('services/:id')
+    async getService(@Param('id') apiID: string) {
+        const data = await this.nlpService.retrieveOne(apiID);
+        const { _id, endpoints, __v, ...rest } = data.toJSON();
+        const id = _id.toHexString();
+        const responseData = { id, ...rest };
+        return responseData;
     }
 }

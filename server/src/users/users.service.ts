@@ -65,7 +65,7 @@ export class UserService {
         if (passwordMatches) {
             // if login successful, generate access token to be used as auth for consecutive
             // access to restricted contents
-            return this.generateAccessToken(user.username, user.id);
+            return this.generateAccessToken(user.username, user.id, user.role);
         } else {
             throw new HttpException('Unauthroized', HttpStatus.UNAUTHORIZED);
         }
@@ -79,9 +79,9 @@ export class UserService {
     }
 
     // using a random 128-letter string as key to generate access token (expires in 1h)
-    private generateAccessToken(username: string, id: string) {
+    private generateAccessToken(username: string, id: string, role: string) {
         dotenv.config();
-        const payload = {username: username, id: id};
+        const payload = {username: username, id: id, role: role};
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
         return accessToken as string;
     }
