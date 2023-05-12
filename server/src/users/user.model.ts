@@ -24,7 +24,13 @@ export class User extends DefaultUser {
     @Prop({ default: 'user'})
     role: string;
 
-    @Prop()
+    @Prop({
+        default: () => {
+            const now = new Date();
+            now.setDate(now.getDate() + 30);
+            return now;
+        },
+    })
     subscriptionExpiryDate: Date;
 }
 

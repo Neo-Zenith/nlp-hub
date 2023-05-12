@@ -6,17 +6,6 @@ import * as dotenv from "dotenv";
 import { CustomRequest } from "src/request/request.model";
 dotenv.config();
 
-// Set subscription expiry date during account creation
-UserSchema.pre('save', function(next) {
-	const now = new Date();
-    if (!this.subscriptionExpiryDate) {
-        const expiryDate = new Date(now);
-        expiryDate.setDate(now.getDate() + 30);
-        this.subscriptionExpiryDate = expiryDate;
-    }
-    next();
-});
-
 // Checks for validity of access token
 @Injectable()
 export class CheckAuthMiddleware implements NestMiddleware {
