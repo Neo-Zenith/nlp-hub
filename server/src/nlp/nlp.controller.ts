@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
+import { Debug } from "src/custom/debug/debug";
 
 @Controller('nlp')
 export class NlpController {
@@ -7,7 +8,14 @@ export class NlpController {
         private readonly nlpService: NlpService
     ) {}
     
-    // route to subscribe an NLP API to server
+    /**
+     * Route to subscribe an NLP API to server
+     * @param apiName Name of the API
+     * @param apiVersion Version of the API
+     * @param apiDesc Description of the API
+     * @param apiEndpoints Endpoints of the API
+     * @returns 
+     */
     @Post('register')
     async subscribeNlp(
         @Body('name') apiName: string,
@@ -15,12 +23,20 @@ export class NlpController {
         @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[]
     ) {
-        const apiID = await this.nlpService.subscribe(
-            apiName,
-            apiVersion,
-            apiDesc,
-            apiEndpoints);
-        return {id: apiID};
+        try {
+            const apiID = await this.nlpService.subscribe(
+                apiName,
+                apiVersion,
+                apiDesc,
+                apiEndpoints);
+            return {id: apiID};
+        } catch (err) {
+            Debug.devLog(null, err);
+            if (err.name === 'ValidationError') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            }
+        }
+        
     }
 
     // route to update NLP API info (version/routes/name)
@@ -32,16 +48,23 @@ export class NlpController {
         @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[]
     ) {
-        await this.nlpService.unsubscribe(apiID);
-        const newID = await this.nlpService.subscribe(
-            apiName,
-            apiVersion,
-            apiDesc,
-            apiEndpoints
-        )
-        return ({
-            newID: newID
-        })
+        try {
+            await this.nlpService.unsubscribe(apiID);
+            const newID = await this.nlpService.subscribe(
+                apiName,
+                apiVersion,
+                apiDesc,
+                apiEndpoints
+            )
+            return ({
+                id: newID
+            })
+        } catch (err) {
+            Debug.devLog(null, err);
+            if (err.name === 'ValidationError') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            }
+        }
     }
 
     // route to unsubscribe NLP API from server
@@ -50,7 +73,10 @@ export class NlpController {
         @Body('id') apiID: string
     ) {
         const data = await this.nlpService.unsubscribe(apiID);
-        return data;
+        if (!data) {
+            throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+        }
+        return {message: "OK (Service Unregistered)"};
     }
 
     // route to retrieve all NLP services currently available
@@ -59,7 +85,7 @@ export class NlpController {
         const data = await this.nlpService.retrieveAll();
         
         // drop sensitive data like api endpoints and rename id before sending to client
-        const modifiedData = data.payload.map((item) => ({
+        const modifiedData = data.map((item) => ({
             id: item._id,
             name: item.name,
             version: item.version,
@@ -72,6 +98,10 @@ export class NlpController {
     @Get('services/:id')
     async getService(@Param('id') apiID: string) {
         const data = await this.nlpService.retrieveOne(apiID);
+
+        if (!data) {
+            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
+        }
 
         // drop sensitive data like api endpoints and rename id before sending to client
         const { _id, endpoints, __v, ...rest } = data.toJSON();

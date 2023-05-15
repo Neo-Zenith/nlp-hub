@@ -9,7 +9,14 @@ export class NlpService {
         @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>
     ) {}
 
-    // register API
+    /**
+     * Register API 
+     * @param apiName Name of the API
+     * @param apiVersion Version of the API
+     * @param apiDescription Description of the API
+     * @param apiEndpoints Endpoints of the API
+     * @returns ID of the registered API
+     */
     async subscribe(apiName: string, apiVersion: string, apiDescription: string, apiEndpoints: string[]) {
         const newAPI = new this.nlpModel({
             name: apiName,
@@ -19,34 +26,55 @@ export class NlpService {
         })
 
         const api = await newAPI.save();
-        return api.id as string;
+        return api.id;
     }
 
-    // unregister API
+    /**
+     * Unregister API from service
+     * @param apiID ID of the API to be unregistered
+     * @returns Boolean {@linkcode true} if successful unregister; {@linkcode false} otherwise
+     */
     async unsubscribe(apiID: string) {
-        await this.checkApiExistence(apiID);
+        const apiExist = await this.checkApiExistence(apiID);
+        if (! apiExist) {
+            return false;
+        }
         await this.nlpModel.deleteOne({_id: apiID});
-        return {message: "API unsubscribed from services"}
+        return true;
     }
 
-    // get all APIs currently registered
+    /**
+     * Get all APIs currently registered
+     * @returns Array[{@link Nlp}]
+     */
     async retrieveAll() {
         const payload = await this.nlpModel.find().exec()
-        return {payload: payload};
+        return payload;
     }
 
-    // get specific API
+    /**
+     * Get a specific API
+     * @param apiID ID of the target API
+     * @returns Boolean {@linkcode false} if the ID is invalid; JSON {@link Nlp} otherwise
+     */
     async retrieveOne(apiID: string) {
         const api = await this.checkApiExistence(apiID);
-        return api as Nlp;
+        if (! api) {
+            return false;
+        }
+        return api;
     }
 
-    // subroutine to verify if API is valid in db
+    /**
+     * Subroutine to verify if API is valid in db
+     * @param apiID ID of the target API
+     * @returns Boolean {@linkcode false} if not found; JSON {@link Nlp} otherwise
+     */
     private async checkApiExistence(apiID: string) {
         const api = await this.nlpModel.findById(apiID);
         if (! api) {
-            throw new HttpException("API not found", HttpStatus.NOT_FOUND)
+            return false;
         }
-        return api as Nlp;
+        return api;
     }
 }

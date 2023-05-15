@@ -53,14 +53,16 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 				if (err.name === "JsonWebTokenError") {
 					req.payload['authenticated'] = false 
 					return this.allowAccessToRoute(req, res, next);
-				}				
+				} else if (err.name === "TokenExpiredError") {
+					req.payload['authenticated'] = false 
+					return res.status(401).send({ message: 'Unauthorized (Token Expired)' });
+				}			
 			}
 		
-		// TODO Find out what other errors are there
+		// TODO find out other errors
 		} catch (err) {
-			console.error(err);
-			req.payload['authenticated'] = false 
-			return res.status(401).send({ message: 'Invalid token' });
+			Debug.devLog(null, err);
+			console.log(err.name)
 		}
 	}
 
@@ -99,8 +101,8 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 			return this.allowAccessToRoute(req, res, next);
 		}
 
-		const authToken = authHeader.split(' ')[1];
 		try {
+			const authToken = authHeader.split(' ')[1];
 			try {
 				const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 				// token valid, now check if user is an admin
@@ -113,18 +115,20 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 					req.payload['authenticated'] = true 
 				}
 				return this.allowAccessToRoute(req, res, next);
+			} catch (err) {
+				Debug.devLog(null, err);
+				if (err.name === "JsonWebTokenError") {
+					req.payload['authenticated'] = false 
+					return this.allowAccessToRoute(req, res, next);
+				} else if (err.name === "TokenExpiredError") {
+					req.payload['authenticated'] = false 
+					return res.status(401).send({ message: 'Unauthorized (Invalid Token)' });
+				}			
 			}
-			catch (err) {
-				console.log(err);
-				req.payload['authenticated'] = false 
-				return this.allowAccessToRoute(req, res, next);
-			}
-		
-		// TODO: Find out other errors
+
+		// TODO find out other errors
 		} catch (err) {
-			console.error(err);
-			req.payload['authenticated'] = false 
-			return res.status(401).send({ message: 'Invalid token' });
+			Debug.devLog(null, err);
 		}
 	}
 

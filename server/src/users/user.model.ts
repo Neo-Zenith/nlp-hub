@@ -8,19 +8,19 @@ import { Document } from 'mongoose';
  * NOT NULL: username, name, email, password, department
  */
 class DefaultUser extends Document {
-    @Prop()
+    @Prop( {required: true} )
     username: string;
 
-    @Prop()
+    @Prop( {required: true} )
     name: string;
 
-    @Prop()
+    @Prop( {required: true} )
     email: string;
 
-    @Prop()
+    @Prop( {required: true} )
     password: string;
 
-    @Prop() 
+    @Prop( {required: true} ) 
     department: string;
 }
 
@@ -32,7 +32,7 @@ class DefaultUser extends Document {
  */
 @Schema()
 export class User extends DefaultUser {
-    @Prop({ default: 'user'})
+    @Prop( {default: 'user', required: true} )
     role: string;
 
     @Prop({
@@ -53,7 +53,7 @@ export class User extends DefaultUser {
  */
 @Schema()
 export class Admin extends DefaultUser {
-    @Prop({ default: 'admin' })
+    @Prop({ default: 'admin' , required: true})
     role: string;
 }
 

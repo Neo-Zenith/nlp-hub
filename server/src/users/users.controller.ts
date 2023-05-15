@@ -1,5 +1,6 @@
 import { Body, Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
 import { UserService } from "./users.service";
+import { Debug } from "src/custom/debug/debug";
 
 @Controller('users')
 export class UserController {
@@ -25,21 +26,29 @@ export class UserController {
         @Body('password') password: string,
         @Body('department') department: string
     ) {
-        const userID = await this.userService.insertUser(
-            username, 
-            name, 
-            email, 
-            password, 
-            department);
-        
-        if (typeof userID === 'number') {
-            if (userID === 1) {
-                throw new HttpException("Conflict (Email Taken)", HttpStatus.CONFLICT)
-            } else if (userID === 2) {
-                throw new HttpException("Conflict (Username Taken)", HttpStatus.CONFLICT)
+        try {
+            const userID = await this.userService.insertUser(
+                username, 
+                name, 
+                email, 
+                password, 
+                department);
+            
+            if (typeof userID === 'number') {
+                if (userID === 1) {
+                    throw new HttpException("Conflict (Email Taken)", HttpStatus.CONFLICT)
+                } else if (userID === 2) {
+                    throw new HttpException("Conflict (Username Taken)", HttpStatus.CONFLICT)
+                }
+            }
+            return { id: userID };
+        } catch (err) {
+            Debug.devLog(null, err);
+            if (err.name === 'ValidationError') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
             }
         }
-        return { id: userID };
+        
     }
 
     /**
@@ -53,10 +62,17 @@ export class UserController {
         @Body('username') username: string,
         @Body('password') password: string
     ) {
-        const accessToken = await this.userService.verifyUser(username, password);
-        if (!accessToken) {
-            throw new HttpException("Unauthorised (Invalid Credentials)", HttpStatus.UNAUTHORIZED)
+        try {
+            const accessToken = await this.userService.verifyUser(username, password);
+            if (!accessToken) {
+                throw new HttpException("Unauthorised (Invalid Credentials)", HttpStatus.UNAUTHORIZED)
+            }
+            return { accessToken: accessToken };
+        } catch (err) {
+            Debug.devLog(null, err);
+            if (err.name === 'Error') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            }
         }
-        return { accessToken: accessToken };
     }
 }
