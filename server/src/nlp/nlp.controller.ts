@@ -32,7 +32,7 @@ export class NlpController {
         @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[]
     ) {
-        const data = await this.nlpService.unsubscribe(apiID);
+        await this.nlpService.unsubscribe(apiID);
         const newID = await this.nlpService.subscribe(
             apiName,
             apiVersion,
@@ -40,7 +40,6 @@ export class NlpController {
             apiEndpoints
         )
         return ({
-            oldAPIStatus: data,
             newID: newID
         })
     }
