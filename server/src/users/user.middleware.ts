@@ -81,6 +81,7 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 			return next()
 		}
 		
+		//TODO modify the route potentially (currently sharing with normal users)
 		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
 			return next();
 		}
@@ -96,6 +97,8 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         const authHeader = req.headers.authorization;
+		req.payload = {};
+		console.log("IN Sudo")
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			req.payload['authenticated'] = false 
 			return this.allowAccessToRoute(req, res, next);

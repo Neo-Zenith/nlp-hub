@@ -19,10 +19,13 @@ dotenv.config();
 
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		// access token check applies to all routes
-		consumer.apply(CheckUserAuthMiddleware).forRoutes('*');
-		//consumer.apply(CheckUserAuthMiddleware).exclude('/nlp/*').forRoutes('*');
-		//consumer.apply(CheckAdminAuthMiddleware).forRoutes('/nlp/*');
+		// access protocol 
+		consumer.apply(CheckUserAuthMiddleware).exclude(
+			'/nlp/unregister', '/nlp/register', '/nlp/update'
+		).forRoutes('*');
+		consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
+		.forRoutes(
+			'/nlp/unregister', '/nlp/register', '/nlp/update');
 	}
 }
 
