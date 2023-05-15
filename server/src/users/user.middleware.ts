@@ -30,6 +30,7 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 				// token valid, now check if the accessed route is allowed
 				// not allowed routes when authenticated: signup/login
 				// not allowed routes when not authenticated: everything except signup/login
+				req.payload['id'] = decoded.id;
 				req.payload['authenticated'] = true 
 				req.payload['role'] = decoded.role
 				
@@ -78,7 +79,7 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 			try {
 				const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 				// token valid, now check if user is an admin
-				req.payload['userID'] = decoded.id
+				req.payload['id'] = decoded.id;
 				req.payload['role'] = decoded.role
 
 				if (decoded.role != 'admin') {

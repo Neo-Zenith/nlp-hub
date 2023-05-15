@@ -1,30 +1,31 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { Model, Types } from "mongoose";
-import { Nlp, NlpModel, NlpSchema } from "src/nlp/nlp.model";
-import { User, UserModel, UserSchema } from "src/users/user.model";
+import { getModelForClass } from "@typegoose/typegoose";
+import { Types } from "mongoose";
+import { Nlp, NlpModel } from "src/nlp/nlp.model";
+import { User, UserModel } from "src/users/user.model";
 
-
+/**
+ * Usage (userID, dateTime, serviceID, input, output, options)
+ * PK: usageID
+ * FK: userID, serviceID
+ * NOT NULL: dateTime, input, output
+ */
 @Schema()
 export class Usage {
     @Prop({ type: Types.ObjectId, ref: User.name, required: true })
-    userID: User['_id'];
+    userID: string;
 
-    @Prop({
-        default: () => {
-        const now = new Date();
-        return now;
-        },
-    })
+    @Prop({ required: true, default: Date.now })
     dateTime: Date;
 
     @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
-    serviceID: Nlp['_id'];
+    serviceID: string;
 
-    @Prop()
+    @Prop({ required: true })
     input: string;
 
-    @Prop()
+    @Prop({ required: true })
     output: string;
 
     @Prop({ type: Map, of: String })
@@ -32,8 +33,12 @@ export class Usage {
 }
 
 export const UsageSchema = SchemaFactory.createForClass(Usage);
+export const UsageModel = getModelForClass(Usage);
 
-// foreign key constraint trigger
+/**
+ * Foreign key constraint trigger
+ * CHECKS: EXISTS userID IN User; EXISTS serviceID IN Nlp
+ */
 UsageSchema.pre('save', async function (next) {
     const usage = this;
     const user = await UserModel.findById(usage.userID);
@@ -44,6 +49,6 @@ UsageSchema.pre('save', async function (next) {
     if (!service) {
         throw new HttpException('Service Not Found', HttpStatus.NOT_FOUND)
     }
-    
+
     return next();
 });

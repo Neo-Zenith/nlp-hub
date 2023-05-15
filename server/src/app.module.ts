@@ -26,4 +26,5 @@ export class AppModule implements NestModule {
 	}
 }
 
+// db connection for models
 mongoose.connect('mongodb+srv://neozenith:'+ process.env.DB_SECRET +'@nlp-hub.mbc3aja.mongodb.net/nlp-hub-db?retryWrites=true&w=majority')
