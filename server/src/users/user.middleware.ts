@@ -3,16 +3,28 @@ import { Response, NextFunction } from 'express';
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import { CustomRequest } from "src/custom/request/request.model";
+import { Debug } from 'src/custom/debug/debug';
 dotenv.config();
 
 
-// All authentication check middlewares should have custom route access protocol
+/**
+ * General interface for authentication middlewares
+ */
 interface CheckAuthMiddleware extends NestMiddleware {
+	/**
+	 * All authentication check middlewares should have custom route access protocol
+	 * @param req {@link Request} object
+	 * @param res {@link Response} object
+	 * @param next {@link NextFunction} callback function
+	 */
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction);
 }
 
 
-// Checks for validity of access token
+/**
+ * Authentication check for normal users 
+ * Allow access to normal routes
+ */
 @Injectable()
 export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 	use(req: CustomRequest, res: Response, next: NextFunction) {
@@ -23,8 +35,8 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 			return this.allowAccessToRoute(req, res, next);
 		}
 
-		const authToken = authHeader.split(' ')[1];
 		try {
+			const authToken = authHeader.split(' ')[1];
 			try {
 				const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
 				// token valid, now check if the accessed route is allowed
@@ -35,13 +47,16 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 				req.payload['role'] = decoded.role
 				
 				return this.allowAccessToRoute(req, res, next);
+
+			} catch (err) {
+				Debug.devLog(null, err);
+				if (err.name === "JsonWebTokenError") {
+					req.payload['authenticated'] = false 
+					return this.allowAccessToRoute(req, res, next);
+				}				
 			}
-			catch (err) {
-				console.log(err);
-				req.payload['authenticated'] = false 
-				return this.allowAccessToRoute(req, res, next);
-			}
-			
+		
+		// TODO Find out what other errors are there
 		} catch (err) {
 			console.error(err);
 			req.payload['authenticated'] = false 
@@ -49,11 +64,17 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 		}
 	}
 
-	// user access protocol
+	/**
+	 * User access protocol
+	 * @param req {@link Request} object
+	 * @param res {@link Response} object
+	 * @param next {@link NextFunction} object
+	 * @returns Error {@link HttpException} if not authorised to access; Invoke the callback function otherwise
+	 */
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
 			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-				return res.status(400).send({message: "User has already logged in"})
+				return res.status(400).send({message: "Bad Request (User Logged In)"})
 			}
 			return next()
 		}
@@ -61,17 +82,21 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
 			return next();
 		}
-		return res.status(401).send({message: "User is not authenticated"});
+		return res.status(401).send({message: "Unauthorized (User Not Authenticated)"});
 	}
 }
 
+/**
+ * Authentication check for admin accounts
+ * Allow access to restricted routes
+ */
 @Injectable()
 export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
 			req.payload['authenticated'] = false 
-			this.allowAccessToRoute(req, res, next);
+			return this.allowAccessToRoute(req, res, next);
 		}
 
 		const authToken = authHeader.split(' ')[1];
@@ -87,14 +112,15 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 				} else {
 					req.payload['authenticated'] = true 
 				}
-				this.allowAccessToRoute(req, res, next);
+				return this.allowAccessToRoute(req, res, next);
 			}
 			catch (err) {
 				console.log(err);
 				req.payload['authenticated'] = false 
-				this.allowAccessToRoute(req, res, next);
+				return this.allowAccessToRoute(req, res, next);
 			}
-			
+		
+		// TODO: Find out other errors
 		} catch (err) {
 			console.error(err);
 			req.payload['authenticated'] = false 
@@ -102,11 +128,17 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 		}
 	}
 
-	// admin access protocol
+	/**
+	 * Admin access protocol
+	 * @param req {@link Request} object
+	 * @param res {@link Response} object
+	 * @param next {@link NextFunction} object
+	 * @returns Error {@link HttpException} if not authorised to access; Invoke the callback function otherwise
+	 */
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
 			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-				return res.status(400).send({ message: "User has already logged in" })
+				return res.status(400).send({ message: "Bad Request (User Logged In)" })
 			}
 
 			if (req.baseUrl.startsWith('/nlp/')) {
@@ -118,7 +150,7 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 			return next();
 		}
 
-		return res.status(403).send({ message: "Forbidden accesss" })
+		return res.status(403).send({ message: "Forbidden (User Not Authorized)" })
 	}
 }
 

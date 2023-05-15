@@ -2,6 +2,11 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { getModelForClass } from '@typegoose/typegoose';
 import { Document } from 'mongoose';
 
+/**
+ * DefaultUser(id, username, name, email, department, password)
+ * PK: id
+ * NOT NULL: username, name, email, password, department
+ */
 class DefaultUser extends Document {
     @Prop()
     username: string;
@@ -19,7 +24,12 @@ class DefaultUser extends Document {
     department: string;
 }
 
-// Define the User schema
+/**
+ * User(id, username, name, email, password, department, role, subscriptionExpiryDate)
+ * PK: id
+ * NOT NULL: username, name, email, password, department, role, subscriptionExpiryDate
+ * DEFAULT: {role: 'user', subscriptionExpiryDate: 30 days from current date}
+ */
 @Schema()
 export class User extends DefaultUser {
     @Prop({ default: 'user'})
@@ -35,14 +45,19 @@ export class User extends DefaultUser {
     subscriptionExpiryDate: Date;
 }
 
-// Define the Admin schema by extending the User schema
+/**
+ * Admin(id, username, name, email, password, department, role)
+ * PK: id
+ * NOT NULL: username, name, email, password, department, role
+ * DEFAULT: {role: 'user'}
+ */
 @Schema()
 export class Admin extends DefaultUser {
     @Prop({ default: 'admin' })
     role: string;
 }
 
-// Create the User and Admin models using the schema factory
+
 export const UserSchema = SchemaFactory.createForClass(User);
 export const UserModel = getModelForClass(User);
 export const AdminSchema = SchemaFactory.createForClass(Admin);
