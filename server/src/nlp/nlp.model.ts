@@ -3,7 +3,7 @@ import { getModelForClass } from '@typegoose/typegoose';
 import { Document } from 'mongoose';
 
 /**
- * Nlp(id, name, version, description, endpoints)
+ * Nlp(id, name, version, description, endpoints, options)
  * PK: id
  * NOT NULL: name, version, endpoints
  */
@@ -20,6 +20,9 @@ export class Nlp extends Document {
 
     @Prop( {required: true} )
     endpoints: string[];
+
+    @Prop( { type: Map, of: String, required: true} ) 
+    options: Record<string, string>
 }
 
 export const NlpSchema = SchemaFactory.createForClass(Nlp);

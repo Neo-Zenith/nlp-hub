@@ -1,35 +1,20 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { getModelForClass } from "@typegoose/typegoose";
-import { Types } from "mongoose";
-import { Nlp, NlpModel } from "src/nlp/nlp.model";
-import { User, UserModel } from "src/users/user.model";
+import { NlpModel } from "src/nlp/nlp.model";
+import { Query } from "src/query/query.model";
+import { UserModel } from "src/users/user.model";
 
 /**
- * Usage (userID, dateTime, serviceID, input, output, options)
+ * Usage (userID, dateTime, serviceID, input, output, options, completed)
  * PK: usageID
  * FK: userID, serviceID
- * NOT NULL: dateTime, input, output
+ * NOT NULL: dateTime, input, output, completed
  */
 @Schema()
-export class Usage {
-    @Prop({ type: Types.ObjectId, ref: User.name, required: true })
-    userID: string;
-
-    @Prop({ required: true, default: Date.now })
-    dateTime: Date;
-
-    @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
-    serviceID: string;
-
-    @Prop({ required: true })
-    input: string;
-
-    @Prop({ required: true })
-    output: string;
-
-    @Prop({ type: Map, of: String })
-    options: Record<string, string>;
+export class Usage extends Query{
+    @Prop( {required: true, default: false})
+    completed: boolean;
 }
 
 export const UsageSchema = SchemaFactory.createForClass(Usage);

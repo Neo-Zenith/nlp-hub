@@ -17,12 +17,18 @@ export class NlpService {
      * @param apiEndpoints Endpoints of the API
      * @returns ID of the registered API
      */
-    async subscribe(apiName: string, apiVersion: string, apiDescription: string, apiEndpoints: string[]) {
+    async subscribe(
+        apiName: string, 
+        apiVersion: string, 
+        apiDescription: string, 
+        apiEndpoints: string[],
+        apiOptions: Record<string, string>) {
         const newAPI = new this.nlpModel({
             name: apiName,
             version: apiVersion,
             description: apiDescription,
-            endpoints: apiEndpoints
+            endpoints: apiEndpoints,
+            options: apiOptions
         })
 
         const api = await newAPI.save();

@@ -21,14 +21,16 @@ export class NlpController {
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
-        @Body('endpoints') apiEndpoints: string[]
+        @Body('endpoints') apiEndpoints: string[],
+        @Body('options') apiOptions: Record<string, string>
     ) {
         try {
             const apiID = await this.nlpService.subscribe(
                 apiName,
                 apiVersion,
                 apiDesc,
-                apiEndpoints);
+                apiEndpoints,
+                apiOptions);
             return {id: apiID};
         } catch (err) {
             Debug.devLog(null, err);
@@ -36,7 +38,6 @@ export class NlpController {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
             }
         }
-        
     }
 
     // route to update NLP API info (version/routes/name)
@@ -46,7 +47,8 @@ export class NlpController {
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
-        @Body('endpoints') apiEndpoints: string[]
+        @Body('endpoints') apiEndpoints: string[],
+        @Body('options') apiOptions: Record<string, string>
     ) {
         try {
             await this.nlpService.unsubscribe(apiID);
@@ -54,7 +56,8 @@ export class NlpController {
                 apiName,
                 apiVersion,
                 apiDesc,
-                apiEndpoints
+                apiEndpoints,
+                apiOptions
             )
             return ({
                 id: newID
