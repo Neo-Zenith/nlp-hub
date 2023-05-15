@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { Types } from "mongoose";
-import { Nlp, NlpSchema } from "src/nlp/nlp.model";
-import { User, UserSchema } from "src/users/user.model";
+import mongoose, { Model, Types } from "mongoose";
+import { Nlp, NlpModel, NlpSchema } from "src/nlp/nlp.model";
+import { User, UserModel, UserSchema } from "src/users/user.model";
 
 
 @Schema()
@@ -34,22 +34,16 @@ export class Usage {
 export const UsageSchema = SchemaFactory.createForClass(Usage);
 
 // foreign key constraint trigger
-UsageSchema.pre('validate', async function (next) {
+UsageSchema.pre('save', async function (next) {
     const usage = this;
-    var User = mongoose.model('User', UserSchema);
-    var Service = mongoose.model('Nlp', NlpSchema);
-
-    try {
-        await User.findOne({_id: usage.userID});
-    } catch (err) {
-        throw new HttpException('User Not Found', HttpStatus.NOT_FOUND)
-    }    
-
-    try {
-        await Service.findOne({_id: usage.serviceID});
-    } catch (err) {
+    const user = await UserModel.findById(usage.userID);
+    const service = await NlpModel.findById(usage.serviceID);
+    if (!user) {
+        throw new HttpException('User Not Found', HttpStatus.NOT_FOUND)  
+    }
+    if (!service) {
         throw new HttpException('Service Not Found', HttpStatus.NOT_FOUND)
     }
-
+    
     return next();
 });

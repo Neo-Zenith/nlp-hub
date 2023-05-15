@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { getModelForClass } from '@typegoose/typegoose';
 import { Document } from 'mongoose';
 
 class DefaultUser extends Document {
@@ -43,5 +44,7 @@ export class Admin extends DefaultUser {
 
 // Create the User and Admin models using the schema factory
 export const UserSchema = SchemaFactory.createForClass(User);
+export const UserModel = getModelForClass(User);
 export const AdminSchema = SchemaFactory.createForClass(Admin);
+export const AdminModel = getModelForClass(Admin);
 

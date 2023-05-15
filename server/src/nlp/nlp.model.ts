@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { getModelForClass } from '@typegoose/typegoose';
+import mongoose, { Document } from 'mongoose';
 
 @Schema()
 export class Nlp extends Document {
@@ -17,4 +18,5 @@ export class Nlp extends Document {
 }
 
 export const NlpSchema = SchemaFactory.createForClass(Nlp);
+export const NlpModel = getModelForClass(Nlp);
 

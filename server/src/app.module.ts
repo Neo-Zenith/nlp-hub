@@ -5,6 +5,7 @@ import { CheckAdminAuthMiddleware, CheckUserAuthMiddleware } from './users/user.
 import * as dotenv from "dotenv";
 import { NlpModule } from './nlp/nlp.module';
 import { UsageModule } from './usage/usage.module';
+import mongoose from 'mongoose';
 
 dotenv.config();
 @Module({
@@ -19,7 +20,10 @@ dotenv.config();
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		// access token check applies to all routes
-		consumer.apply(CheckUserAuthMiddleware).exclude('/nlp/*').forRoutes('*');
-		consumer.apply(CheckAdminAuthMiddleware).forRoutes('/nlp/*');
+		consumer.apply(CheckUserAuthMiddleware).forRoutes('*');
+		//consumer.apply(CheckUserAuthMiddleware).exclude('/nlp/*').forRoutes('*');
+		//consumer.apply(CheckAdminAuthMiddleware).forRoutes('/nlp/*');
 	}
 }
+
+mongoose.connect('mongodb+srv://neozenith:'+ process.env.DB_SECRET +'@nlp-hub.mbc3aja.mongodb.net/nlp-hub-db?retryWrites=true&w=majority')
