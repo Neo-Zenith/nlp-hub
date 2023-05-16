@@ -1,13 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Nlp, NlpEndpoint } from "./nlp.model";
+import { Nlp, NlpConfig, NlpEndpoint } from "./nlp.model";
 
 @Injectable()
 export class NlpService {
     constructor(
         @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>,
-        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
+        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>,
+        @InjectModel('NlpConfig') private readonly nlpConfigModel: Model<NlpConfig>
     ) {}
 
     /**
@@ -22,22 +23,32 @@ export class NlpService {
         apiName: string, 
         apiVersion: string, 
         apiDescription: string, 
-        apiEndpoints: string[],
-        apiOptions: Record<string, string>[]) {
+        apiEndpoints: NlpEndpoint[],
+        apiConfig: NlpConfig[]) {
         const newAPI = new this.nlpModel({
             name: apiName,
             version: apiVersion,
             description: apiDescription,
         })
-
-        const newAPIEndpoint = new this.nlpEndpointModel({
-            serviceID: newAPI.id,
-            options: apiOptions,
-            endpoints: apiEndpoints
-        })
-
         const api = await newAPI.save();
-        await newAPIEndpoint.save();
+
+        for (let i = 0; i < apiEndpoints.length; i ++) {
+            const newAPIEndpoint = new this.nlpEndpointModel({
+                serviceID: newAPI.id,
+                method: apiEndpoints[i].method,
+                options: apiEndpoints[i].options,
+                url: apiEndpoints[i].url
+            })
+            await newAPIEndpoint.save();
+
+            const newAPIConfig = new this.nlpConfigModel({
+                serviceID: newAPI.id,
+                task: apiConfig[i].task,
+                endpointID: newAPIEndpoint.id
+            })
+            await newAPIConfig.save();
+        }
+
         return api.id;
     }
 
@@ -51,6 +62,8 @@ export class NlpService {
         if (! apiExist) {
             return false;
         }
+        await this.nlpEndpointModel.deleteMany({serviceID: apiID});
+        await this.nlpConfigModel.deleteMany({serviceID: apiID});
         await this.nlpModel.deleteOne({_id: apiID});
         return true;
     }
@@ -59,7 +72,7 @@ export class NlpService {
      * Get all APIs currently registered
      * @returns Array[{@link Nlp}]
      */
-    async retrieveAll() {
+    async retrieveAllServices() {
         const payload = await this.nlpModel.find().exec()
         return payload;
     }
@@ -69,12 +82,37 @@ export class NlpService {
      * @param apiID ID of the target API
      * @returns Boolean {@linkcode false} if the ID is invalid; JSON {@link Nlp} otherwise
      */
-    async retrieveOne(apiID: string) {
+    async retrieveOneService(apiID: string) {
         const api = await this.checkApiExistence(apiID);
         if (! api) {
             return false;
         }
         return api;
+    }
+
+    async retrieveAllEndpoints() {
+        const payload = await this.nlpEndpointModel.find().exec();
+        return payload;
+    }
+
+    async retrieveOneEndpoint(endpointID: string) {
+        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+
+        if (!endpoint) {
+            return false;
+        }
+
+        return endpoint;
+    }
+
+    async retrieveEndpointsForOneService(serviceID: string) {
+        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID });
+
+        if (!endpoints) {
+            return false;
+        }
+
+        return endpoints;
     }
 
     /**

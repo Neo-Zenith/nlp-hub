@@ -1,14 +1,14 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { getModelForClass } from "@typegoose/typegoose";
-import { Types } from "mongoose";
-import { Nlp } from "src/nlp/nlp.model";
+import { Document, Types } from "mongoose";
+import { Nlp, NlpEndpoint } from "src/nlp/nlp.model";
 import { User } from "src/users/user.model";
 
 /**
  * Query(id, userID, serviceID, input, output, options)
  */
 @Schema()
-export class Query {
+export class Query extends Document {
     @Prop({ type: Types.ObjectId, ref: User.name, required: true })
     userID: string;
 
@@ -24,7 +24,7 @@ export class Query {
     @Prop({ required: true })
     output: string;
 
-    @Prop({ type: Map, of: String })
+    @Prop({ type: Types.Map, ref: NlpEndpoint.name, of: String })
     options: Record<string, string>;
 }
 

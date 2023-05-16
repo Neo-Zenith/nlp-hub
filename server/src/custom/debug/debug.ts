@@ -1,5 +1,5 @@
 export class Debug {
-    public static devLog(userID: string, message: string) {
-        console.log("[" + userID + "]: " + message);
+    public static devLog(func: string, message: string) {
+        console.log("[" + func + "]: " + message);
     }
 }

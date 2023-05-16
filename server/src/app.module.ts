@@ -6,13 +6,15 @@ import * as dotenv from "dotenv";
 import { NlpModule } from './nlp/nlp.module';
 import { UsageModule } from './usage/usage.module';
 import mongoose from 'mongoose';
+import { QueryModule } from './query/query.module';
 
 dotenv.config();
 @Module({
 	imports: [MongooseModule.forRoot('mongodb+srv://neozenith:'+ process.env.DB_SECRET +'@nlp-hub.mbc3aja.mongodb.net/nlp-hub-db?retryWrites=true&w=majority'), 
 	UserModule, 
 	NlpModule,
-	UsageModule],
+	UsageModule,
+	QueryModule],
 	controllers: [],
 	providers: [],
 })
@@ -20,12 +22,12 @@ dotenv.config();
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		// access protocol 
-		consumer.apply(CheckUserAuthMiddleware).exclude(
-			'/nlp/unregister', '/nlp/register', '/nlp/update'
-		).forRoutes('*');
-		consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
-		.forRoutes(
-			'/nlp/unregister', '/nlp/register', '/nlp/update');
+		// consumer.apply(CheckUserAuthMiddleware).exclude(
+		// 	'/nlp/unregister', '/nlp/register', '/nlp/update'
+		// ).forRoutes('*');
+		// consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
+		// .forRoutes(
+		// 	'/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*');
 	}
 }
 

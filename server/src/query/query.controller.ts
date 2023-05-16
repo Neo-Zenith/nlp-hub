@@ -1,4 +1,4 @@
-import { Controller, Post } from "@nestjs/common";
+import { Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { QueryService } from "./query.service";
 
 @Controller('query')
@@ -7,22 +7,24 @@ export class QueryController {
         private readonly queryService: QueryService
     ) {}
 
-    /**
-     * Route for connecting client with NLP API endpoints
-     * CLients send in data, indicate options and which API to use, server forwards package
-     * @param input Input text to be passed over to the API
-     * @param serviceID ID of the API to be utilised
-     * @param options Options selected by the user
-     */
     @Post()
-    predict(input: string, serviceID: string, options: Record<string, string>) {
-        // retrieve Nlp service object
-        // parse endpoints
-        // cross-check options matches (maybe link query's options to NLP's options as FK?)
-        // determine HTTP method (from parse endpoints)
-        // send over data
-        // receive response
-        // parse response
-        // send data to client
+    predict(input: string, serviceID: string, config: string, options: Record<string, string>) {
     }
+
+    @Get('config/:id') 
+    async getConfig(@Param('id') serviceID: string) {
+        const configs = await this.queryService.retrieveConfig(serviceID);
+        var tasks = []
+
+        if (! configs) {
+            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+        }
+
+        for (const config of configs) {
+            tasks.push(config.task);
+        } 
+
+        return {payload: tasks}
+    }
+
 }

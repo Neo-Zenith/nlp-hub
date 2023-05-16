@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { Debug } from "src/custom/debug/debug";
+import { NlpConfig, NlpEndpoint } from "./nlp.model";
 
 @Controller('nlp')
 export class NlpController {
@@ -21,8 +22,8 @@ export class NlpController {
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
-        @Body('endpoints') apiEndpoints: string[],
-        @Body('options') apiOptions: Record<string, string>[]
+        @Body('endpoints') apiEndpoints: NlpEndpoint[],
+        @Body('config') apiConfig: NlpConfig[]
     ) {
         try {
             const apiID = await this.nlpService.subscribe(
@@ -30,11 +31,13 @@ export class NlpController {
                 apiVersion,
                 apiDesc,
                 apiEndpoints,
-                apiOptions);
+                apiConfig);
             return {id: apiID};
         } catch (err) {
-            Debug.devLog(null, err);
+            Debug.devLog('subscribeNlp', err);
             if (err.name === 'ValidationError') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            } else if (err.name === 'TypeError') {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
             }
         }
@@ -47,8 +50,8 @@ export class NlpController {
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
-        @Body('endpoints') apiEndpoints: string[],
-        @Body('options') apiOptions: Record<string, string>[]
+        @Body('endpoints') apiEndpoints: NlpEndpoint[],
+        @Body('config') apiConfig: NlpConfig[]
     ) {
         try {
             await this.nlpService.unsubscribe(apiID);
@@ -57,7 +60,7 @@ export class NlpController {
                 apiVersion,
                 apiDesc,
                 apiEndpoints,
-                apiOptions
+                apiConfig
             )
             return ({
                 id: newID
@@ -85,7 +88,7 @@ export class NlpController {
     // route to retrieve all NLP services currently available
     @Get('services')
     async listAllServices() {
-        const data = await this.nlpService.retrieveAll();
+        const data = await this.nlpService.retrieveAllServices();
         
         // drop sensitive data like api endpoints and rename id before sending to client
         const modifiedData = data.map((item) => ({
@@ -100,16 +103,79 @@ export class NlpController {
     // route to retrieve specific NLP service
     @Get('services/:id')
     async getService(@Param('id') apiID: string) {
-        const data = await this.nlpService.retrieveOne(apiID);
+        try {
+            const data = await this.nlpService.retrieveOneService(apiID);
+            if (!data) {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
+            }
+    
+            // drop sensitive data like api endpoints and rename id before sending to client
+            const { _id, __v, ...rest } = data.toJSON();
+            const id = _id.toHexString();
+            const responseData = { id, ...rest };
+            return responseData;
+
+        } catch(err) {
+            Debug.devLog(null, err);
+            if (err.name === "CastError") {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
+        }
+    }
+
+    @Get('endpoints')
+    async listAllEndpoints() {
+        const data = await this.nlpService.retrieveAllEndpoints();
+        console.log(data)
+        var modifiedData = []
+
+        for (const endpoint of data) {
+            const api = await this.nlpService.retrieveOneService(endpoint.serviceID)
+            if (! api) {
+                throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            const endpointData = {
+                id: endpoint._id,
+                apiName: api.name,
+                apiVersion: api.version,
+                apiDescription: api.description,
+                url: endpoint.url,
+                method: endpoint.method
+            }
+
+            modifiedData.push(endpointData)
+        }
+        return modifiedData;
+    }
+
+    @Get('endpoints/:id')
+    async getEndpoint(@Param('id') endpointID: string) {
+        const data = await this.nlpService.retrieveOneEndpoint(endpointID);
 
         if (!data) {
             throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
         }
 
+        const api = await this.nlpService.retrieveOneService(data.serviceID)
+        if (! api) {
+            throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         // drop sensitive data like api endpoints and rename id before sending to client
-        const { _id, __v, ...rest } = data.toJSON();
-        const id = _id.toHexString();
-        const responseData = { id, ...rest };
-        return responseData;
+        const endpointData = {
+            id: data._id,
+            apiName: api.name,
+            apiVersion: api.version,
+            apiDescription: api.description,
+            url: data.url,
+            method: data.method
+        }
+
+        return endpointData;
+    }
+
+    async getServiceEndpoint() {
+        
     }
 }
