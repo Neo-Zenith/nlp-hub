@@ -22,7 +22,7 @@ export class NlpController {
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[],
-        @Body('options') apiOptions: Record<string, string>
+        @Body('options') apiOptions: Record<string, string>[]
     ) {
         try {
             const apiID = await this.nlpService.subscribe(
@@ -48,7 +48,7 @@ export class NlpController {
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
         @Body('endpoints') apiEndpoints: string[],
-        @Body('options') apiOptions: Record<string, string>
+        @Body('options') apiOptions: Record<string, string>[]
     ) {
         try {
             await this.nlpService.unsubscribe(apiID);
@@ -107,7 +107,7 @@ export class NlpController {
         }
 
         // drop sensitive data like api endpoints and rename id before sending to client
-        const { _id, endpoints, __v, ...rest } = data.toJSON();
+        const { _id, __v, ...rest } = data.toJSON();
         const id = _id.toHexString();
         const responseData = { id, ...rest };
         return responseData;

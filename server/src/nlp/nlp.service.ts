@@ -1,12 +1,13 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Nlp } from "./nlp.model";
+import { Nlp, NlpEndpoint } from "./nlp.model";
 
 @Injectable()
 export class NlpService {
     constructor(
-        @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>
+        @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>,
+        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
     ) {}
 
     /**
@@ -22,16 +23,21 @@ export class NlpService {
         apiVersion: string, 
         apiDescription: string, 
         apiEndpoints: string[],
-        apiOptions: Record<string, string>) {
+        apiOptions: Record<string, string>[]) {
         const newAPI = new this.nlpModel({
             name: apiName,
             version: apiVersion,
             description: apiDescription,
-            endpoints: apiEndpoints,
-            options: apiOptions
+        })
+
+        const newAPIEndpoint = new this.nlpEndpointModel({
+            serviceID: newAPI.id,
+            options: apiOptions,
+            endpoints: apiEndpoints
         })
 
         const api = await newAPI.save();
+        await newAPIEndpoint.save();
         return api.id;
     }
 
@@ -78,7 +84,9 @@ export class NlpService {
      */
     private async checkApiExistence(apiID: string) {
         const api = await this.nlpModel.findById(apiID);
-        if (! api) {
+        const endpoint = await this.nlpEndpointModel.find({serviceID: apiID});
+
+        if (! api || ! endpoint) {
             return false;
         }
         return api;
