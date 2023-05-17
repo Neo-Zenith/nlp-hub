@@ -68,20 +68,13 @@ export class NlpService {
         return true;
     }
 
-    /**
-     * Get all APIs currently registered
-     * @returns Array[{@link Nlp}]
-     */
+    // Get all services currently registered in the server
     async retrieveAllServices() {
         const payload = await this.nlpModel.find().exec()
         return payload;
     }
 
-    /**
-     * Get a specific API
-     * @param apiID ID of the target API
-     * @returns Boolean {@linkcode false} if the ID is invalid; JSON {@link Nlp} otherwise
-     */
+    // Get details of a specific API
     async retrieveOneService(apiID: string) {
         const api = await this.checkApiExistence(apiID);
         if (! api) {
@@ -106,8 +99,7 @@ export class NlpService {
     }
 
     async retrieveEndpointsForOneService(serviceID: string) {
-        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID });
-
+        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID }).exec();
         if (!endpoints) {
             return false;
         }
@@ -115,13 +107,9 @@ export class NlpService {
         return endpoints;
     }
 
-    /**
-     * Subroutine to verify if API is valid in db
-     * @param apiID ID of the target API
-     * @returns Boolean {@linkcode false} if not found; JSON {@link Nlp} otherwise
-     */
+    // Check if API exists before performing modification to DB
     private async checkApiExistence(apiID: string) {
-        const api = await this.nlpModel.findById(apiID);
+        const api = await this.nlpModel.findById(apiID);;
         const endpoint = await this.nlpEndpointModel.find({serviceID: apiID});
 
         if (! api || ! endpoint) {

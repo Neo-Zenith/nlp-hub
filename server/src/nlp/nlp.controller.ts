@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { Debug } from "src/custom/debug/debug";
 import { NlpConfig, NlpEndpoint } from "./nlp.model";
@@ -9,14 +9,7 @@ export class NlpController {
         private readonly nlpService: NlpService
     ) {}
     
-    /**
-     * Route to subscribe an NLP API to server
-     * @param apiName Name of the API
-     * @param apiVersion Version of the API
-     * @param apiDesc Description of the API
-     * @param apiEndpoints Endpoints of the API
-     * @returns 
-     */
+    // route to register NLP API to server
     @Post('register')
     async subscribeNlp(
         @Body('name') apiName: string,
@@ -35,10 +28,16 @@ export class NlpController {
             return {id: apiID};
         } catch (err) {
             Debug.devLog('subscribeNlp', err);
+            // occurs when saving Nlp without all required fields
             if (err.name === 'ValidationError') {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
-            } else if (err.name === 'TypeError') {
+            } 
+            // occurs when saving NlpConfig/NlpEndpoint without all required fields
+            else if (err.name === 'TypeError') {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            }
+            else if (err.name === 'HttpException') {
+                throw new HttpException('Duplicated Service Registered', HttpStatus.CONFLICT);
             }
         }
     }
@@ -54,7 +53,10 @@ export class NlpController {
         @Body('config') apiConfig: NlpConfig[]
     ) {
         try {
-            await this.nlpService.unsubscribe(apiID);
+            const deleted = await this.nlpService.unsubscribe(apiID);
+            if (! deleted) {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
             const newID = await this.nlpService.subscribe(
                 apiName,
                 apiVersion,
@@ -62,13 +64,22 @@ export class NlpController {
                 apiEndpoints,
                 apiConfig
             )
-            return ({
-                id: newID
-            })
+
+            return { id: newID }
+
         } catch (err) {
-            Debug.devLog(null, err);
+            Debug.devLog('updateNlp', err);
+            // occurs when saving Nlp without all required fields
             if (err.name === 'ValidationError') {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            } 
+            // occurs when saving NlpConfig/NlpEndpoint without all required fields
+            else if (err.name === 'TypeError') {
+                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
+            }
+            // catch the thrown http exception in the try block
+            else if (err.name === 'HttpException') {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
             }
         }
     }
@@ -78,11 +89,19 @@ export class NlpController {
     async unsubscribeNlp(
         @Body('id') apiID: string
     ) {
-        const data = await this.nlpService.unsubscribe(apiID);
-        if (!data) {
-            throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+        try {
+            const data = await this.nlpService.unsubscribe(apiID);
+            if (!data) {
+                throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
+            return {message: "OK (Service Unregistered)"};
+        } catch (err) {
+            Debug.devLog('unsubscribeNlp', err)
+            // occurs when ID is not the required format
+            if (err.name === 'CastError') {
+                throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
         }
-        return {message: "OK (Service Unregistered)"};
     }
 
     // route to retrieve all NLP services currently available
@@ -105,28 +124,32 @@ export class NlpController {
     async getService(@Param('id') apiID: string) {
         try {
             const data = await this.nlpService.retrieveOneService(apiID);
-            if (!data) {
+            if (! data) {
                 throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
             }
     
             // drop sensitive data like api endpoints and rename id before sending to client
-            const { _id, __v, ...rest } = data.toJSON();
-            const id = _id.toHexString();
-            const responseData = { id, ...rest };
-            return responseData;
+            const modifiedData = {
+                id: data._id,
+                name: data.name,
+                version: data.version,
+                description: data.description
+            };
+            return modifiedData
 
         } catch(err) {
-            Debug.devLog(null, err);
+            Debug.devLog('getService', err);
+            // occurs when ID is not of the required format
             if (err.name === "CastError") {
                 throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
             }
         }
     }
 
+    // get all the possible endpoints from all APIs
     @Get('endpoints')
     async listAllEndpoints() {
         const data = await this.nlpService.retrieveAllEndpoints();
-        console.log(data)
         var modifiedData = []
 
         for (const endpoint of data) {
@@ -149,19 +172,38 @@ export class NlpController {
         return modifiedData;
     }
 
+    // Get the details of a specific endpoint
     @Get('endpoints/:id')
     async getEndpoint(@Param('id') endpointID: string) {
-        const data = await this.nlpService.retrieveOneEndpoint(endpointID);
+        var data;
+        var api;
 
-        if (!data) {
-            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
+        try {
+            data = await this.nlpService.retrieveOneEndpoint(endpointID);
+            if (! data) {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
+            }
+        } catch (err) {
+            Debug.devLog('getEndpoint', err);
+            // occurs when ID is not of the required format
+            if (err.name === "CastError") {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
         }
 
-        const api = await this.nlpService.retrieveOneService(data.serviceID)
-        if (! api) {
-            throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
+        try {
+            api = await this.nlpService.retrieveOneService(data.serviceID)
+            if (! api) {
+                throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (err) {
+            Debug.devLog('getEndpoint', err);
+            // occurs when ID is not of the required format
+            if (err.name === "CastError") {
+                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            }
         }
-
+        
         // drop sensitive data like api endpoints and rename id before sending to client
         const endpointData = {
             id: data._id,
@@ -175,7 +217,29 @@ export class NlpController {
         return endpointData;
     }
 
-    async getServiceEndpoint() {
-        
+    // get endpoints of an API
+    @Get('services/:id/endpoints')
+    async getServiceEndpoint(@Param('id') serviceID: string) {
+        const api = await this.getService(serviceID);
+        const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID);
+        var modifiedEndpoints = []
+
+        if (! endpoints) {
+            throw new HttpException("Record Not Found (No Valid Endpoints)", HttpStatus.NOT_FOUND)
+        }
+        for (const endpoint of endpoints) {
+            const endpointData = {
+                id: endpoint._id,
+                apiName: api.name,
+                apiVersion: api.version,
+                apiDescription: api.description,
+                url: endpoint.url,
+                method: endpoint.method
+            }
+
+            modifiedEndpoints.push(endpointData)
+        }
+
+        return modifiedEndpoints;
     }
 }

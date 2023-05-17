@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { getModelForClass } from "@typegoose/typegoose";
+import mongoose from "mongoose";
 import { NlpModel } from "src/nlp/nlp.model";
 import { Query } from "src/query/query.model";
 import { UserModel } from "src/users/user.model";
@@ -18,7 +19,7 @@ export class Usage extends Query{
 }
 
 export const UsageSchema = SchemaFactory.createForClass(Usage);
-export const UsageModel = getModelForClass(Usage);
+export const UsageModel = mongoose.model('Usage', UsageSchema)
 
 /**
  * Foreign key constraint trigger

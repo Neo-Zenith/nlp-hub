@@ -25,15 +25,16 @@ export class UsageController {
         @Body('serviceID') serviceID: string,
         @Body('input') input: string,
         @Body('output') output: string,
+        @Body('endpointID') endpointID: string,
         @Body('options') options: Record<string, string>
         ) {
         try {
             const usageID = await this.usageService.addUsage(
-                userID, serviceID, input, output, options
+                userID, serviceID, endpointID, input, output, options
             )
             return ({id: usageID})
         } catch (err) {
-            Debug.devLog(userID, err);
+            Debug.devLog('addUsage', err);
             if (err.name === 'ValidationError') {
                 throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
             }

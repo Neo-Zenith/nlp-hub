@@ -5,6 +5,8 @@ import { QueryService } from "./query.service";
 import { QueryController } from "./query.controller";
 import { NlpModule } from "src/nlp/nlp.module";
 import { NlpConfigSchema, NlpEndpointSchema, NlpSchema } from "src/nlp/nlp.model";
+import { UsageModule } from "src/usage/usage.module";
+import { UsageSchema } from "src/usage/usage.model";
 
 @Module({
     imports: [

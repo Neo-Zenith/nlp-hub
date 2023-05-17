@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './users/users.module';
 import { CheckAdminAuthMiddleware, CheckUserAuthMiddleware } from './users/user.middleware';
@@ -22,12 +22,13 @@ dotenv.config();
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		// access protocol 
-		// consumer.apply(CheckUserAuthMiddleware).exclude(
-		// 	'/nlp/unregister', '/nlp/register', '/nlp/update'
-		// ).forRoutes('*');
-		// consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
-		// .forRoutes(
-		// 	'/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*');
+		consumer.apply(CheckUserAuthMiddleware).exclude(
+			'/nlp/unregister', '/nlp/register', '/nlp/update'
+		).forRoutes('*');
+		consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
+		.forRoutes(
+			'/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*',
+			{ path: 'nlp/services/:id/endpoints', method: RequestMethod.GET });
 	}
 }
 

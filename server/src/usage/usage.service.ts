@@ -47,16 +47,19 @@ export class UsageService {
     async addUsage(
             userID: string, 
             serviceID: string,
+            endpointID: string,
             input: string, 
             output: string, 
             options: Record<string, string>) {
         const newUsage = new this.usageModel({
             userID: userID,
             serviceID: serviceID,
+            endpointID: endpointID,
             input: input,
             output: output,
             options: options
         })
+
         const usage = await newUsage.save();
         return usage.id;
     }
