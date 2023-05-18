@@ -1,15 +1,14 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
-import { Nlp, NlpConfig, NlpEndpoint } from "./nlp.model";
+import { Model } from "mongoose";
+import { Nlp, NlpEndpoint } from "./nlp.model";
 import { Debug } from "src/custom/debug/debug";
 
 @Injectable()
 export class NlpService {
     constructor(
         @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>,
-        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>,
-        @InjectModel('NlpConfig') private readonly nlpConfigModel: Model<NlpConfig>
+        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
     ) {}
 
     // Subscribes a service to the server
@@ -18,8 +17,7 @@ export class NlpService {
         serviceVersion: string, 
         serviceDescription: string, 
         serviceAddress: string,
-        serviceEndpoints: NlpEndpoint[],
-        serviceConfig: NlpConfig[]) {
+        serviceEndpoints: NlpEndpoint[]) {
 
         const newService = new this.nlpModel({
             name: serviceName,
@@ -34,16 +32,10 @@ export class NlpService {
                 serviceID: service.id,
                 method: serviceEndpoints[i].method,
                 options: serviceEndpoints[i].options,
-                endpoint: serviceEndpoints[i].endpoint
+                endpoint: serviceEndpoints[i].endpoint,
+                task: serviceEndpoints[i].task
             });
-            const endpoint = await newEndpoint.save();
-
-            const newConfig = new this.nlpConfigModel({
-                serviceID: service.id,
-                task: serviceConfig[i].task,
-                endpointID: endpoint.id
-            })
-            await newConfig.save();
+            await newEndpoint.save();
         }
         return service.id;
     }
@@ -52,13 +44,11 @@ export class NlpService {
     async unsubscribe(serviceID: string) {
         const service = await this.checkServiceExist(serviceID);
         const endpointsDeleted = await this.nlpEndpointModel.deleteMany({serviceID: service.id});
-        const configsDeleted = await this.nlpConfigModel.deleteMany({serviceID: service.id});
         const serviceDeleted = await this.nlpModel.deleteOne({_id: service.id});
 
         const returnData = {
             serviceDeleted: serviceDeleted.deletedCount,
-            endpointsDeleted: endpointsDeleted.deletedCount,
-            configsDeleted: configsDeleted.deletedCount
+            endpointsDeleted: endpointsDeleted.deletedCount
         }
 
         return returnData;

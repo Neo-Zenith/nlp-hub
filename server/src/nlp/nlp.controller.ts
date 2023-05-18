@@ -1,7 +1,7 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { Debug } from "src/custom/debug/debug";
-import { NlpConfig, NlpEndpoint } from "./nlp.model";
+import { NlpEndpoint } from "./nlp.model";
 
 @Controller('nlp')
 export class NlpController {
@@ -16,16 +16,14 @@ export class NlpController {
         @Body('version') serviceVersion: string,
         @Body('description') serviceDesc: string,
         @Body('address') serviceAddr: string,
-        @Body('endpoints') serviceEndpoints: NlpEndpoint[],
-        @Body('config') serviceConfig: NlpConfig[]
+        @Body('endpoints') serviceEndpoints: NlpEndpoint[]
     ) {
         const serviceID = await this.nlpService.subscribe(
             serviceName,
             serviceVersion,
             serviceDesc,
             serviceAddr,
-            serviceEndpoints,
-            serviceConfig);
+            serviceEndpoints);
         return {id: serviceID};
     }
 
@@ -37,8 +35,7 @@ export class NlpController {
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
         @Body('address') apiAddr: string,
-        @Body('endpoints') apiEndpoints: NlpEndpoint[],
-        @Body('config') apiConfig: NlpConfig[]
+        @Body('endpoints') apiEndpoints: NlpEndpoint[]
     ) {
         try {
             const deleted = await this.nlpService.unsubscribe(apiID);
@@ -50,8 +47,7 @@ export class NlpController {
                 apiVersion,
                 apiDesc,
                 apiAddr,
-                apiEndpoints,
-                apiConfig
+                apiEndpoints
             )
 
             return { id: newID }

@@ -28,12 +28,6 @@ export class QueryController {
     @Get('config/:id') 
     async getConfig(@Param('id') serviceID: string) {
         const configs = await this.queryService.retrieveConfig(serviceID);
-
-        if (! configs) {
-            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-        }
-
-        return {payload: configs}
     }
 
 }

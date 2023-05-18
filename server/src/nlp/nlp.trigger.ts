@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { NlpConfigModel, NlpConfigSchema, NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./nlp.model";
+import { NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./nlp.model";
 import mongoose from "mongoose";
 
 // Pre-save trigger for NlpSchema
@@ -11,7 +11,7 @@ export function NlpTrigger() {
         })
         
         if (service) {
-            throw new HttpException("Duplicated Service Registered", HttpStatus.CONFLICT)
+            throw new HttpException("Service already registered", HttpStatus.CONFLICT)
         }
 
         return next();
@@ -23,77 +23,36 @@ export function NlpEndpointTrigger() {
     NlpEndpointSchema.pre('save', async function(next) {
         // Validate if serviceID is a valid ObjectID
         if (! mongoose.isValidObjectId(this.serviceID)) {
-            throw new HttpException("Service Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+            throw new HttpException("Invalid service ID format", HttpStatus.NOT_FOUND)
         }
 
         // FK constraint check for serviceID
         const service = await NlpModel.findById(this.serviceID);
         if (! service) {
-            throw new HttpException("Service Not Found", HttpStatus.NOT_FOUND);
+            throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
         }
 
-        // Unique constraint check for <serviceID, endpoint>
+        // Unique constraint check for <serviceID, endpoint, method>
         const endpointExist = await NlpEndpointModel.findOne({
             serviceID: this.serviceID,
-            endpoint: this.endpoint
+            endpoint: this.endpoint,
+            method: this.method
         })
         if (endpointExist) {
             throw new HttpException(
-                "Unique Constraint Violated (Unique Endpoint for Service)",
+                "Endpoint of the given method already registered",
                 HttpStatus.CONFLICT)
         }
 
-        return next();
-    })
-}
-
-// Pre-save trigger for NlpConfig
-export function NlpConfigTrigger() {
-    NlpConfigSchema.pre('save', async function(next) {
-        // Validate if serviceID is a valid ObjectID
-        if (! mongoose.isValidObjectId(this.serviceID)) {
-            throw new HttpException("Service Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-        }
-
-        // FK constraint check for serviceID
-        const service = await NlpModel.findById(this.serviceID);
-        if (! service) {
-            throw new HttpException("Service Not Found", HttpStatus.NOT_FOUND);
-        }
-
-        // Validate if endpointID is a valid ObjectID
-        if (! mongoose.isValidObjectId(this.endpointID)) {
-            throw new HttpException("Endpoint Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-        }
-
-        // FK constraint check for endpointID
-        const endpoint = await NlpEndpointModel.findById(this.endpointID);
-        if (! endpoint) {
-            throw new HttpException("Endpoint Not Found", HttpStatus.NOT_FOUND);
-        }
-
-        // Unique constraint check for <serviceID, endpointID>
-        const endpointExist = await NlpConfigModel.findOne({
-            serviceID: this.serviceID,
-            endpointID: this.endpointID
-        })
-
-        if (endpointExist) {
-            throw new HttpException(
-                "Unique Constraint Violated (Unique Endpoint for Service)", 
-                HttpStatus.BAD_REQUEST)
-        }
-
         // Unique constraint check for <serviceID, task>
-        const taskExist = await NlpConfigModel.findOne({
+        const taskExist = await NlpEndpointModel.findOne({
             serviceID: this.serviceID,
             task: this.task
         })
-
         if (taskExist) {
             throw new HttpException(
-                "Unique Constraint Violated (Unique Task for Service)", 
-                HttpStatus.BAD_REQUEST
+                "Task for the requested service already registered",
+                HttpStatus.CONFLICT
             )
         }
 

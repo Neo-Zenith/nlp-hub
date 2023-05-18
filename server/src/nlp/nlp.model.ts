@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { NlpConfigTrigger, NlpEndpointTrigger, NlpTrigger } from './nlp.trigger';
+import { NlpEndpointTrigger, NlpTrigger } from './nlp.trigger';
 
 /**
- * Nlp(id, name, version, description)
+ * Nlp(id, name, version, address, description)
  * PK: id
- * NOT NULL: name, version
+ * UNIQUE: address
+ * NOT NULL: name, version, address
  */
 @Schema()
 export class Nlp extends Document {
@@ -23,10 +24,11 @@ export class Nlp extends Document {
 }
 
 /**
- * NlpEndpoint(id, serviceID, method, options, url)
+ * NlpEndpoint(id, serviceID, method, options, endpoint, task)
  * PK: id
- * FK: serviceID
- * NOT NULL: method, url
+ * FK: serviceID => Nlp(id)
+ * UNIQUE: <serviceID, endpoint, method>, <serviceID, task>
+ * NOT NULL: serviceID, method, endpoint, task
  */
 @Schema()
 export class NlpEndpoint extends Document {
@@ -41,25 +43,10 @@ export class NlpEndpoint extends Document {
 
     @Prop({ required: true })
     endpoint: string;
-} 
-
-/**
- * NlpConfig(id, serviceID, task, endpointID)
- * PK: id
- * FK: serviceID, endpointID
- * NOT NULL: task
- */
-@Schema()
-export class NlpConfig extends Document {
-    @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
-    serviceID: string;
 
     @Prop({ required: true })
     task: string;
-
-    @Prop({ type: Types.ObjectId, ref: NlpEndpoint.name, required: true })
-    endpointID: string;
-}
+} 
 
 export const NlpSchema = SchemaFactory.createForClass(Nlp);
 export const NlpModel = mongoose.model('Nlp', NlpSchema);
@@ -67,10 +54,6 @@ export const NlpModel = mongoose.model('Nlp', NlpSchema);
 export const NlpEndpointSchema = SchemaFactory.createForClass(NlpEndpoint);
 export const NlpEndpointModel = mongoose.model('NlpEndpoint', NlpEndpointSchema);
 
-export const NlpConfigSchema = SchemaFactory.createForClass(NlpConfig);
-export const NlpConfigModel = mongoose.model('NlpConfig', NlpConfigSchema);
-
 NlpTrigger();
 NlpEndpointTrigger();
-NlpConfigTrigger();
 
