@@ -1,6 +1,5 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
-import { Debug } from "src/custom/debug/debug";
 import { NlpEndpoint } from "./nlp.model";
 
 @Controller('nlp')
@@ -9,7 +8,7 @@ export class NlpController {
         private readonly nlpService: NlpService
     ) {}
     
-    // route to register NLP API to server
+
     @Post('register')
     async subscribeNlp(
         @Body('name') serviceName: string,
@@ -27,187 +26,144 @@ export class NlpController {
         return { id: serviceID };
     }
 
-    // route to update NLP API info (version/routes/name)
+
     @Post('update')
     async updateNlp(
-        @Body('id') apiID: string,
-        @Body('name') apiName: string,
-        @Body('version') apiVersion: string,
-        @Body('description') apiDesc: string,
-        @Body('address') apiAddr: string,
-        @Body('endpoints') apiEndpoints: NlpEndpoint[]
+        @Body('id') serviceID: string,
+        @Body('name') serviceName: string,
+        @Body('version') serviceVersion: string,
+        @Body('description') serviceDesc: string,
+        @Body('address') serviceAddr: string,
+        @Body('endpoints') serviceEndpoints: NlpEndpoint[]
     ) {
-        const deleted = await this.nlpService.unsubscribe(apiID);
+        const deleted = await this.nlpService.unsubscribe(serviceID);
         if (! deleted) {
             throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
         }
         const newID = await this.nlpService.subscribe(
-            apiName,
-            apiVersion,
-            apiDesc,
-            apiAddr,
-            apiEndpoints
+            serviceName,
+            serviceVersion,
+            serviceDesc,
+            serviceAddr,
+            serviceEndpoints
         )
 
         return { id: newID }
     }
 
-    // route to unsubscribe NLP API from server
+
     @Post('unregister')
     async unsubscribeNlp(
-        @Body('id') apiID: string
+        @Body('id') serviceID: string
     ) {
-        try {
-            const data = await this.nlpService.unsubscribe(apiID);
-            if (!data) {
-                throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-            return {message: "OK (Service Unregistered)"};
-        } catch (err) {
-            Debug.devLog('unsubscribeNlp', err)
-            // occurs when ID is not the required format
-            if (err.name === 'CastError') {
-                throw new HttpException("Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-        }
+        const response = await this.nlpService.unsubscribe(serviceID);
+        return response;
     }
 
-    // route to retrieve all NLP services currently available
+
     @Get('services')
     async listAllServices() {
-        const data = await this.nlpService.retrieveAllServices();
+        const services = await this.nlpService.retrieveAllServices();
         
         // drop sensitive data like api endpoints and rename id before sending to client
-        const modifiedData = data.map((item) => ({
+        const obscuredServices = services.map((item) => ({
             id: item._id,
             name: item.name,
             version: item.version,
             description: item.description
         }));
-        return { payload: modifiedData };
+        return { services: obscuredServices };
     }
 
-    // route to retrieve specific NLP service
+
     @Get('services/:id')
-    async getService(@Param('id') apiID: string) {
-        try {
-            const data = await this.nlpService.retrieveOneService(apiID);
-            if (! data) {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
-            }
+    async getService(@Param('id') serviceID: string) {
+        const service = await this.nlpService.retrieveOneService(serviceID);
     
-            // drop sensitive data like api endpoints and rename id before sending to client
-            const modifiedData = {
-                id: data._id,
-                name: data.name,
-                version: data.version,
-                description: data.description
-            };
-            return modifiedData
+        // drop sensitive data like api endpoints and rename id before sending to client
+        const obscuredService = {
+            id: service._id,
+            name: service.name,
+            version: service.version,
+            description: service.description
+        };
 
-        } catch(err) {
-            Debug.devLog('getService', err);
-            // occurs when ID is not of the required format
-            if (err.name === "CastError") {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-        }
+        return obscuredService
     }
 
-    // get all the possible endpoints from all APIs
+
     @Get('endpoints')
     async listAllEndpoints() {
-        const data = await this.nlpService.retrieveAllEndpoints();
-        var modifiedData = []
+        const endpoints = await this.nlpService.retrieveAllEndpoints();
+        const services = await this.nlpService.retrieveAllServices();
+        var returnData = []
 
-        for (const endpoint of data) {
-            const api = await this.nlpService.retrieveOneService(endpoint.serviceID)
-            if (! api) {
-                throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
+        for (const endpoint of endpoints) {
+            const service = services.find((s) => s._id === endpoint.serviceID);
+            if (! service) {
+                throw new HttpException(
+                    "Foreign key constraint failed", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             const endpointData = {
                 id: endpoint._id,
-                apiName: api.name,
-                apiVersion: api.version,
-                apiDescription: api.description,
+                serviceName: service.name,
+                serviceVersion: service.version,
+                serviceDescription: service.description,
+                serviceAddress: service.address,
                 endpoint: endpoint.endpoint,
-                method: endpoint.method
+                method: endpoint.method,
+                options: endpoint.options
             }
 
-            modifiedData.push(endpointData)
+            returnData.push(endpointData)
         }
-        return modifiedData;
+        return returnData;
     }
 
-    // Get the details of a specific endpoint
+    
     @Get('endpoints/:id')
     async getEndpoint(@Param('id') endpointID: string) {
-        var data;
-        var api;
-
-        try {
-            data = await this.nlpService.retrieveOneEndpoint(endpointID);
-            if (! data) {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
-            }
-        } catch (err) {
-            Debug.devLog('getEndpoint', err);
-            // occurs when ID is not of the required format
-            if (err.name === "CastError") {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-        }
-
-        try {
-            api = await this.nlpService.retrieveOneService(data.serviceID)
-            if (! api) {
-                throw new HttpException("Internal Server Error (FK Constraint Violated)", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (err) {
-            Debug.devLog('getEndpoint', err);
-            // occurs when ID is not of the required format
-            if (err.name === "CastError") {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-        }
+        const endpoint = await this.nlpService.retrieveOneEndpoint(endpointID);
+        const service = await this.nlpService.retrieveOneService(endpoint.serviceID)
         
         // drop sensitive data like api endpoints and rename id before sending to client
         const endpointData = {
-            id: data._id,
-            apiName: api.name,
-            apiVersion: api.version,
-            apiDescription: api.description,
-            url: data.url,
-            method: data.method
+            id: service._id,
+            serviceName: service.name,
+            serviceVersion: service.version,
+            serviceDescription: service.description,
+            serviceAddress: service.address,
+            endpoint: endpoint.endpoint,
+            method: endpoint.method,
+            options: endpoint.options
         }
 
         return endpointData;
     }
 
-    // get endpoints of an API
+
     @Get('services/:id/endpoints')
     async getServiceEndpoint(@Param('id') serviceID: string) {
-        const api = await this.getService(serviceID);
+        const service = await this.nlpService.retrieveOneService(serviceID);
         const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID);
-        var modifiedEndpoints = []
+        var returnData = []
 
-        if (! endpoints) {
-            throw new HttpException("Record Not Found (No Valid Endpoints)", HttpStatus.NOT_FOUND)
-        }
         for (const endpoint of endpoints) {
             const endpointData = {
                 id: endpoint._id,
-                apiName: api.name,
-                apiVersion: api.version,
-                apiDescription: api.description,
+                serviceName: service.name,
+                serviceVersion: service.version,
+                serviceDescription: service.description,
+                serviceAddress: service.address,
                 endpoint: endpoint.endpoint,
+                options: endpoint.options,
                 method: endpoint.method
             }
 
-            modifiedEndpoints.push(endpointData)
+            returnData.push(endpointData)
         }
 
-        return modifiedEndpoints;
+        return returnData;
     }
 }

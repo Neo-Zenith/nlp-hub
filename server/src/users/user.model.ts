@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { UserTrigger } from './users.triggre';
+import { UserTrigger } from './users.trigger';
 
 /**
  * DefaultUser(id, username, name, email, department, password)
