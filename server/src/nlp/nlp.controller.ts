@@ -24,7 +24,7 @@ export class NlpController {
             serviceDesc,
             serviceAddr,
             serviceEndpoints);
-        return {id: serviceID};
+        return { id: serviceID };
     }
 
     // route to update NLP API info (version/routes/name)
@@ -37,36 +37,19 @@ export class NlpController {
         @Body('address') apiAddr: string,
         @Body('endpoints') apiEndpoints: NlpEndpoint[]
     ) {
-        try {
-            const deleted = await this.nlpService.unsubscribe(apiID);
-            if (! deleted) {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
-            const newID = await this.nlpService.subscribe(
-                apiName,
-                apiVersion,
-                apiDesc,
-                apiAddr,
-                apiEndpoints
-            )
-
-            return { id: newID }
-
-        } catch (err) {
-            Debug.devLog('updateNlp', err);
-            // occurs when saving Nlp without all required fields
-            if (err.name === 'ValidationError') {
-                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
-            } 
-            // occurs when saving NlpConfig/NlpEndpoint without all required fields
-            else if (err.name === 'TypeError') {
-                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
-            }
-            // catch the thrown http exception in the try block
-            else if (err.name === 'HttpException') {
-                throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-            }
+        const deleted = await this.nlpService.unsubscribe(apiID);
+        if (! deleted) {
+            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
         }
+        const newID = await this.nlpService.subscribe(
+            apiName,
+            apiVersion,
+            apiDesc,
+            apiAddr,
+            apiEndpoints
+        )
+
+        return { id: newID }
     }
 
     // route to unsubscribe NLP API from server

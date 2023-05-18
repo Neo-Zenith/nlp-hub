@@ -43,15 +43,10 @@ export class NlpService {
     // Removes a service from the server
     async unsubscribe(serviceID: string) {
         const service = await this.checkServiceExist(serviceID);
-        const endpointsDeleted = await this.nlpEndpointModel.deleteMany({serviceID: service.id});
-        const serviceDeleted = await this.nlpModel.deleteOne({_id: service.id});
-
-        const returnData = {
-            serviceDeleted: serviceDeleted.deletedCount,
-            endpointsDeleted: endpointsDeleted.deletedCount
-        }
-
-        return returnData;
+        await this.nlpModel.deleteOne({_id: service.id});
+        return {
+            message: "Service deleted"
+        };
     }
 
     // Retrieves all services from the server
@@ -97,9 +92,6 @@ export class NlpService {
 
         // A service without any endpoint is invalid
         if (! service || endpoints.length === 0) {
-            Debug.devLog(
-                'checkServiceExist', 
-                "service: " + service + "; " + "endpoints: " + endpoints)
             throw new HttpException("Service Not Found (Invalid ID", HttpStatus.NOT_FOUND);
         }
         return service;

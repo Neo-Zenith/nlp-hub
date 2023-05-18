@@ -3,7 +3,7 @@ import { NlpController } from "./nlp.controller";
 import { NlpService } from "./nlp.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
-import { RegisterServiceMiddleware } from "./nlp.middleware";
+import { RegisterServiceMiddleware, RetrieveServiceMiddleware } from "./nlp.middleware";
 
 @Module({
     imports: [
@@ -17,7 +17,10 @@ import { RegisterServiceMiddleware } from "./nlp.middleware";
 export class NlpModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
-          .apply(RegisterServiceMiddleware)
-          .forRoutes('/nlp/register');
+            .apply(RegisterServiceMiddleware)
+            .forRoutes('/nlp/register');
+        consumer
+            .apply(RetrieveServiceMiddleware)
+            .forRoutes('/nlp/unregister');
     }
 };

@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./nlp.model";
-import mongoose from "mongoose";
 
-// Pre-save trigger for NlpSchema
+// Triggers for NlpSchema
 export function NlpTrigger() {
+    // Pre-save trigger
     NlpSchema.pre('save', async function(next) {
         // Find if another service of the same address already exist
         const service = await NlpModel.findOne({
@@ -16,16 +16,20 @@ export function NlpTrigger() {
 
         return next();
     })
+
+    // Pre-delete trigger
+    NlpSchema.pre('deleteOne', async function(next) {
+        await NlpEndpointModel.deleteMany({
+            serviceID: this.getFilter()["_id"]
+        })
+
+        return next();
+    })
 }
 
 // Pre-save trigger for NlpEndpoint
 export function NlpEndpointTrigger() {
     NlpEndpointSchema.pre('save', async function(next) {
-        // Validate if serviceID is a valid ObjectID
-        if (! mongoose.isValidObjectId(this.serviceID)) {
-            throw new HttpException("Invalid service ID format", HttpStatus.NOT_FOUND)
-        }
-
         // FK constraint check for serviceID
         const service = await NlpModel.findById(this.serviceID);
         if (! service) {

@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './users/users.module';
-import { CheckAdminAuthMiddleware, CheckUserAuthMiddleware } from './users/user.middleware';
+import { CheckAdminAuthMiddleware, CheckUserAuthMiddleware, RegisterUserMiddleware } from './users/user.middleware';
 import * as dotenv from "dotenv";
 import { NlpModule } from './nlp/nlp.module';
 import { UsageModule } from './usage/usage.module';

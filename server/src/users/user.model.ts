@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { getModelForClass } from '@typegoose/typegoose';
 import mongoose, { Document } from 'mongoose';
+import { UserTrigger } from './users.triggre';
 
 /**
  * DefaultUser(id, username, name, email, department, password)
  * PK: id
  * NOT NULL: username, name, email, password, department
+ * UNIQUE: username, email
  */
 class DefaultUser extends Document {
     @Prop( {required: true} )
@@ -28,7 +29,7 @@ class DefaultUser extends Document {
  * User(id, username, name, email, password, department, role, subscriptionExpiryDate)
  * PK: id
  * NOT NULL: username, name, email, password, department, role, subscriptionExpiryDate
- * DEFAULT: {role: 'user', subscriptionExpiryDate: 30 days from current date}
+ * UNIQUE: username, email
  */
 @Schema()
 export class User extends DefaultUser {
@@ -49,7 +50,7 @@ export class User extends DefaultUser {
  * Admin(id, username, name, email, password, department, role)
  * PK: id
  * NOT NULL: username, name, email, password, department, role
- * DEFAULT: {role: 'user'}
+ * UNIQUE: email, username
  */
 @Schema()
 export class Admin extends DefaultUser {
@@ -60,6 +61,8 @@ export class Admin extends DefaultUser {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 export const UserModel = mongoose.model('User', UserSchema);
+
 export const AdminSchema = SchemaFactory.createForClass(Admin);
 export const AdminModel = mongoose.model('Admin', AdminSchema);
 
+UserTrigger();
