@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Usage } from "./usage.model";
@@ -9,41 +9,37 @@ export class UsageService {
     constructor(
         @InjectModel('Usage') private readonly usageModel: Model<Usage>
     ) {}
-    
-    /**
-     * Returns all usage histories from database
-     * @returns Array[{@link Usage}]
-     */
-    async retrieveAll() {
-        const payload = await this.usageModel.find().exec()
-        return payload;
+
+    async retrieveAllUsagesForUser(userID: string) {
+        const usages = await this.usageModel.find({userID: userID});
+        return usages;
     }
     
-    /**
-     * Returns a specific usage history from database
-     * @param usageID ID of the target usage history
-     * @param userID ID of the user associated with the history
-     * @returns JSON {@link Usage}
-     */
-    async retrieveOne(usageID: string, userID: string) {
-        const usage = await this.checkRecordExistence(usageID, userID);
+    async retrieveAllUsagesForAdmin() {
+        const usages = await this.usageModel.find().exec()
+        return usages;
+    }
+    
+    async retrieveOneUsageForUser(usageID: string, userID: string) {
+        const usage = await this.checkUsageExistence(usageID, userID);
 
-        if (!usage) {
-            return false;
+        if (! usage) {
+            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND)
         }
 
         return usage;
     }
 
-    /**
-     * Adds a new usage history into database
-     * @param userID ID of the user associated with the usage
-     * @param serviceID ID of the service chosen by the user 
-     * @param input Input text of the usage
-     * @param output Output result of the usage
-     * @param options Options selected by the user
-     * @returns ID of the new usage history record
-     */
+    async retrieveOneUsageForAdmin(usageID: string) {
+        const usage = await this.usageModel.findById(usageID);
+
+        if (! usage) {
+            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND)
+        }
+        
+        return usage;
+    }
+
     async addUsage(
             userID: string, 
             serviceID: string,
@@ -51,6 +47,7 @@ export class UsageService {
             input: string, 
             output: string, 
             options: Record<string, string>) {
+
         const newUsage = new this.usageModel({
             userID: userID,
             serviceID: serviceID,
@@ -64,46 +61,27 @@ export class UsageService {
         return usage.id;
     }
 
-    /**
-     * Removes a specific usage history from database
-     * @param usageID ID of the target usage history to be removed
-     * @param userID ID of the user associated with the target usage history
-     * @returns Boolean {@linkcode true} if remove is successful; {@linkcode false} otherwise
-     */
     async removeUsage(
         usageID: string,
         userID: string
     ) {
-        const exist = await this.checkRecordExistence(usageID, userID);
-        if (! exist) {
-            return false;
+        const usage = await this.checkUsageExistence(usageID, userID);
+        if (! usage) {
+            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND)
         }
         await this.usageModel.deleteOne({_id: usageID});
-        return true;
+        return {
+            message: "Service deleted"
+        };
     }
 
-    /**
-     * Subroutine used to check if a record exists before performing CRUD operations
-     * @param usageID ID of the new/old usage to be inserted/deleted
-     * @param userID ID of the user making the request
-     * @returns JSON {@link Usage} if a record is found; {@linkcode false} otherwise
-     */
-    async checkRecordExistence(usageID: string, userID: string) {
-        try {
-            const usage = await this.usageModel.findOne({_id: usageID, userID: userID});
+    async checkUsageExistence(usageID: string, userID: string) {
+        const usage = await this.usageModel.findOne({_id: usageID, userID: userID});
 
-            if (usage) {
-                return usage;
-            }
-            return false;
-
-        } catch (err) {
-            Debug.devLog(userID, err)
-            if (err.name === "CastError") {
-                return false;
-            }
+        if (usage) {
+            return usage;
         }
-        
+        return false;
     }
     
     // TODO: Overwrites userID constraint to a usageID for administrators

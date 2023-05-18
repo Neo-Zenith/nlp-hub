@@ -10,7 +10,15 @@ export abstract class MissingFieldsMiddleware {
     }
 
     checkMissingFields(req: CustomRequest) {
-        const missingFields = this.requiredFields.filter((field) => ! req.body[field]);
+        var requestBody;
+
+        if (req.method === 'POST') {
+            requestBody = req.body;
+        } else if (req.method === 'GET') {
+            requestBody = req.params;
+        }
+
+        const missingFields = this.requiredFields.filter((field) => ! requestBody[field]);
         if (missingFields.length > 0) {
             const message = `Incomplete body (${missingFields.join(', ')})`
             Debug.devLog("MissingFieldsMiddleware", message)

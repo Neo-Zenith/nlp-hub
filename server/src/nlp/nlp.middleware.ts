@@ -32,9 +32,17 @@ export class RetrieveServiceMiddleware extends MissingFieldsMiddleware implement
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
         if (! this.checkMissingFields(req)) {
-            if (! mongoose.isValidObjectId(req.body['id'])) {
+            var requestBody;
+            if (req.method === 'POST') {
+                requestBody = req.body;
+            } else if (req.method === 'GET') {
+                requestBody = req.params;
+            }
+
+            if (! mongoose.isValidObjectId(requestBody['id'])) {
                 throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
             }
+            
             return next();
         }
     }
