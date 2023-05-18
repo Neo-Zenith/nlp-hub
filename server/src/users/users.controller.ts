@@ -1,6 +1,5 @@
-import { Body, Controller, HttpException, HttpStatus, Post } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { UserService } from "./users.service";
-import { Debug } from "src/custom/debug/debug";
 
 @Controller('users')
 export class UserController {
@@ -33,9 +32,6 @@ export class UserController {
         @Body('password') password: string
     ) {
         const accessToken = await this.userService.verifyUser(username, password);
-        if (! accessToken) {
-            throw new HttpException("Unauthorised (Invalid Credentials)", HttpStatus.UNAUTHORIZED)
-        }
         return { accessToken: accessToken };
     }
 }

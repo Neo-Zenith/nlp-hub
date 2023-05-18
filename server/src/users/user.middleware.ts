@@ -51,8 +51,7 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 		
 		// TODO find out other errors
 		} catch (err) {
-			Debug.devLog(null, err);
-			console.log(err.name)
+			Debug.devLog('CheckUserAuthMiddleware', err);
 		}
 	}
 
@@ -118,7 +117,7 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 
 		// TODO find out other errors
 		} catch (err) {
-			Debug.devLog(null, err);
+			Debug.devLog('CheckAdminAuthMiddleware', err);
 		}
 	}
 
