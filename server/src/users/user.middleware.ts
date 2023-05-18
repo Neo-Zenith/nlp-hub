@@ -43,8 +43,9 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 					req.payload['authenticated'] = false 
 					return this.allowAccessToRoute(req, res, next);
 				} else if (err.name === "TokenExpiredError") {
-					req.payload['authenticated'] = false 
-					return res.status(401).send({ message: 'Unauthorized (Token Expired)' });
+					req.payload['authenticated'] = false;
+					Debug.devLog('CheckUserAuthMiddleware', "Token expired")
+					return res.status(401).send({ message: 'Access token expired' });
 				}			
 			}
 		
@@ -58,7 +59,9 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
 			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-				return res.status(400).send({message: "User already logged in"})
+				const message = "User already logged in"
+				Debug.devLog('CheckUserAuthMiddleware', message)
+				return res.status(400).send({ message: message })
 			}
 			return next()
 		}
@@ -66,7 +69,9 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
 			return next();
 		}
-		return res.status(401).send({message: "User not authenticated"});
+		const message = "User not authenticated"
+		Debug.devLog('CheckUserAuthMiddleware', message)
+		return res.status(401).send({ message: message  });
 	}
 }
 
@@ -79,7 +84,7 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         const authHeader = req.headers.authorization;
 		req.payload = {};
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (! authHeader || ! authHeader.startsWith('Bearer ')) {
 			req.payload['authenticated'] = false 
 			return this.allowAccessToRoute(req, res, next);
 		}
@@ -105,7 +110,9 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 					return this.allowAccessToRoute(req, res, next);
 				} else if (err.name === "TokenExpiredError") {
 					req.payload['authenticated'] = false 
-					return res.status(401).send({ message: 'Access token expired' });
+					const message = 'Access token expired'
+					Debug.devLog("CheckAdminAuthMiddleware", message)
+					return res.status(401).send({ message: message });
 				}			
 			}
 
@@ -118,7 +125,9 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
 			if (req.baseUrl === '/admins/login' || req.baseUrl === '/admins/register') {
-				return res.status(400).send({ message: "User already logged in" })
+				const message = "User already logged in"
+				Debug.devLog("CheckAdminAuthMiddleware", message);
+				return res.status(400).send({ message: message })
 			}
 			return next();
 		}
@@ -126,8 +135,9 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 		if (req.baseUrl === '/admins/login' || req.baseUrl === '/admins/register') {
 			return next();
 		}
-
-		return res.status(403).send({ message: "User unauthorized" })
+		const message = "User unauthorized"
+		Debug.devLog("CheckAdminAuthMiddleware", message)
+		return res.status(403).send({ message: message })
 	}
 }
 
