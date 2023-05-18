@@ -28,7 +28,7 @@ export class AppModule implements NestModule {
 		consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
 		.forRoutes(
 			'/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*',
-			{ path: 'nlp/services/:id/endpoints', method: RequestMethod.GET });
+			{ path: '/nlp/services/:id/endpoints', method: RequestMethod.GET });
 	}
 }
 

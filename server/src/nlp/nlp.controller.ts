@@ -12,34 +12,21 @@ export class NlpController {
     // route to register NLP API to server
     @Post('register')
     async subscribeNlp(
-        @Body('name') apiName: string,
-        @Body('version') apiVersion: string,
-        @Body('description') apiDesc: string,
-        @Body('endpoints') apiEndpoints: NlpEndpoint[],
-        @Body('config') apiConfig: NlpConfig[]
+        @Body('name') serviceName: string,
+        @Body('version') serviceVersion: string,
+        @Body('description') serviceDesc: string,
+        @Body('address') serviceAddr: string,
+        @Body('endpoints') serviceEndpoints: NlpEndpoint[],
+        @Body('config') serviceConfig: NlpConfig[]
     ) {
-        try {
-            const apiID = await this.nlpService.subscribe(
-                apiName,
-                apiVersion,
-                apiDesc,
-                apiEndpoints,
-                apiConfig);
-            return {id: apiID};
-        } catch (err) {
-            Debug.devLog('subscribeNlp', err);
-            // occurs when saving Nlp without all required fields
-            if (err.name === 'ValidationError') {
-                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
-            } 
-            // occurs when saving NlpConfig/NlpEndpoint without all required fields
-            else if (err.name === 'TypeError') {
-                throw new HttpException('Bad Request (Incomplete Body)', HttpStatus.BAD_REQUEST)
-            }
-            else if (err.name === 'HttpException') {
-                throw new HttpException('Duplicated Service Registered', HttpStatus.CONFLICT);
-            }
-        }
+        const serviceID = await this.nlpService.subscribe(
+            serviceName,
+            serviceVersion,
+            serviceDesc,
+            serviceAddr,
+            serviceEndpoints,
+            serviceConfig);
+        return {id: serviceID};
     }
 
     // route to update NLP API info (version/routes/name)
@@ -49,6 +36,7 @@ export class NlpController {
         @Body('name') apiName: string,
         @Body('version') apiVersion: string,
         @Body('description') apiDesc: string,
+        @Body('address') apiAddr: string,
         @Body('endpoints') apiEndpoints: NlpEndpoint[],
         @Body('config') apiConfig: NlpConfig[]
     ) {
@@ -61,6 +49,7 @@ export class NlpController {
                 apiName,
                 apiVersion,
                 apiDesc,
+                apiAddr,
                 apiEndpoints,
                 apiConfig
             )
@@ -163,7 +152,7 @@ export class NlpController {
                 apiName: api.name,
                 apiVersion: api.version,
                 apiDescription: api.description,
-                url: endpoint.url,
+                endpoint: endpoint.endpoint,
                 method: endpoint.method
             }
 
@@ -233,7 +222,7 @@ export class NlpController {
                 apiName: api.name,
                 apiVersion: api.version,
                 apiDescription: api.description,
-                url: endpoint.url,
+                endpoint: endpoint.endpoint,
                 method: endpoint.method
             }
 

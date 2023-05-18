@@ -22,7 +22,7 @@ export class QueryService {
         const endpointID = await this.parseConfig(serviceID, config);
         const endpoint = (await this.nlpEndpointModel.findById(endpointID).exec()).toObject();
         const method = endpoint.method;
-        const url = endpoint.url;
+        const url = endpoint.endpoint;
         
         const payload = {
             message: input,

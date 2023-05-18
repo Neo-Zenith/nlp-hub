@@ -1,8 +1,9 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module } from "@nestjs/common";
 import { NlpController } from "./nlp.controller";
 import { NlpService } from "./nlp.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { NlpConfigSchema, NlpEndpointSchema, NlpSchema } from "./nlp.model";
+import { RegisterServiceMiddleware } from "./nlp.middleware";
 
 @Module({
     imports: [
@@ -14,4 +15,10 @@ import { NlpConfigSchema, NlpEndpointSchema, NlpSchema } from "./nlp.model";
     providers: [NlpService]
 })
 
-export class NlpModule {};
+export class NlpModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+          .apply(RegisterServiceMiddleware)
+          .forRoutes('/nlp/register');
+    }
+};

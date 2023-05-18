@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { Nlp, NlpConfig, NlpEndpoint } from "./nlp.model";
+import { Debug } from "src/custom/debug/debug";
 
 @Injectable()
 export class NlpService {
@@ -11,110 +12,106 @@ export class NlpService {
         @InjectModel('NlpConfig') private readonly nlpConfigModel: Model<NlpConfig>
     ) {}
 
-    /**
-     * Register API 
-     * @param apiName Name of the API
-     * @param apiVersion Version of the API
-     * @param apiDescription Description of the API
-     * @param apiEndpoints Endpoints of the API
-     * @returns ID of the registered API
-     */
+    // Subscribes a service to the server
     async subscribe(
-        apiName: string, 
-        apiVersion: string, 
-        apiDescription: string, 
-        apiEndpoints: NlpEndpoint[],
-        apiConfig: NlpConfig[]) {
-        const newAPI = new this.nlpModel({
-            name: apiName,
-            version: apiVersion,
-            description: apiDescription,
-        })
-        const api = await newAPI.save();
+        serviceName: string, 
+        serviceVersion: string, 
+        serviceDescription: string, 
+        serviceAddress: string,
+        serviceEndpoints: NlpEndpoint[],
+        serviceConfig: NlpConfig[]) {
 
-        for (let i = 0; i < apiEndpoints.length; i ++) {
-            const newAPIEndpoint = new this.nlpEndpointModel({
-                serviceID: newAPI.id,
-                method: apiEndpoints[i].method,
-                options: apiEndpoints[i].options,
-                url: apiEndpoints[i].url
-            })
-            await newAPIEndpoint.save();
+        const newService = new this.nlpModel({
+            name: serviceName,
+            version: serviceVersion,
+            description: serviceDescription,
+            address: serviceAddress
+        });
+        const service = await newService.save();
 
-            const newAPIConfig = new this.nlpConfigModel({
-                serviceID: newAPI.id,
-                task: apiConfig[i].task,
-                endpointID: newAPIEndpoint.id
+        for (let i = 0; i < serviceEndpoints.length; i ++) {
+            const newEndpoint = new this.nlpEndpointModel({
+                serviceID: service.id,
+                method: serviceEndpoints[i].method,
+                options: serviceEndpoints[i].options,
+                endpoint: serviceEndpoints[i].endpoint
+            });
+            const endpoint = await newEndpoint.save();
+
+            const newConfig = new this.nlpConfigModel({
+                serviceID: service.id,
+                task: serviceConfig[i].task,
+                endpointID: endpoint.id
             })
-            await newAPIConfig.save();
+            await newConfig.save();
         }
-
-        return api.id;
+        return service.id;
     }
 
-    /**
-     * Unregister API from service
-     * @param apiID ID of the API to be unregistered
-     * @returns Boolean {@linkcode true} if successful unregister; {@linkcode false} otherwise
-     */
-    async unsubscribe(apiID: string) {
-        const apiExist = await this.checkApiExistence(apiID);
-        if (! apiExist) {
-            return false;
+    // Removes a service from the server
+    async unsubscribe(serviceID: string) {
+        const service = await this.checkServiceExist(serviceID);
+        const endpointsDeleted = await this.nlpEndpointModel.deleteMany({serviceID: service.id});
+        const configsDeleted = await this.nlpConfigModel.deleteMany({serviceID: service.id});
+        const serviceDeleted = await this.nlpModel.deleteOne({_id: service.id});
+
+        const returnData = {
+            serviceDeleted: serviceDeleted.deletedCount,
+            endpointsDeleted: endpointsDeleted.deletedCount,
+            configsDeleted: configsDeleted.deletedCount
         }
-        await this.nlpEndpointModel.deleteMany({serviceID: apiID});
-        await this.nlpConfigModel.deleteMany({serviceID: apiID});
-        await this.nlpModel.deleteOne({_id: apiID});
-        return true;
+
+        return returnData;
     }
 
-    // Get all services currently registered in the server
+    // Retrieves all services from the server
     async retrieveAllServices() {
-        const payload = await this.nlpModel.find().exec()
-        return payload;
+        const services = await this.nlpModel.find().exec();
+        return services;
     }
 
-    // Get details of a specific API
-    async retrieveOneService(apiID: string) {
-        const api = await this.checkApiExistence(apiID);
-        if (! api) {
-            return false;
-        }
-        return api;
+    // Retrieves a specific service from the server
+    async retrieveOneService(serviceID: string) {
+        const service = await this.checkServiceExist(serviceID);
+        return service;
     }
 
+    // Retrieves all endpoints from the server
     async retrieveAllEndpoints() {
-        const payload = await this.nlpEndpointModel.find().exec();
-        return payload;
-    }
-
-    async retrieveOneEndpoint(endpointID: string) {
-        const endpoint = await this.nlpEndpointModel.findById(endpointID);
-
-        if (!endpoint) {
-            return false;
-        }
-
-        return endpoint;
-    }
-
-    async retrieveEndpointsForOneService(serviceID: string) {
-        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID }).exec();
-        if (!endpoints) {
-            return false;
-        }
-
+        const endpoints = await this.nlpEndpointModel.find().exec();
         return endpoints;
     }
 
-    // Check if API exists before performing modification to DB
-    private async checkApiExistence(apiID: string) {
-        const api = await this.nlpModel.findById(apiID);;
-        const endpoint = await this.nlpEndpointModel.find({serviceID: apiID});
-
-        if (! api || ! endpoint) {
-            return false;
+    // Retrieves a specific endpoint 
+    async retrieveOneEndpoint(endpointID: string) {
+        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+        if (! endpoint) {
+            throw new HttpException("Endpoint Not Found (Invalid ID)", HttpStatus.NOT_FOUND);
         }
-        return api;
+        return endpoint;
+    }
+
+    // Retrieves endpoints of a specific service
+    async retrieveEndpointsForOneService(serviceID: string) {
+        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID }).exec();
+        if (endpoints.length === 0) {
+            throw new HttpException("Endpoints Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
+        }
+        return endpoints;
+    }
+
+    // Check if service exists before performing modification to DB
+    private async checkServiceExist(serviceID: string) {
+        const service = await this.nlpModel.findById(serviceID);;
+        const endpoints = await this.nlpEndpointModel.find({serviceID: serviceID});
+
+        // A service without any endpoint is invalid
+        if (! service || endpoints.length === 0) {
+            Debug.devLog(
+                'checkServiceExist', 
+                "service: " + service + "; " + "endpoints: " + endpoints)
+            throw new HttpException("Service Not Found (Invalid ID", HttpStatus.NOT_FOUND);
+        }
+        return service;
     }
 }
