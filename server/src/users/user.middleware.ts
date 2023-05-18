@@ -20,49 +20,41 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 		const authHeader = req.headers.authorization;
 		req.payload = {};
 		if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-			req.payload['authenticated'] = false 
+			req.payload['authenticated'] = false;
 			return this.allowAccessToRoute(req, res, next);
 		}
 
+		const authToken = authHeader.split(' ')[1];
 		try {
-			const authToken = authHeader.split(' ')[1];
-			try {
-				const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-				// token valid, now check if the accessed route is allowed
-				// not allowed routes when authenticated: signup/login
-				// not allowed routes when not authenticated: everything except signup/login
-				req.payload['id'] = decoded.id;
-				req.payload['authenticated'] = true 
-				req.payload['role'] = decoded.role
-				
-				return this.allowAccessToRoute(req, res, next);
+			const decodedData = jwt.verify(authToken, process.env.JWT_SECRET);
+			req.payload['id'] = decodedData.id;
+			req.payload['authenticated'] = true;
+			req.payload['role'] = decodedData.role;
 
-			} catch (err) {
-				Debug.devLog('CheckUserAuthMiddleware', err);
-				if (err.name === "JsonWebTokenError") {
-					req.payload['authenticated'] = false 
-					return this.allowAccessToRoute(req, res, next);
-				} else if (err.name === "TokenExpiredError") {
-					req.payload['authenticated'] = false;
-					Debug.devLog('CheckUserAuthMiddleware', "Token expired")
-					return res.status(401).send({ message: 'Access token expired' });
-				}			
-			}
-		
-		// TODO find out other errors
+			// token valid, now check if the accessed route is allowed
+			return this.allowAccessToRoute(req, res, next);
+
 		} catch (err) {
 			Debug.devLog('CheckUserAuthMiddleware', err);
+			// Invalid token 
+			if (err.name === "JsonWebTokenError") {
+				req.payload['authenticated'] = false;
+				return this.allowAccessToRoute(req, res, next);
+			} else if (err.name === "TokenExpiredError") { // Token expired
+				req.payload['authenticated'] = false;
+				return res.status(401).send({ message: 'Access token expired' });
+			}			
 		}
 	}
 
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
 			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-				const message = "User already logged in"
-				Debug.devLog('CheckUserAuthMiddleware', message)
-				return res.status(400).send({ message: message })
+				const message = "User already logged in";
+				Debug.devLog('CheckUserAuthMiddleware', message);
+				return res.status(400).send({ message: message });
 			}
-			return next()
+			return next();
 		}
 		
 		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
@@ -74,56 +66,46 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 	}
 }
 
-/**
- * Authentication check for admin accounts
- * Allow access to restricted routes
- */
+
+
 @Injectable()
 export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         const authHeader = req.headers.authorization;
 		req.payload = {};
         if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-			req.payload['authenticated'] = false 
+			req.payload['authenticated'] = false;
 			return this.allowAccessToRoute(req, res, next);
 		}
 
+		const authToken = authHeader.split(' ')[1];
 		try {
-			const authToken = authHeader.split(' ')[1];
-			try {
-				const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-				// token valid, now check if user is an admin
-				req.payload['id'] = decoded.id;
-				req.payload['role'] = decoded.role
+			const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
+			// token valid, now check if user is an admin
+			req.payload['id'] = decoded.id;
+			req.payload['role'] = decoded.role
 
-				if (decoded.role != 'admin') {
-					req.payload['authenticated'] = false 
-				} else {
-					req.payload['authenticated'] = true 
-				}
-				return this.allowAccessToRoute(req, res, next);
-			} catch (err) {
-				Debug.devLog('CheckAdminAuthMiddleware', err);
-				if (err.name === "JsonWebTokenError") {
-					req.payload['authenticated'] = false 
-					return this.allowAccessToRoute(req, res, next);
-				} else if (err.name === "TokenExpiredError") {
-					req.payload['authenticated'] = false 
-					const message = 'Access token expired'
-					Debug.devLog("CheckAdminAuthMiddleware", message)
-					return res.status(401).send({ message: message });
-				}			
+			if (decoded.role !== 'admin') {
+				req.payload['authenticated'] = false 
+			} else {
+				req.payload['authenticated'] = true 
 			}
-
-		// TODO find out other errors
+			return this.allowAccessToRoute(req, res, next);
 		} catch (err) {
 			Debug.devLog('CheckAdminAuthMiddleware', err);
+			if (err.name === "JsonWebTokenError") {
+				req.payload['authenticated'] = false 
+				return this.allowAccessToRoute(req, res, next);
+			} else if (err.name === "TokenExpiredError") {
+				req.payload['authenticated'] = false 
+				return res.status(401).send({ message: "Access token expired" });
+			}			
 		}
 	}
 
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		if (req.payload.authenticated) {
-			if (req.baseUrl === '/admins/login' || req.baseUrl === '/admins/register') {
+			if (req.baseUrl === '/admins/login') {
 				const message = "User already logged in"
 				Debug.devLog("CheckAdminAuthMiddleware", message);
 				return res.status(400).send({ message: message })
@@ -131,7 +113,7 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 			return next();
 		}
 		
-		if (req.baseUrl === '/admins/login' || req.baseUrl === '/admins/register') {
+		if (req.baseUrl === '/admins/login') {
 			return next();
 		}
 		const message = "User unauthorized"
@@ -139,6 +121,8 @@ export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
 		return res.status(403).send({ message: message })
 	}
 }
+
+
 
 @Injectable()
 export class RegisterUserMiddleware extends MissingFieldsMiddleware implements NestMiddleware {

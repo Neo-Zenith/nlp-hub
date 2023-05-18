@@ -4,40 +4,53 @@ import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
-import { User } from "./user.model";
+import { Admin, User } from "./user.model";
 dotenv.config();
 
 @Injectable() 
 export class UserService {
     constructor(
-        @InjectModel('User') private readonly userModel: Model<User>
+        @InjectModel('User') private readonly userModel: Model<User>,
+        @InjectModel('Admin') private readonly adminModel: Model<Admin>
     ) {}
     
     async insertUser( username: string, 
                 name: string, 
                 email: string,
                 password: string,
-                department: string) {
+                department: string,
+                role: string) {
 
         // hash the password before saving to db
         const hashedPassword = await this.hashPassword(password);
 
-        // save user 
-        const newUser = new this.userModel({
-            username,
-            name,
-            email,
-            password: hashedPassword,
-            department
-        })
-        const user = await newUser.save();
-        return user.id;
+        if (role === 'user') {
+            // save user 
+            const newUser = new this.userModel({
+                username,
+                name,
+                email,
+                password: hashedPassword,
+                department
+            })
+            const user = await newUser.save();
+            return user.id;
+        } else { // save admin
+            const newAdmin = new this.adminModel({
+                username,
+                name,
+                email,
+                password: hashedPassword,
+                department
+            })
+            const admin = await newAdmin.save();
+            return admin.id;
+        }
     }
 
-
-    async verifyUser(username: string, password: string) {
+    async verifyUser(username: string, password: string, role: string) {
         // find if the username exists
-        const user = await this.existingUsername(username);
+        const user = await this.existingUsername(username, role);
         if (! user) {
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }
@@ -53,37 +66,26 @@ export class UserService {
         }
     }
 
-    /**
-     * Subroutine to hash the password before saving to db using bcrypt
-     * @param password Unhashed password
-     * @returns Hashed password
-     */
     private async hashPassword(password: string) {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         return hashedPassword;
     }
 
-    /**
-     * Using a random 128-letter string as key to generate access token
-     * @param username Username of the user
-     * @param id ID of the user
-     * @param role Role of the user ('admin'/'user')
-     * @returns Access token
-     */
     private generateAccessToken(username: string, id: string, role: string) {
         const payload = {username: username, id: id, role: role};
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
         return accessToken;
     }
 
-    /**
-     * Subroutine to check if username exists in db
-     * @param username Username of the user
-     * @returns Boolean {@linkcode false} if not exists; JSON {@link User} otherwise
-     */
-    private async existingUsername(username: string) {
-        const user = await this.userModel.findOne({username: username})
+    private async existingUsername(username: string, role: string) {
+        var user;
+        if (role === 'user') {
+            user = await this.userModel.findOne({username: username})
+        } else {
+            user = await this.adminModel.findOne({username: username})
+        }
+        
         if (user) {
             return user;
         }

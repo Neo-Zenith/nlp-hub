@@ -22,12 +22,15 @@ dotenv.config();
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
 		// access protocol 
-		consumer.apply(CheckUserAuthMiddleware).exclude(
-			'/nlp/unregister', '/nlp/register', '/nlp/update'
-		).forRoutes('*');
+		consumer.apply(CheckUserAuthMiddleware)
+		.exclude(
+			'/admins/login', '/admins/register', '/nlp/unregister', '/nlp/register', '/nlp/update'
+		)
+		.forRoutes('*');
+
 		consumer.apply(CheckAdminAuthMiddleware).exclude('/nlp/services/*')
 		.forRoutes(
-			'/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*',
+			'/admins/*','/nlp/unregister', '/nlp/register', '/nlp/update', '/nlp/endpoints/*',
 			{ path: '/nlp/services/:id/endpoints', method: RequestMethod.GET });
 	}
 }
