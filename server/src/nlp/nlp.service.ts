@@ -15,13 +15,15 @@ export class NlpService {
         serviceVersion: string, 
         serviceDescription: string, 
         serviceAddress: string,
+        serviceType: string,
         serviceEndpoints: NlpEndpoint[]) {
 
         const newService = new this.nlpModel({
             name: serviceName,
             version: serviceVersion,
             description: serviceDescription,
-            address: serviceAddress
+            baseAddress: serviceAddress,
+            type: serviceType
         });
         const service = await newService.save();
 
@@ -30,7 +32,7 @@ export class NlpService {
                 serviceID: service.id,
                 method: serviceEndpoints[i].method,
                 options: serviceEndpoints[i].options,
-                endpoint: serviceEndpoints[i].endpoint,
+                endpointPath: serviceEndpoints[i].endpointPath,
                 task: serviceEndpoints[i].task
             });
             await newEndpoint.save();

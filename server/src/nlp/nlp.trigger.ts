@@ -7,7 +7,7 @@ export function NlpTrigger() {
     NlpSchema.pre('save', async function(next) {
         // Find if another service of the same address already exist
         const service = await NlpModel.findOne({
-            address: this.address
+            baseAddress: this.baseAddress
         })
         
         if (service) {
@@ -39,7 +39,7 @@ export function NlpEndpointTrigger() {
         // Unique constraint check for <serviceID, endpoint, method>
         const endpointExist = await NlpEndpointModel.findOne({
             serviceID: this.serviceID,
-            endpoint: this.endpoint,
+            endpointPath: this.endpointPath,
             method: this.method
         })
         if (endpointExist) {

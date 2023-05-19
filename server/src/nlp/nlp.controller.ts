@@ -15,6 +15,7 @@ export class NlpController {
         @Body('version') serviceVersion: string,
         @Body('description') serviceDesc: string,
         @Body('address') serviceAddr: string,
+        @Body('type') serviceType: string,
         @Body('endpoints') serviceEndpoints: NlpEndpoint[]
     ) {
         const serviceID = await this.nlpService.subscribe(
@@ -22,6 +23,7 @@ export class NlpController {
             serviceVersion,
             serviceDesc,
             serviceAddr,
+            serviceType,
             serviceEndpoints);
         return { id: serviceID };
     }
@@ -34,6 +36,7 @@ export class NlpController {
         @Body('version') serviceVersion: string,
         @Body('description') serviceDesc: string,
         @Body('address') serviceAddr: string,
+        @Body('type') serviceType: string,
         @Body('endpoints') serviceEndpoints: NlpEndpoint[]
     ) {
         const deleted = await this.nlpService.unsubscribe(serviceID);
@@ -45,6 +48,7 @@ export class NlpController {
             serviceVersion,
             serviceDesc,
             serviceAddr,
+            serviceType,
             serviceEndpoints
         )
 
@@ -99,7 +103,7 @@ export class NlpController {
         var returnData = []
 
         for (const endpoint of endpoints) {
-            const service = services.find((s) => s._id === endpoint.serviceID);
+            const service = services.find((s) => s.id === endpoint.serviceID);
             if (! service) {
                 throw new HttpException(
                     "Foreign key constraint failed", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -107,12 +111,10 @@ export class NlpController {
 
             const endpointData = {
                 id: endpoint._id,
-                serviceName: service.name,
-                serviceVersion: service.version,
-                serviceDescription: service.description,
-                serviceAddress: service.address,
-                endpoint: endpoint.endpoint,
+                serviceID: service._id,
+                endpointPath: endpoint.endpointPath,
                 method: endpoint.method,
+                task: endpoint.task,
                 options: endpoint.options
             }
 
@@ -130,12 +132,10 @@ export class NlpController {
         // drop sensitive data like api endpoints and rename id before sending to client
         const endpointData = {
             id: service._id,
-            serviceName: service.name,
-            serviceVersion: service.version,
-            serviceDescription: service.description,
-            serviceAddress: service.address,
-            endpoint: endpoint.endpoint,
+            serviceID: service._id,
+            endpointPath: endpoint.endpointPath,
             method: endpoint.method,
+            task: endpoint.task,
             options: endpoint.options
         }
 
@@ -145,18 +145,13 @@ export class NlpController {
 
     @Get('services/:id/endpoints')
     async getServiceEndpoint(@Param('id') serviceID: string) {
-        const service = await this.nlpService.retrieveOneService(serviceID);
         const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID);
         var returnData = []
 
         for (const endpoint of endpoints) {
             const endpointData = {
                 id: endpoint._id,
-                serviceName: service.name,
-                serviceVersion: service.version,
-                serviceDescription: service.description,
-                serviceAddress: service.address,
-                endpoint: endpoint.endpoint,
+                task: endpoint.task,
                 options: endpoint.options,
                 method: endpoint.method
             }

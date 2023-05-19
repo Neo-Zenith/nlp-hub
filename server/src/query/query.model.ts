@@ -22,9 +22,6 @@ export class Query extends Document {
     endpointID: string;
 
     @Prop({ required: true })
-    input: string;
-
-    @Prop({ required: true })
     output: string;
 
     @Prop({ type: Types.Map, ref: NlpEndpoint.name, of: String })

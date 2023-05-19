@@ -13,50 +13,67 @@ export class QueryService {
         @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
     ) {}
 
-    async serviceRequest(userID: string,
-                        input: string, 
+    async serviceQuery(userID: string,
                         serviceID: string, 
-                        config: string, 
+                        endpointID: string, 
                         options: Record<string, string>) {
-        const endpointID = await this.parseConfig(serviceID, config);
-        const endpoint = (await this.nlpEndpointModel.findById(endpointID).exec()).toObject();
-        const method = endpoint.method;
-        const url = endpoint.endpoint;
         
-        const payload = {
-            message: input,
-            options: options
-        };
-        
-        let response;
-        
-        if (method === 'POST') {
-            response = await axios.post(url, payload);
-        } else if (method === 'GET') {
-            response = await axios.get(url, { params: payload });
-        } else {
-            throw new HttpException("Invalid Request (Invalid HTTP Method)", HttpStatus.BAD_REQUEST)
+        const service = await this.retrieveService(serviceID);
+        const endpoint = await this.retrieveEndpoint(endpointID);
+        const fullPath = service.baseAddress + endpoint.endpointPath;
+
+        let response, config;
+        if (endpoint.method === 'POST') {
+            config = {
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+            };
+            response = await axios.post(fullPath, options, config);
+
+        } else if (endpoint.method === 'GET') {
+            const params = options;
+            response = await axios.get(fullPath, { params })
         }
+
         const query = new this.queryModel({
-            userID: userID,
-            serviceID: serviceID,
-            input: input,
+            userID,
+            serviceID,
+            endpointID,
             output: JSON.stringify(response.data),
-            endpointID: endpointID,
-            options: options
+            options
         })
+        
         await query.save();
-
-        return response.data;
+        return { 
+            id: query.id,
+            output: response.data
+        }
     }
 
-    // retrieves the options of an NLP API
-    async retrieveConfig(serviceID: string) {
-        
+    async getAllUsageForUser(userID: string) {
+        const usages = await this.queryModel.find({userID: userID});
+        return usages;
     }
 
-    // maps the configuration to the associated endpoint
-    private async parseConfig(serviceID: string, configTask: string) {
-        
+    async getAllUsageForAdmin() {
+        const usages = await this.queryModel.find().exec();
+        return usages;
+    }
+
+    private async retrieveService(serviceID: string) {
+        const service = await this.nlpModel.findById(serviceID);
+        if (! service) {
+            throw new HttpException("Service not found", HttpStatus.NOT_FOUND)
+        }
+        return service;
+    }
+
+    private async retrieveEndpoint(endpointID: string) {
+        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+        if (! endpoint) {
+            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND);
+        }
+        return endpoint;
     }
 }

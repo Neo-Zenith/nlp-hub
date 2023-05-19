@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, HttpException, NestMiddleware, HttpStatus } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
@@ -8,14 +8,8 @@ import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 dotenv.config();
 
 
-interface CheckAuthMiddleware extends NestMiddleware {
-	use(req: CustomRequest, res: Response, next: NextFunction);
-	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction);
-}
-
-
 @Injectable()
-export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
+export class CheckAuthMiddleware {
 	use(req: CustomRequest, res: Response, next: NextFunction) {
 		const authHeader = req.headers.authorization;
 		req.payload = {};
@@ -31,97 +25,59 @@ export class CheckUserAuthMiddleware implements CheckAuthMiddleware {
 			req.payload['authenticated'] = true;
 			req.payload['role'] = decodedData.role;
 
-			// token valid, now check if the accessed route is allowed
-			return this.allowAccessToRoute(req, res, next);
-
 		} catch (err) {
-			Debug.devLog('CheckUserAuthMiddleware', err);
+			Debug.devLog('CheckAuthMiddleware', err);
 			// Invalid token 
 			if (err.name === "JsonWebTokenError") {
 				req.payload['authenticated'] = false;
-				return this.allowAccessToRoute(req, res, next);
+				return res.status(401).send({ message: 'Access token invalid' });
 			} else if (err.name === "TokenExpiredError") { // Token expired
 				req.payload['authenticated'] = false;
 				return res.status(401).send({ message: 'Access token expired' });
-			}			
+			} 
 		}
+
+		// token valid, now check if the accessed route is allowed
+		return this.allowAccessToRoute(req, res, next);
 	}
 
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
+		const restrictedRoutes = [
+			'/admins/register', '/nlp/unregister', 
+			'/nlp/register', '/nlp/update', '/nlp/endpoints'
+		]
+
 		if (req.payload.authenticated) {
-			if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-				const message = "User already logged in";
-				Debug.devLog('CheckUserAuthMiddleware', message);
-				return res.status(400).send({ message: message });
+			if (req.payload.role === 'user') {
+				if (restrictedRoutes.some((route) => req.baseUrl.startsWith(route))) {
+					throw new HttpException("User not authorized", HttpStatus.FORBIDDEN)
+				}
+
+				if (req.baseUrl.startsWith('/users')) {
+					throw new HttpException("User already logged in", HttpStatus.UNAUTHORIZED)
+				}
+				return next();
 			}
+			else {
+				if (restrictedRoutes.some((route) => req.baseUrl.startsWith(route))
+					&& ! req.baseUrl.startsWith('/admins/login')) {
+					return next();
+				}
+
+				if (req.baseUrl.startsWith('/admins/login')) {
+					throw new HttpException("User already logged in", HttpStatus.UNAUTHORIZED)
+				}
+				return next();
+			}
+		}
+
+		if (req.baseUrl.startsWith('/users') 
+			|| req.baseUrl.startsWith('/admins/login')) {
 			return next();
 		}
-		
-		if (req.baseUrl === '/users/login' || req.baseUrl === '/users/register') {
-			return next();
-		}
-		const message = "User not authenticated"
-		Debug.devLog('CheckUserAuthMiddleware', message)
-		return res.status(401).send({ message: message  });
+		throw new HttpException("User not authenticated", HttpStatus.UNAUTHORIZED)
 	}
 }
-
-
-
-@Injectable()
-export class CheckAdminAuthMiddleware implements CheckAuthMiddleware {
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        const authHeader = req.headers.authorization;
-		req.payload = {};
-        if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-			req.payload['authenticated'] = false;
-			return this.allowAccessToRoute(req, res, next);
-		}
-
-		const authToken = authHeader.split(' ')[1];
-		try {
-			const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-			// token valid, now check if user is an admin
-			req.payload['id'] = decoded.id;
-			req.payload['role'] = decoded.role
-
-			if (decoded.role !== 'admin') {
-				req.payload['authenticated'] = false 
-			} else {
-				req.payload['authenticated'] = true 
-			}
-			return this.allowAccessToRoute(req, res, next);
-		} catch (err) {
-			Debug.devLog('CheckAdminAuthMiddleware', err);
-			if (err.name === "JsonWebTokenError") {
-				req.payload['authenticated'] = false 
-				return this.allowAccessToRoute(req, res, next);
-			} else if (err.name === "TokenExpiredError") {
-				req.payload['authenticated'] = false 
-				return res.status(401).send({ message: "Access token expired" });
-			}			
-		}
-	}
-
-	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
-		if (req.payload.authenticated) {
-			if (req.baseUrl === '/admins/login') {
-				const message = "User already logged in"
-				Debug.devLog("CheckAdminAuthMiddleware", message);
-				return res.status(400).send({ message: message })
-			}
-			return next();
-		}
-		
-		if (req.baseUrl === '/admins/login') {
-			return next();
-		}
-		const message = "User unauthorized"
-		Debug.devLog("CheckAdminAuthMiddleware", message)
-		return res.status(403).send({ message: message })
-	}
-}
-
 
 
 @Injectable()

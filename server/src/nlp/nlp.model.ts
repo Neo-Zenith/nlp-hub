@@ -8,6 +8,11 @@ import { NlpEndpointTrigger, NlpTrigger } from './nlp.trigger';
  * UNIQUE: address
  * NOT NULL: name, version, address
  */
+
+export enum NlpTypes {
+    "SUD", "NER"
+}
+
 @Schema()
 export class Nlp extends Document {
     @Prop({ required: true })
@@ -17,10 +22,13 @@ export class Nlp extends Document {
     version: string;
 
     @Prop({ required: true })
-    address: string;
+    baseAddress: string;
 
     @Prop()
     description: string;
+
+    @Prop({ required: true, enum: NlpTypes })
+    type: string;
 }
 
 /**
@@ -42,7 +50,7 @@ export class NlpEndpoint extends Document {
     options: Record<string, any>;
 
     @Prop({ required: true })
-    endpoint: string;
+    endpointPath: string;
 
     @Prop({ required: true })
     task: string;

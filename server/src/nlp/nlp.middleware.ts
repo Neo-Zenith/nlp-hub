@@ -3,12 +3,13 @@ import { NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
+import { NlpTypes } from './nlp.model';
 
 
 @Injectable()
 export class RegisterServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['name', 'version', 'description', 'address', 
+        const requiredFields = ['name', 'version', 'description', 'address', 'type',
         'endpoints'];
         super(requiredFields);
         this.requiredFields = requiredFields;
@@ -74,13 +75,18 @@ export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements 
 function validateField(req: CustomRequest) {
     for (const endpoint of req.body['endpoints']) {
         if (typeof endpoint !== 'object' || 
-            ! ('endpoint' in endpoint) ||
+            ! ('endpointPath' in endpoint) ||
             ! ('method' in endpoint) ||
             ! ('options' in endpoint) ||
             ! ('task' in endpoint)) {
                 throw new HttpException(
-                    "Incomplete body (endpoint)", HttpStatus.BAD_REQUEST)
+                    "Incomplete body (endpoints)", HttpStatus.BAD_REQUEST)
             }
     }
+
+    if (! Object.values(NlpTypes).includes(req.body['type'])) {
+        throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
+    }
+    
     return true;
 }
