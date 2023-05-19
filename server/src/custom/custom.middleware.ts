@@ -1,8 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable, NestMiddleware } from "@nestjs/common";
 import { CustomRequest } from "./request/request.model";
 import { Debug } from "./debug/debug";
 import { NextFunction, Response } from "express";
 import * as jwt from "jsonwebtoken";
+import * as dotenv from "dotenv";
+dotenv.config()
 
 export abstract class MissingFieldsMiddleware {
     protected requiredFields;
@@ -32,73 +34,70 @@ export abstract class MissingFieldsMiddleware {
 }
 
 @Injectable()
-export class CheckAuthMiddleware {
-	use(req: CustomRequest, res: Response, next: NextFunction) {
-		const authHeader = req.headers.authorization;
-		req.payload = {};
-		if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-			req.payload['authenticated'] = false;
-			return this.allowAccessToRoute(req, res, next);
-		}
+export class CheckAuthMiddleware implements NestMiddleware {
+    async use(req: CustomRequest, res: Response, next: NextFunction) {
+        const { baseUrl } = req;
+        const isPublicRoute = this.isPublic(baseUrl);
+        const isAdminRoute = this.isAdmin(baseUrl);
+        req.payload = {};
 
-		const authToken = authHeader.split(' ')[1];
-		try {
-			const decodedData = jwt.verify(authToken, process.env.JWT_SECRET);
-			req.payload['id'] = decodedData.id;
-			req.payload['authenticated'] = true;
-			req.payload['role'] = decodedData.role;
+        if (! isPublicRoute) {
+            // Check for JWT token
+            const token = req.headers.authorization.split(' ')[1];
 
-		} catch (err) {
-			Debug.devLog('CheckAuthMiddleware', err);
-			// Invalid token 
-			if (err.name === "JsonWebTokenError") {
-				req.payload['authenticated'] = false;
-				return res.status(401).send({ message: 'Invalid access token' });
-			} else if (err.name === "TokenExpiredError") { // Token expired
-				req.payload['authenticated'] = false;
-				return res.status(401).send({ message: 'Access token expired' });
-			} 
-		}
+            try {
+                // Verify and decode the JWT token
+                const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+                // Set the decoded user object on the request for future use
+                req.payload['userID'] = decoded.id;
+                req.payload['role'] = decoded.role;
+ 
+                if (isAdminRoute) {
+                    // Check if the user is an admin
+                    const isAdmin = decoded.role === 'admin';
 
-		// token valid, now check if the accessed route is allowed
-		return this.allowAccessToRoute(req, res, next);
-	}
+                    if (! isAdmin) {
+                        res.status(403).json({ message: 'User not authorized' });
+                        return;
+                    }
+                }
 
-	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
-		const restrictedRoutes = [
-			'/admins/register', '/services/unsubscribe', 
-			'/services/subscribe', '/services/update', '/endpoints/add',
-			'/endpoints/remove', '/endpoints/update'
-		]
+                return next();
 
-		if (req.payload.authenticated) {
-			if (req.payload.role === 'user') {
-				if (restrictedRoutes.some((route) => req.baseUrl.startsWith(route))) {
-					throw new HttpException("User not authorized", HttpStatus.FORBIDDEN)
-				}
+            } catch (err) {
+                if (err.name === 'JsonWebTokenError') {
+                    res.status(400).json({ message: 'Invalid access token' })
+                } else if (err.name === 'TokenExpiredError') {
+                    res.status(400).json({ message: 'Access token expired' })
+                }
+            }
 
-				if (req.baseUrl.startsWith('/users')) {
-					throw new HttpException("User already logged in", HttpStatus.UNAUTHORIZED)
-				}
-				return next();
-			}
-			else {
-				if (restrictedRoutes.some((route) => req.baseUrl.startsWith(route))
-					&& ! req.baseUrl.startsWith('/admins/login')) {
-					return next();
-				}
+        } else {
+            return next();
+        }
+    }
 
-				if (req.baseUrl.startsWith('/admins/login')) {
-					throw new HttpException("User already logged in", HttpStatus.UNAUTHORIZED)
-				}
-				return next();
-			}
-		}
+    isPublic(url: string): boolean {
+        const publicRoutes = [
+            '/users/register',
+            '/users/login',
+            '/admins/login',
+        ];
 
-		if (req.baseUrl.startsWith('/users') 
-			|| req.baseUrl.startsWith('/admins/login')) {
-			return next();
-		}
-		throw new HttpException("User not authenticated", HttpStatus.UNAUTHORIZED)
-	}
+        return publicRoutes.includes(url);
+    }
+
+    isAdmin(url: string): boolean {
+        const restrictedRoutes = [
+            '/admins/register',
+            '/services/unsubscribe',
+            '/services/subscribe',
+            '/services/update',
+            '/endpoints/add',
+            '/endpoints/remove',
+            '/endpoints/update',
+        ];
+
+        return restrictedRoutes.includes(url);
+    }
 }
