@@ -8,7 +8,7 @@ export class QueryController {
         private readonly queryService: QueryService
     ) {}
 
-    @Post('submit')
+    @Post('')
     async query(@Body('serviceID') serviceID: string, 
             @Body('endpointID') endpointID: string,
             @Body('options') options: Record<string, string>,
@@ -22,19 +22,39 @@ export class QueryController {
         )
         return response;
     }
+}
 
-    @Get('usage')
+@Controller('usages')
+export class UsageController {
+    constructor(
+        private readonly queryService: QueryService
+    ) {}
+
+    @Get('')
     async getAllUsage(@Req() request: CustomRequest) {
+        var usages;
+        var obscuredUsages = [];
+
         if (request.payload.role === 'user') {
-            const usages = await this.queryService.getAllUsageForUser(request.payload.id);
-            return {
-                usage: usages
-            }
+            usages = await this.queryService.getAllUsageForUser(request.payload.id);
         } else {
-            const usages = await this.queryService.getAllUsageForAdmin();
-            return {
-                usage: usages
-            }
+            usages = await this.queryService.getAllUsageForAdmin();
         }
+
+        for (const usage of usages) {
+            const modifiedUsage = {
+                id: usage.id,
+                userID: usage.userID,
+                serviceID: usage.serviceID,
+                endpointID: usage.endpointID,
+                output: usage.output,
+                options: usage.options,
+                dateTime: usage.dateTime
+            }
+
+            obscuredUsages.push(modifiedUsage)
+        }
+
+        return { usages: obscuredUsages }
     }
 }
