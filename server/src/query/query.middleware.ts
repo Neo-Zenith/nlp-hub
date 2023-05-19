@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common';
-import { NextFunction, query } from 'express';
+import { NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';

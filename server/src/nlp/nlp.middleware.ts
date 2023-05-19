@@ -72,6 +72,33 @@ export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements 
 }
 
 
+@Injectable()
+export class RetrieveEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+    constructor() {
+        const requiredFields = ['id'];
+        super(requiredFields);
+        this.requiredFields = requiredFields;
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction) {
+        if (! this.checkMissingFields(req)) {
+            var requestBody;
+            if (req.method === 'POST') {
+                requestBody = req.body;
+            } else if (req.method === 'GET') {
+                requestBody = req.params;
+            }
+
+            if (! mongoose.isValidObjectId(requestBody['id'])) {
+                throw new HttpException("Invalid endpoint ID format", HttpStatus.BAD_REQUEST)
+            }
+            
+            return next();
+        }
+    }
+}
+
+
 function validateField(req: CustomRequest) {
     for (const endpoint of req.body['endpoints']) {
         if (typeof endpoint !== 'object' || 

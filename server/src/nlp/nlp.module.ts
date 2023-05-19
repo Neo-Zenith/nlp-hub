@@ -1,16 +1,16 @@
 import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
-import { NlpController } from "./nlp.controller";
+import { EndpointController, NlpController } from "./nlp.controller";
 import { NlpService } from "./nlp.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
-import { RegisterServiceMiddleware, RetrieveServiceMiddleware, UpdateServiceMiddleware } from "./nlp.middleware";
+import { RegisterServiceMiddleware, RetrieveEndpointMiddleware, RetrieveServiceMiddleware, UpdateServiceMiddleware } from "./nlp.middleware";
 
 @Module({
     imports: [
         MongooseModule.forFeature([{name: 'Nlp', schema: NlpSchema}]),
         MongooseModule.forFeature([{name: 'NlpEndpoint', schema: NlpEndpointSchema}])
     ],
-    controllers: [NlpController],
+    controllers: [NlpController, EndpointController],
     providers: [NlpService]
 })
 
@@ -18,17 +18,20 @@ export class NlpModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(RegisterServiceMiddleware)
-            .forRoutes('/nlp/register');
+            .forRoutes('/services/subscribe');
 
         consumer
             .apply(RetrieveServiceMiddleware)
-            .forRoutes('/nlp/unregister', 
-                        { path: '/nlp/services/:id', method: RequestMethod.GET },
-                        { path: '/nlp/services/:id/endpoints', method: RequestMethod.GET },
-                        { path: '/nlp/endpoints/:id', method: RequestMethod.GET });
+            .forRoutes('/services/unsubscribe', 
+                        { path: '/services/:id', method: RequestMethod.GET },
+                        { path: '/services/:id/endpoints', method: RequestMethod.GET });
 
         consumer
             .apply(UpdateServiceMiddleware)
-            .forRoutes('/nlp/update');
+            .forRoutes('/services/update');
+
+        consumer    
+            .apply(RetrieveEndpointMiddleware)
+            .forRoutes({ path: '/endpoints/:id', method: RequestMethod.GET });
     }
 };

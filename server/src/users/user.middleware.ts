@@ -30,7 +30,7 @@ export class CheckAuthMiddleware {
 			// Invalid token 
 			if (err.name === "JsonWebTokenError") {
 				req.payload['authenticated'] = false;
-				return res.status(401).send({ message: 'Access token invalid' });
+				return res.status(401).send({ message: 'Invalid access token' });
 			} else if (err.name === "TokenExpiredError") { // Token expired
 				req.payload['authenticated'] = false;
 				return res.status(401).send({ message: 'Access token expired' });
@@ -43,8 +43,9 @@ export class CheckAuthMiddleware {
 
 	allowAccessToRoute(req: CustomRequest, res: Response, next: NextFunction) {
 		const restrictedRoutes = [
-			'/admins/register', '/nlp/unregister', 
-			'/nlp/register', '/nlp/update', '/nlp/endpoints'
+			'/admins/register', '/services/unsubscribe', 
+			'/services/subscribe', '/services/update', '/endpoints/add',
+			'/endpoints/remove', '/endpoints/update'
 		]
 
 		if (req.payload.authenticated) {

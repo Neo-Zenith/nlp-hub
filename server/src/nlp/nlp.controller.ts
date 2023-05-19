@@ -2,14 +2,14 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@
 import { NlpService } from "./nlp.service";
 import { NlpEndpoint } from "./nlp.model";
 
-@Controller('nlp')
+@Controller('services')
 export class NlpController {
     constructor(
         private readonly nlpService: NlpService
     ) {}
     
 
-    @Post('register')
+    @Post('subscribe')
     async subscribeNlp(
         @Body('name') serviceName: string,
         @Body('version') serviceVersion: string,
@@ -56,7 +56,7 @@ export class NlpController {
     }
 
 
-    @Post('unregister')
+    @Post('unsubscribe')
     async unsubscribeNlp(
         @Body('id') serviceID: string
     ) {
@@ -65,7 +65,7 @@ export class NlpController {
     }
 
 
-    @Get('services')
+    @Get()
     async listAllServices() {
         const services = await this.nlpService.retrieveAllServices();
         
@@ -80,7 +80,7 @@ export class NlpController {
     }
 
 
-    @Get('services/:id')
+    @Get(':id')
     async getService(@Param('id') serviceID: string) {
         const service = await this.nlpService.retrieveOneService(serviceID);
     
@@ -95,55 +95,7 @@ export class NlpController {
         return obscuredService
     }
 
-
-    @Get('endpoints')
-    async listAllEndpoints() {
-        const endpoints = await this.nlpService.retrieveAllEndpoints();
-        const services = await this.nlpService.retrieveAllServices();
-        var returnData = []
-
-        for (const endpoint of endpoints) {
-            const service = services.find((s) => s.id === endpoint.serviceID);
-            if (! service) {
-                throw new HttpException(
-                    "Foreign key constraint failed", HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            const endpointData = {
-                id: endpoint._id,
-                serviceID: service._id,
-                endpointPath: endpoint.endpointPath,
-                method: endpoint.method,
-                task: endpoint.task,
-                options: endpoint.options
-            }
-
-            returnData.push(endpointData)
-        }
-        return returnData;
-    }
-
-    
-    @Get('endpoints/:id')
-    async getEndpoint(@Param('id') endpointID: string) {
-        const endpoint = await this.nlpService.retrieveOneEndpoint(endpointID);
-        const service = await this.nlpService.retrieveOneService(endpoint.serviceID)
-        
-        // drop sensitive data like api endpoints and rename id before sending to client
-        const endpointData = {
-            id: service._id,
-            serviceID: service._id,
-            endpointPath: endpoint.endpointPath,
-            method: endpoint.method,
-            task: endpoint.task,
-            options: endpoint.options
-        }
-
-        return endpointData;
-    }
-
-
-    @Get('services/:id/endpoints')
+    @Get(':id/endpoints')
     async getServiceEndpoint(@Param('id') serviceID: string) {
         const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID);
         var returnData = []
@@ -159,6 +111,58 @@ export class NlpController {
             returnData.push(endpointData)
         }
 
-        return returnData;
+        return { endpoints: returnData };
+    }
+
+}
+
+@Controller('endpoints')
+export class EndpointController {
+    constructor(
+        private readonly nlpService: NlpService
+    ) {}
+
+    @Get()
+    async listAllEndpoints() {
+        const endpoints = await this.nlpService.retrieveAllEndpoints();
+        const services = await this.nlpService.retrieveAllServices();
+        var returnData = []
+
+        for (const endpoint of endpoints) {
+            const service = services.find((s) => s.id === endpoint.serviceID);
+            if (! service) {
+                throw new HttpException(
+                    "Foreign key constraint failed", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            const endpointData = {
+                id: endpoint._id,
+                serviceID: service._id,
+                method: endpoint.method,
+                task: endpoint.task,
+                options: endpoint.options
+            }
+
+            returnData.push(endpointData)
+        }
+        return { endpoints: returnData };
+    }
+
+    
+    @Get(':id')
+    async getEndpoint(@Param('id') endpointID: string) {
+        const endpoint = await this.nlpService.retrieveOneEndpoint(endpointID);
+        const service = await this.nlpService.retrieveOneService(endpoint.serviceID)
+        
+        // drop sensitive data like api endpoints and rename id before sending to client
+        const endpointData = {
+            id: service._id,
+            serviceID: service._id,
+            method: endpoint.method,
+            task: endpoint.task,
+            options: endpoint.options
+        }
+
+        return endpointData;
     }
 }
