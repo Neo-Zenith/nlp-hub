@@ -17,7 +17,7 @@ export class RegisterServiceMiddleware extends MissingFieldsMiddleware implement
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
         this.checkMissingFields(req);
-        if (validateField(req)) {
+        if (validateServiceField(req)) {
             return next();
         }
     }
@@ -64,7 +64,7 @@ export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements 
             if (! mongoose.isValidObjectId(req.body['id'])) {
                 throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
             }
-            if (validateField(req)) {
+            if (validateServiceField(req)) {
                 return next();
             }
         }
@@ -98,8 +98,54 @@ export class RetrieveEndpointMiddleware extends MissingFieldsMiddleware implemen
     }
 }
 
+@Injectable()
+export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+    constructor() {
+        const requiredFields = 
+            ['serviceID', 'method', 'options', 'endpointPath', 'task']
+        super(requiredFields);
+        this.requiredFields = requiredFields
+    }
+    
+    use(req: CustomRequest, res: Response, next: NextFunction) {
+        if (! this.checkMissingFields(req)) {
+            if (! mongoose.isValidObjectId(req.body['serviceID'])) {
+                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
+            }
 
-function validateField(req: CustomRequest) {
+            if (validateEndpointField(req)) {
+                return next();
+            }
+        }
+    }
+}
+
+@Injectable()
+export class UpdateEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+    constructor() {
+        const requiredFields = ['id', 'serviceID', 'method', 'options', 
+                                'endpointPath', 'task']
+        super(requiredFields);
+        this.requiredFields = requiredFields;
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction) {
+        if(! this.checkMissingFields(req)) {
+            if (! mongoose.isValidObjectId(req.body['id'])) {
+                throw new HttpException("Invalid endpoint ID format", HttpStatus.BAD_REQUEST)
+            }
+            if (! mongoose.isValidObjectId(req.body['serviceID'])) {
+                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
+            }
+            if (validateEndpointField(req)) {
+                return next();
+            }
+        }
+    }
+}
+
+
+function validateServiceField(req: CustomRequest) {
     for (const endpoint of req.body['endpoints']) {
         if (typeof endpoint !== 'object' || 
             ! ('endpointPath' in endpoint) ||
@@ -119,5 +165,12 @@ function validateField(req: CustomRequest) {
         throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     
+    return true;
+}
+
+function validateEndpointField(req: CustomRequest) {
+    if (! Object.values(MethodTypes).includes(req.body['method'])) {
+        throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
+    }
     return true;
 }

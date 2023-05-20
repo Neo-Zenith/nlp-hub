@@ -113,6 +113,36 @@ export class NlpService {
         return endpoints;
     }
 
+    async addEndpoint(
+        serviceID: string, 
+        endpointPath: string,
+        method: string, 
+        task: string,
+        options: Record<string, string>) {
+            const newEndpoint = await new this.nlpEndpointModel({
+                serviceID,
+                endpointPath,
+                method,
+                task,
+                options
+            })
+            await newEndpoint.save()
+
+            return newEndpoint.id;
+    }
+
+    async removeEndpoint(endpointID: string) {
+        console.log(endpointID)
+        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+        if (! endpoint) {
+            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
+        }
+        await this.nlpEndpointModel.deleteOne({_id: endpointID});
+        return {
+            message: "Endpoint deleted"
+        };
+    }
+
     private async checkServiceExist(serviceID: string) {
         const service = await this.nlpModel.findById(serviceID);;
         const endpoints = await this.nlpEndpointModel.find({serviceID: serviceID});

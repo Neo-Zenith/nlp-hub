@@ -39,10 +39,7 @@ export class NlpController {
         @Body('type') serviceType: string,
         @Body('endpoints') serviceEndpoints: NlpEndpoint[]
     ) {
-        const deleted = await this.nlpService.unsubscribe(serviceID);
-        if (! deleted) {
-            throw new HttpException("Record Not Found (Invalid ID)", HttpStatus.NOT_FOUND)
-        }
+        await this.nlpService.unsubscribe(serviceID);
         const newID = await this.nlpService.subscribe(
             serviceName,
             serviceVersion,
@@ -177,5 +174,45 @@ export class EndpointController {
         }
 
         return endpointData;
+    }
+
+    @Post('add')
+    async addEndpoint(
+        @Body('serviceID') serviceID: string,
+        @Body('method') method: string,
+        @Body('endpointPath') endpointPath: string,
+        @Body('task') task: string,
+        @Body('options') options: Record<string, string>
+    ) {
+        const endpointID = await this.nlpService.addEndpoint(
+            serviceID, endpointPath, method, task, options
+        )
+
+        return { id: endpointID }
+    }
+
+    @Post('remove')
+    async removeEndpoint(
+        @Body('id') endpointID: string
+    ) {
+        const message = await this.nlpService.removeEndpoint(endpointID);
+        return message;
+    }
+
+    @Post('update') 
+    async updateEndpoint(
+        @Body('id') endpointID: string,
+        @Body('serviceID') serviceID: string,
+        @Body('method') method: string,
+        @Body('endpointPath') endpointPath: string,
+        @Body('task') task: string,
+        @Body('options') options: Record<string, string>
+    ) {
+        await this.nlpService.removeEndpoint(endpointID);
+        const newEndpointID = await this.nlpService.addEndpoint(
+            serviceID, endpointPath, method, task, options
+        )
+
+        return { id: newEndpointID }
     }
 }

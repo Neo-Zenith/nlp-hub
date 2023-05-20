@@ -3,7 +3,7 @@ import { EndpointController, NlpController } from "./nlp.controller";
 import { NlpService } from "./nlp.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
-import { RegisterServiceMiddleware, RetrieveEndpointMiddleware, RetrieveServiceMiddleware, UpdateServiceMiddleware } from "./nlp.middleware";
+import { RegisterEndpointMiddleware, RegisterServiceMiddleware, RetrieveEndpointMiddleware, RetrieveServiceMiddleware, UpdateEndpointMiddleware, UpdateServiceMiddleware } from "./nlp.middleware";
 
 @Module({
     imports: [
@@ -32,6 +32,15 @@ export class NlpModule {
 
         consumer    
             .apply(RetrieveEndpointMiddleware)
-            .forRoutes({ path: '/endpoints/:id', method: RequestMethod.GET });
+            .forRoutes('/endpoints/remove',
+                        { path: '/endpoints/:id', method: RequestMethod.GET });
+
+        consumer
+            .apply(RegisterEndpointMiddleware)
+            .forRoutes('/endpoints/add');
+
+        consumer
+            .apply(UpdateEndpointMiddleware)
+            .forRoutes('/endpoints/update')
     }
 };
