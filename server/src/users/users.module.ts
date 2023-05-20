@@ -3,7 +3,7 @@ import { AdminController, UserController } from "./users.controller";
 import { UserService } from "./users.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AdminSchema, UserSchema } from "./user.model";
-import { LoginUserMiddleware, RegisterUserMiddleware } from "./user.middleware";
+import { LoginUserMiddleware, RegisterUserMiddleware, RemoveUserMiddleware } from "./user.middleware";
 
 @Module({
     imports: [
@@ -22,5 +22,9 @@ export class UserModule {
         consumer
             .apply(LoginUserMiddleware)
             .forRoutes('/users/login', '/admins/login');
+
+        consumer
+            .apply(RemoveUserMiddleware)
+            .forRoutes('/users/remove')
     }
 }

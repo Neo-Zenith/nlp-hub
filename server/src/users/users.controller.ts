@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Req } from "@nestjs/common";
 import { UserService } from "./users.service";
+import { CustomRequest } from "src/custom/request/request.model";
 
 @Controller('users')
 export class UserController {
@@ -34,6 +35,14 @@ export class UserController {
     ) {
         const accessToken = await this.userService.verifyUser(username, password, 'user');
         return { accessToken: accessToken };
+    }
+
+    @Post('remove') 
+    async removeUser(
+        @Body('id') userID: string,
+    ) {
+        const message = await this.userService.removeUser(userID);
+        return message;
     }
 }
 

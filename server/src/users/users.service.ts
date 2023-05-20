@@ -66,6 +66,15 @@ export class UserService {
         }
     }
 
+    async removeUser(userID: string) {
+        const user = await this.userModel.findById(userID);
+        if (! user) {
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
+        await this.userModel.deleteOne({_id: userID});
+        return { message: "User deleted" }
+    }
+
     private async hashPassword(password: string) {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
