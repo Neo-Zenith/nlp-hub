@@ -55,7 +55,7 @@ export class CheckAuthMiddleware implements NestMiddleware {
                 // Verify and decode the JWT token
                 const decoded = await jwt.verify(token, process.env.JWT_SECRET);
                 // Set the decoded user object on the request for future use
-                req.payload['userID'] = decoded.id;
+                req.payload['id'] = decoded.id;
                 req.payload['role'] = decoded.role;
  
                 if (isAdminRoute) {

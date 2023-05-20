@@ -10,12 +10,21 @@ import { NlpEndpointTrigger, NlpTrigger } from './nlp.trigger';
  */
 
 export enum NlpTypes {
-    "SUD", "NER"
+    SUD = 'SUD',
+    NER = 'NER'
+}
+
+export enum MethodTypes {
+    POST = 'POST',
+    GET = 'GET',
+    PUT = 'PUT',
+    DELETE = 'DELETE',
+    UPDATE = 'UPDATE'
 }
 
 @Schema()
 export class Nlp extends Document {
-    @Prop({ required: true })
+    @Prop({ required: true, index: 'text' })
     name: string;
 
     @Prop({ required: true })
@@ -27,7 +36,7 @@ export class Nlp extends Document {
     @Prop()
     description: string;
 
-    @Prop({ required: true, enum: NlpTypes })
+    @Prop({ required: true, enum: NlpTypes, index: true })
     type: string;
 }
 
@@ -43,7 +52,7 @@ export class NlpEndpoint extends Document {
     @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
     serviceID: string;
 
-    @Prop({ required: true })
+    @Prop({ required: true, enum: MethodTypes })
     method: string;
 
     @Prop({ type: Map, of: String })
@@ -52,7 +61,7 @@ export class NlpEndpoint extends Document {
     @Prop({ required: true })
     endpointPath: string;
 
-    @Prop({ required: true })
+    @Prop({ required: true, index: 'text' })
     task: string;
 } 
 

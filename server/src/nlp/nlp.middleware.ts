@@ -3,7 +3,7 @@ import { NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
-import { NlpTypes } from './nlp.model';
+import { MethodTypes, NlpTypes } from './nlp.model';
 
 
 @Injectable()
@@ -113,6 +113,10 @@ function validateField(req: CustomRequest) {
 
     if (! Object.values(NlpTypes).includes(req.body['type'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
+    }
+
+    if (! Object.values(MethodTypes).includes(req.body['method'])) {
+        throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     
     return true;

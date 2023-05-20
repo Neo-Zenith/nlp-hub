@@ -68,10 +68,9 @@ export class NlpController {
     @Get()
     async listAllServices(
         @Query('name') name?: string,
-        @Query('version') version?: string,
         @Query('type') type?: string,
     ) {
-        const services = await this.nlpService.retrieveAllServices(name, version, type);
+        const services = await this.nlpService.retrieveAllServices(name, type);
 
         // Drop sensitive data like API endpoints and rename id before sending to the client
         const obscuredServices = services.map((item) => ({
@@ -104,9 +103,11 @@ export class NlpController {
     @Get(':id/endpoints')
     async getServiceEndpoint(
         @Param('id') serviceID: string,
-        @Query('task') task?: string
+        @Query('task') task?: string,
+        @Query('method') method?: string,
     ) {
-        const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID, task);
+        const endpoints = await this.nlpService
+                            .retrieveEndpointsForOneService(serviceID, task, method);
         var returnData = []
 
         for (const endpoint of endpoints) {
