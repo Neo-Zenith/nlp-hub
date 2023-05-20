@@ -39,9 +39,15 @@ export class CheckAuthMiddleware implements NestMiddleware {
         const { baseUrl } = req;
         const isPublicRoute = this.isPublic(baseUrl);
         const isAdminRoute = this.isAdmin(baseUrl);
+        const authHeader = req.headers.authorization;
         req.payload = {};
 
+
         if (! isPublicRoute) {
+            if (! authHeader || ! authHeader.startsWith('Bearer ')) {
+                return res.status(400).json({ message: "Access token is not present" })
+            }
+            
             // Check for JWT token
             const token = req.headers.authorization.split(' ')[1];
 
@@ -57,8 +63,7 @@ export class CheckAuthMiddleware implements NestMiddleware {
                     const isAdmin = decoded.role === 'admin';
 
                     if (! isAdmin) {
-                        res.status(403).json({ message: 'User not authorized' });
-                        return;
+                        return res.status(403).json({ message: 'User not authorized' });
                     }
                 }
 
@@ -66,9 +71,9 @@ export class CheckAuthMiddleware implements NestMiddleware {
 
             } catch (err) {
                 if (err.name === 'JsonWebTokenError') {
-                    res.status(400).json({ message: 'Invalid access token' })
+                    return res.status(400).json({ message: 'Invalid access token' })
                 } else if (err.name === 'TokenExpiredError') {
-                    res.status(400).json({ message: 'Access token expired' })
+                    return res.status(400).json({ message: 'Access token expired' })
                 }
             }
 

@@ -48,8 +48,22 @@ export class NlpService {
         };
     }
 
-    async retrieveAllServices() {
-        const services = await this.nlpModel.find().exec();
+    async retrieveAllServices(name?: string, version?: string, type?: string) {
+        const query = this.nlpModel.find();
+      
+        if (name) {
+          query.where('name').equals(name);
+        }
+
+        if (version) {
+          query.where('version').equals(version);
+        }
+
+        if (type) {
+          query.where('type').equals(type);
+        }
+      
+        const services = await query.exec();
         return services;
     }
 
@@ -58,8 +72,18 @@ export class NlpService {
         return service;
     }
 
-    async retrieveAllEndpoints() {
-        const endpoints = await this.nlpEndpointModel.find().exec();
+    async retrieveAllEndpoints(task?: string, method?: string) {
+        const query = this.nlpEndpointModel.find();
+      
+        if (task) {
+            query.where('task').equals(task);
+        }
+
+        if (method) {
+            query.where('method').equals(method);
+        }
+
+        const endpoints = await query.exec();
         return endpoints;
     }
 
@@ -71,8 +95,15 @@ export class NlpService {
         return endpoint;
     }
 
-    async retrieveEndpointsForOneService(serviceID: string) {
-        const endpoints = await this.nlpEndpointModel.find({ serviceID: serviceID }).exec();
+    async retrieveEndpointsForOneService(serviceID: string, task?: string) {
+        const query = this.nlpEndpointModel.find();
+      
+        if (task) {
+          query.where('task').equals(task);
+        }
+        query.where('serviceID').equals(serviceID);
+        const endpoints = await query.exec();
+
         if (endpoints.length === 0) {
             throw new HttpException(
                 "No endpoints found for requested service", HttpStatus.NOT_FOUND)

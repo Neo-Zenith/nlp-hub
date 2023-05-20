@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { NlpEndpoint } from "./nlp.model";
 
@@ -66,15 +66,20 @@ export class NlpController {
 
 
     @Get()
-    async listAllServices() {
-        const services = await this.nlpService.retrieveAllServices();
-        
-        // drop sensitive data like api endpoints and rename id before sending to client
+    async listAllServices(
+        @Query('name') name?: string,
+        @Query('version') version?: string,
+        @Query('type') type?: string,
+    ) {
+        const services = await this.nlpService.retrieveAllServices(name, version, type);
+
+        // Drop sensitive data like API endpoints and rename id before sending to the client
         const obscuredServices = services.map((item) => ({
             id: item._id,
             name: item.name,
             version: item.version,
-            description: item.description
+            description: item.description,
+            type: item.type
         }));
         return { services: obscuredServices };
     }
@@ -89,15 +94,19 @@ export class NlpController {
             id: service._id,
             name: service.name,
             version: service.version,
-            description: service.description
+            description: service.description,
+            type: service.type
         };
 
         return obscuredService
     }
 
     @Get(':id/endpoints')
-    async getServiceEndpoint(@Param('id') serviceID: string) {
-        const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID);
+    async getServiceEndpoint(
+        @Param('id') serviceID: string,
+        @Query('task') task?: string
+    ) {
+        const endpoints = await this.nlpService.retrieveEndpointsForOneService(serviceID, task);
         var returnData = []
 
         for (const endpoint of endpoints) {
@@ -123,8 +132,11 @@ export class EndpointController {
     ) {}
 
     @Get()
-    async listAllEndpoints() {
-        const endpoints = await this.nlpService.retrieveAllEndpoints();
+    async listAllEndpoints(
+        @Query('method') method?: string,
+        @Query('task') task?: string
+    ) {
+        const endpoints = await this.nlpService.retrieveAllEndpoints(task, method);
         const services = await this.nlpService.retrieveAllServices();
         var returnData = []
 
