@@ -51,13 +51,32 @@ export class QueryService {
         }
     }
 
-    async getAllUsageForUser(userID: string) {
+    async getAllUsageForUser(userID: string, type?: string) {
         const usages = await this.queryModel.find({userID: userID});
+        if (type) {
+            const filteredUsages = await Promise.all(usages.map(async (usage) => {
+                const service = await this.nlpModel.findById(usage.serviceID); // Assuming serviceModel is the model for the service document
+                if (service && service.type === type) {
+                    return usage;
+                }
+            }));
+            return filteredUsages.filter(Boolean); // Remove any undefined/null values
+        }
+        
         return usages;
     }
 
-    async getAllUsageForAdmin() {
-        const usages = await this.queryModel.find().exec();
+    async getAllUsageForAdmin(type?: string) {
+        const usages = await this.queryModel.find();
+        if (type) {
+            const filteredUsages = await Promise.all(usages.map(async (usage) => {
+                const service = await this.nlpModel.findById(usage.serviceID); // Assuming serviceModel is the model for the service document
+                if (service && service.type === type) {
+                    return usage;
+                }
+            }));
+            return filteredUsages.filter(Boolean); // Remove any undefined/null values
+        }
         return usages;
     }
 

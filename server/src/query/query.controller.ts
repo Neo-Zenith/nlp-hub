@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
 import { QueryService } from "./query.service";
 import { CustomRequest } from "src/custom/request/request.model";
 
@@ -31,14 +31,16 @@ export class UsageController {
     ) {}
 
     @Get('')
-    async getAllUsage(@Req() request: CustomRequest) {
+    async getAllUsage(
+        @Req() request: CustomRequest,
+        @Query('type') type?: string
+    ) {
         var usages;
         var obscuredUsages = [];
-
         if (request.payload.role === 'user') {
-            usages = await this.queryService.getAllUsageForUser(request.payload.id);
+            usages = await this.queryService.getAllUsageForUser(request.payload.id, type);
         } else {
-            usages = await this.queryService.getAllUsageForAdmin();
+            usages = await this.queryService.getAllUsageForAdmin(type);
         }
 
         for (const usage of usages) {
