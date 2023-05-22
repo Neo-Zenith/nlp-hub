@@ -1,6 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiSecurity } from "@nestjs/swagger";
+import { httpException } from "src/custom/custom.schema";
 
 @ApiTags('Users')
 @Controller('users')
@@ -41,9 +42,29 @@ export class UserController {
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'User successfully registered.' })
-    @ApiResponse({ status: 409, description: 'Username taken, or email taken.' })
-    @ApiResponse({ status: 400, description: 'Incomplete body.' })
+    @ApiResponse({ 
+        status: 201, 
+        schema: {
+            properties: {
+                'id': {
+                    type: 'string',
+                    description: 'ID of the newly created user',
+                    example: '5467443817296ad01d46a430'
+                }
+            }
+        },
+        description: 'User successfully registered.' 
+    })
+    @ApiResponse({ 
+        status: 409, 
+        schema: httpException,
+        description: 'Username taken, or email taken.' 
+    })
+    @ApiResponse({ 
+        status: 400, 
+        schema: httpException,
+        description: 'Incomplete body.' 
+    })
     @Post('register')
     async register(
         @Body('name') name: string,
@@ -80,10 +101,31 @@ export class UserController {
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'Successful user login.' })
-    @ApiResponse({ status: 404, description: 'The requested user could not be found.' })
-    @ApiResponse({ status: 401, description: 'Invalid password.' })
-    @ApiResponse({ status: 400, description: 'Incomplete body.' })
+    @ApiResponse({ 
+        status: 201, 
+        schema: {
+            properties: {
+                'accessToken': {
+                    type: 'string',
+                    description: 'Access token for subsequent authentication',
+                    example: 'eyJhbGciOiJIUzI1NiIsKnR5cCI6IopXVCJ9.eyJ1c2VybmFtZSI6Ik5lb1plbml0aCIsImlkIjoiNjQ2NWIzZGM0Yjg1MTcxNmY4MThmOTY3Iiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjg0NzM5MDkxLCJleHAiOiE2ODQ3NDI2OTF9.0gBiSS4cZzBXqe2KHhcy25sL77zsxgUqSkzLr_6rF6s'
+                }
+            }
+        },
+        description: 'Successful user login.' 
+    })
+    @ApiResponse({ 
+        status: 404, 
+        schema: httpException,
+        description: 'The requested user could not be found.' })
+    @ApiResponse({ 
+        status: 401, 
+        schema: httpException,
+        description: 'Invalid password.' })
+    @ApiResponse({ 
+        status: 400, 
+        schema: httpException,
+        description: 'Incomplete body.' })
     @Post('login')
     async login(
         @Body('username') username: string,
@@ -106,11 +148,32 @@ export class UserController {
             }
         }
     })
-    @ApiResponse({ status: 400, description: 'Invalid user ID format' })
-    @ApiResponse({ status: 404, description: 'The requested user could not be found' })
-    @ApiResponse({ status: 201, description: 'User successfully deleted' })
+    @ApiResponse({ 
+        status: 400, 
+        schema: httpException,
+        description: 'Invalid user ID format' 
+    })
+    @ApiResponse({ 
+        status: 404, 
+        schema: httpException,
+        description: 'The requested user could not be found' 
+    })
+    @ApiResponse({ 
+        status: 201, 
+        schema: {
+            properties: {
+                'message': {
+                    type: 'string',
+                    description: 'Return message from server',
+                    example: 'User deleted'
+                }
+            }
+        },
+        description: 'User successfully deleted' 
+    })
     @ApiResponse({ 
         status: 403, 
+        schema: httpException,
         description: 'User ID passed in do not match the user making the request'
     })
     @Post('remove') 
@@ -136,35 +199,55 @@ export class AdminController {
             properties: {
                 'name': { 
                     type: 'string',
-                    description: 'Name of the user',
+                    description: 'Name of the admin',
                     example: 'John Doe'
                 },
                 'username': {
                     type: 'string',
-                    description: 'Username of the user',
-                    example: 'User01'
+                    description: 'Username of the admin',
+                    example: 'Admin01'
                 },
                 'email': {
                     type: 'string',
-                    description: 'Email of the user',
-                    example: 'user@example.com'
+                    description: 'Email of the admin',
+                    example: 'admin@example.com'
                 },
                 'password': {
                     type: 'string',
-                    description: 'Password of the user',
+                    description: 'Password of the admin',
                     example: 'password123'
                 },
                 'department': {
                     type: 'string',
-                    description: 'Department of the user',
+                    description: 'Department of the admin',
                     example: 'SCSE'
                 }
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'Admin successfully registered.' })
-    @ApiResponse({ status: 409, description: 'Username taken, or email taken.' })
-    @ApiResponse({ status: 400, description: 'Incomplete body.' })
+    @ApiResponse({ 
+        status: 201, 
+        schema: {
+            properties: {
+                'id': {
+                    type: 'string',
+                    description: 'ID of the newly created admin',
+                    example: '5467443817296ad01d46a430'
+                }
+            }
+        },
+        description: 'Admin successfully registered.' 
+    })
+    @ApiResponse({ 
+        status: 409, 
+        schema: httpException,
+        description: 'Username taken, or email taken.' 
+    })
+    @ApiResponse({ 
+        status: 400, 
+        schema: httpException,
+        description: 'Incomplete body.' 
+    })
     @Post('register') 
     async register(
         @Body('name') name: string,
@@ -196,10 +279,34 @@ export class AdminController {
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'Successful admin login.' })
-    @ApiResponse({ status: 404, description: 'The requested admin could not be found.' })
-    @ApiResponse({ status: 401, description: 'Invalid password.' })
-    @ApiResponse({ status: 400, description: 'Incomplete body.' })
+    @ApiResponse({ 
+        status: 201, 
+        schema: {
+            properties: {
+                'accessToken': {
+                    type: 'string',
+                    description: 'Access token for subsequent authentication',
+                    example: 'eyJhbGciOiJIUzI1NiIsKnR5cCI6IopXVCJ9.eyJ1c2VybmFtZSI6Ik5lb1plbml0aCIsImlkIjoiNjQ2NWIzZGM0Yjg1MTcxNmY4MThmOTY3Iiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNjg0NzM5MDkxLCJleHAiOiE2ODQ3NDI2OTF9.0gBiSS4cZzBXqe2KHhcy25sL77zsxgUqSkzLr_6rF6s'
+                }
+            }
+        },
+        description: 'Successful admin login.' 
+    })
+    @ApiResponse({ 
+        status: 404, 
+        schema: httpException,
+        description: 'The requested admin could not be found.' 
+    })
+    @ApiResponse({ 
+        status: 401, 
+        schema: httpException,
+        description: 'Invalid password.' 
+    })
+    @ApiResponse({ 
+        status: 400, 
+        schema: httpException,
+        description: 'Incomplete body.' 
+    })
     @Post('login')
     async login(
         @Body('username') username: string,

@@ -7,9 +7,7 @@ import {
     ApiBody, 
     ApiResponse, 
     ApiQuery, 
-    ApiSecurity,
-    ApiOkResponse,
-    ApiCreatedResponse
+    ApiSecurity
 } from "@nestjs/swagger";
 import { NlpTypes } from "src/nlp/nlp.model";
 import { httpException } from "src/custom/custom.schema";
@@ -60,7 +58,7 @@ export class QueryController {
                     type: 'object',
                     description: 'Output from the NLP service',
                     example: {
-                        'result': 'Output message'
+                        'prediction': 'Output message'
                     }
                 }
             }
@@ -105,7 +103,8 @@ export class UsageController {
     @ApiQuery({
         name: 'type',
         description: `Filter by types of service used. Available types are ${Object.values(NlpTypes).join(' ,').toString()}`,
-        example: 'SUD'
+        example: 'SUD',
+        required: false
     })
     @ApiResponse({
         status: 200,

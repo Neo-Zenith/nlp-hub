@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { MethodTypes, NlpEndpoint, NlpTypes } from "./nlp.model";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiSecurity } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiSecurity, ApiParam } from "@nestjs/swagger";
 import { httpException } from "src/custom/custom.schema";
 
 @ApiTags('Services')
@@ -345,7 +345,7 @@ export class NlpController {
 
     @ApiOperation({ summary: 'Retrieves a service' })
     @ApiSecurity('access-token')
-    @ApiQuery({ 
+    @ApiParam({ 
         name: 'id', 
         description: 'ID of the service to be retrieved' 
     })
@@ -409,7 +409,7 @@ export class NlpController {
 
     @ApiOperation({ summary: 'Retrieves all endpoints of a service' })
     @ApiSecurity('access-token')
-    @ApiQuery({ 
+    @ApiParam({ 
         name: 'id', 
         description: 'Endpoints assoicated with this ID will be retrieved' 
     })
@@ -580,7 +580,7 @@ export class EndpointController {
 
     @ApiOperation({ summary: 'Retrieves an endpoint' })
     @ApiSecurity('access-token')
-    @ApiQuery({ 
+    @ApiParam({ 
         name: 'id',
         description: 'ID of the endpoint to be retrieved' 
     })
