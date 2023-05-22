@@ -29,5 +29,5 @@ export class Query extends Document {
 }
 
 export const QuerySchema = SchemaFactory.createForClass(Query);
-export const QueryModel = mongoose.model('Query', QuerySchema);
 QueryTrigger();
+export const QueryModel = mongoose.model('Query', QuerySchema);

@@ -53,31 +53,40 @@ export class QueryService {
 
     async getAllUsageForUser(userID: string, type?: string) {
         const usages = await this.queryModel.find({userID: userID});
-        if (type) {
-            const filteredUsages = await Promise.all(usages.map(async (usage) => {
-                const service = await this.nlpModel.findById(usage.serviceID); // Assuming serviceModel is the model for the service document
+        const filteredUsages = await Promise.all(usages.map(async (usage) => {
+            const service = await this.nlpModel.findById(usage.serviceID); 
+            if (type) {
                 if (service && service.type === type) {
                     return usage;
                 }
-            }));
-            return filteredUsages.filter(Boolean); // Remove any undefined/null values
-        }
-        
-        return usages;
+            }
+            else {
+                if (! service) {
+                    return Object.assign({'deleted': true}, usage['_doc'] )
+                }
+            }
+        }));
+
+        return filteredUsages.filter(Boolean);
     }
 
     async getAllUsageForAdmin(type?: string) {
         const usages = await this.queryModel.find();
-        if (type) {
-            const filteredUsages = await Promise.all(usages.map(async (usage) => {
-                const service = await this.nlpModel.findById(usage.serviceID); // Assuming serviceModel is the model for the service document
+        const filteredUsages = await Promise.all(usages.map(async (usage) => {
+            const service = await this.nlpModel.findById(usage.serviceID); 
+            if (type) {
                 if (service && service.type === type) {
                     return usage;
                 }
-            }));
-            return filteredUsages.filter(Boolean); // Remove any undefined/null values
-        }
-        return usages;
+            }
+            else {
+                if (! service) {
+                    return Object.assign({'deleted': true}, usage['_doc'] )
+                }
+            }
+        }));
+
+        return filteredUsages.filter(Boolean);
     }
 
     private async retrieveService(serviceID: string) {

@@ -113,7 +113,7 @@ export class UsageController {
             properties: {
                 'usages': {
                     type: 'array', 
-                    description: 'Array of all usages',
+                    description: 'Array of all usages. If type is defined, returns usages of current valid services with the defined type. Otherwise, serviceDeleted is true for usages associated with deleted services.',
                     items: {
                         type: 'object',
                         properties: {
@@ -149,6 +149,11 @@ export class UsageController {
                                     'option1': 'option1',
                                     'option2': 'option2'
                                 }
+                            },
+                            'serviceDeleted': {
+                                type: 'boolean',
+                                description: 'True if service utilised for this query was removed from server',
+                                example: true
                             }
                         }
                     }
@@ -168,7 +173,7 @@ export class UsageController {
         } else {
             usages = await this.queryService.getAllUsageForAdmin(type);
         }
-
+        
         for (const usage of usages) {
             const modifiedUsage = {
                 id: usage.id,
@@ -177,7 +182,8 @@ export class UsageController {
                 endpointID: usage.endpointID,
                 output: usage.output,
                 options: usage.options,
-                dateTime: usage.dateTime
+                dateTime: usage.dateTime,
+                serviceDeleteed: usage.deleted
             }
 
             obscuredUsages.push(modifiedUsage)
