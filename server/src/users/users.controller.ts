@@ -183,6 +183,85 @@ export class UserController {
         const message = await this.userService.removeUser(userID);
         return message;
     }
+
+    @ApiOperation({ summary: 'Updates information of a user'})
+    @ApiSecurity('access-token')
+    @ApiBody({
+        schema: {
+            properties: {
+                'id': {
+                    type: 'string',
+                    description: 'ID of the user to be updated',
+                    example: '5467443817296ad01d46a430'
+                },
+                'username': {
+                    type: 'string',
+                    description: 'Username of the user to be updated',
+                    example: 'User02'
+                },
+                'name': {
+                    type: 'string',
+                    description: 'Name of the user to be updated',
+                    example: 'John Smith'
+                },
+                'email': {
+                    type: 'string',
+                    description: 'Email of the user to be updated',
+                    example: 'test@example.com'
+                },
+                'password': {
+                    type: 'string',
+                    description: 'Password of the user to be updated',
+                    example: 'test@example.com'
+                },
+                'department': {
+                    type: 'string',
+                    description: 'Department of the user to be updated',
+                    example: 'MAE'
+                }
+            }
+        }
+    })
+    @ApiResponse({
+        status: 201,
+        schema: {
+            properties: {
+                'message': {
+                    type: 'string',
+                    description: 'Return message from server',
+                    example: 'User updated'
+                }
+            }
+        },
+        description: 'User information updated successfully.'
+    })
+    @ApiResponse({
+        status: 404,
+        schema: httpException,
+        description: 'The requested user could not be found.'
+    })
+    @ApiResponse({
+        status: 400,
+        schema: httpException,
+        description: 'Invalid user ID format'
+    })
+    @ApiResponse({
+        status: 409,
+        schema: httpException,
+        description: 'Username or email already exist'
+    })
+    @Post('update')
+    async updateUser(
+        @Body('id') id: string,
+        @Body('name') name?: string,
+        @Body('username') username?: string,
+        @Body('email') email?: string,
+        @Body('password') password?: string,
+        @Body('department') department?: string
+    ) {
+        const message = this.userService.updateUser(id, username, name, email, password, department)
+        return message;
+    }
 }
 
 @ApiTags('Admins')

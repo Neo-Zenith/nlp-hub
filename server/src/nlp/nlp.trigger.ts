@@ -17,6 +17,22 @@ export function NlpTrigger() {
         return next();
     })
 
+    NlpSchema.pre('updateOne', async function (next) {
+        const baseAddress = this.getUpdate()['$set']['baseAddress'];
+
+        if (baseAddress) {
+            const service = await NlpModel.findOne({
+                baseAddress
+            });
+      
+            if (service && service.id !== this['_conditions']['_id']) {
+                throw new Error("Service with the same base address already registered");
+            }
+        }
+      
+        return next();
+    });
+
     // Pre-delete trigger
     NlpSchema.pre('deleteOne', async function(next) {
         await NlpEndpointModel.deleteMany({

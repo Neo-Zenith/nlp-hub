@@ -66,11 +66,11 @@ export class NlpEndpoint extends Document {
 } 
 
 export const NlpSchema = SchemaFactory.createForClass(Nlp);
+NlpTrigger();
 export const NlpModel = mongoose.model('Nlp', NlpSchema);
 
 export const NlpEndpointSchema = SchemaFactory.createForClass(NlpEndpoint);
+NlpEndpointTrigger();
 export const NlpEndpointModel = mongoose.model('NlpEndpoint', NlpEndpointSchema);
 
-NlpTrigger();
-NlpEndpointTrigger();
 

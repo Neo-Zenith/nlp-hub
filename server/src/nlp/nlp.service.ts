@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Nlp, NlpEndpoint } from "./nlp.model";
+import { Nlp, NlpEndpoint, NlpModel } from "./nlp.model";
 
 @Injectable()
 export class NlpService {
@@ -16,8 +16,8 @@ export class NlpService {
         serviceDescription: string, 
         serviceAddress: string,
         serviceType: string,
-        serviceEndpoints: NlpEndpoint[]) {
-
+        serviceEndpoints: NlpEndpoint[]
+    ) {
         const newService = new this.nlpModel({
             name: serviceName,
             version: serviceVersion,
@@ -46,6 +46,41 @@ export class NlpService {
         return {
             message: "Service deleted"
         };
+    }
+
+    async updateService(
+        serviceID: string, 
+        name?: string, 
+        version?: string, 
+        baseAddress?: string, 
+        description?: string, 
+        type?: string
+    ) {
+
+        var updates = {}
+
+        if (name) {
+            updates['name'] = name;
+        }
+        if (version) {
+            updates['version'] = version;
+        }
+        if (baseAddress) {
+            updates['baseAddress'] = baseAddress;
+        }
+        if (description) {
+            updates['description'] = description;
+        }
+        if (type) {
+            updates['type'] = type;
+        }
+        
+        const result = await NlpModel.updateOne(
+            { _id: serviceID }, 
+            { $set: updates } 
+        );
+
+        return { message: result }
     }
 
     async retrieveAllServices(name?: string, type?: string) {
@@ -141,6 +176,38 @@ export class NlpService {
         return {
             message: "Endpoint deleted"
         };
+    }
+
+    async updateEndpoint(
+        endpointID: string,
+        serviceID?: string,
+        endpointPath?: string,
+        task?: string,
+        options?: Record<string, any>,
+        method?: string
+    ) {
+        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+        if (! endpoint) {
+            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
+        }
+        if (serviceID) {
+            await this.checkServiceExist(serviceID);
+            endpoint.serviceID = serviceID
+        }
+        if (endpointPath) {
+            endpoint.endpointPath = endpointPath
+        }
+        if (task) {
+            endpoint.task = task
+        }
+        if (method) {
+            endpoint.method = method;
+        }
+        if (options) {
+            endpoint.options = options
+        }
+        await endpoint.save()
+        return { message: 'Endpoint updated successfully' }
     }
 
     private async checkServiceExist(serviceID: string) {

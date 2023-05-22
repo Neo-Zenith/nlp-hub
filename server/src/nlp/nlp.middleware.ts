@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { MethodTypes, NlpTypes } from './nlp.model';
+import { Debug } from 'src/custom/debug/debug';
+import { httpException } from 'src/custom/custom.schema';
 
 
 @Injectable()
@@ -53,8 +55,7 @@ export class RetrieveServiceMiddleware extends MissingFieldsMiddleware implement
 @Injectable()
 export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['id', 'name', 'version', 'description', 'address', 
-        'endpoints'];
+        const requiredFields = ['id'];
         super(requiredFields);
         this.requiredFields = requiredFields;
     }
@@ -64,6 +65,7 @@ export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements 
             if (! mongoose.isValidObjectId(req.body['id'])) {
                 throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
             }
+
             if (validateServiceField(req)) {
                 return next();
             }
@@ -123,8 +125,7 @@ export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implemen
 @Injectable()
 export class UpdateEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['id', 'serviceID', 'method', 'options', 
-                                'endpointPath', 'task']
+        const requiredFields = ['id']
         super(requiredFields);
         this.requiredFields = requiredFields;
     }
@@ -146,22 +147,31 @@ export class UpdateEndpointMiddleware extends MissingFieldsMiddleware implements
 
 
 function validateServiceField(req: CustomRequest) {
-    for (const endpoint of req.body['endpoints']) {
-        if (typeof endpoint !== 'object' || 
-            ! ('endpointPath' in endpoint) ||
-            ! ('method' in endpoint) ||
-            ! ('options' in endpoint) ||
-            ! ('task' in endpoint)) {
-                throw new HttpException(
-                    "Incomplete body (endpoints)", HttpStatus.BAD_REQUEST)
+    if (req.body['endpoints']) {
+        try {
+            for (const endpoint of req.body['endpoints']) {
+                if (typeof endpoint !== 'object' || 
+                    ! ('endpointPath' in endpoint) ||
+                    ! ('method' in endpoint) ||
+                    ! ('options' in endpoint) ||
+                    ! ('task' in endpoint)) {
+                        throw new HttpException(
+                            "Incomplete body (endpoints)", HttpStatus.BAD_REQUEST)
+                    }
             }
+        } catch (err) {
+            Debug.devLog('validateServiceField', err);
+            if (err.name === 'TypeError') {
+                throw new HttpException('Invalid body (endpoints)', HttpStatus.BAD_REQUEST)
+            }
+        }
     }
-
-    if (! Object.values(NlpTypes).includes(req.body['type'])) {
+    
+    if (req.body['type'] && ! Object.values(NlpTypes).includes(req.body['type'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
     }
 
-    if (! Object.values(MethodTypes).includes(req.body['method'])) {
+    if (req.body['method'] && ! Object.values(MethodTypes).includes(req.body['method'])) {
         throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     

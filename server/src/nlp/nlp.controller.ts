@@ -108,7 +108,8 @@ export class NlpController {
             serviceDesc,
             serviceAddr,
             serviceType,
-            serviceEndpoints);
+            serviceEndpoints
+        );
         return { id: serviceID };
     }
 
@@ -146,33 +147,6 @@ export class NlpController {
                     type: 'string', 
                     description: `Valid types are: ${Object.values(NlpTypes).join(', ').toString()}`,
                     example: 'SUD' 
-                },
-                'endpoints': { 
-                    type: 'array', 
-                    description: 'Array of endpoints provided by the service',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            'method': { 
-                                type: 'string',
-                                description: `HTTP method of the endpoint. Valid methods are: ${Object.values(MethodTypes).join(', ').toString()}`, 
-                                example: 'POST' 
-                            },
-                            'endpointPath': { 
-                                type: 'string', 
-                                description: 'Endpoint path for the endpoint, must include a leading backslash',
-                                example: '/predict'
-                            },
-                            'options': { 
-                                type: 'object', 
-                                description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
-                                example: {
-                                    'option1': 'string',
-                                    'option2': 'boolean'
-                                } 
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -191,10 +165,10 @@ export class NlpController {
         status: 201, 
         schema: {
             properties: {
-                'id': {
+                'message': {
                     type: 'string',
-                    description: 'ID of the newly updated service',
-                    example: '5467443817296ad01d46a430'
+                    description: 'Return message from the server',
+                    example: 'Service updated'
                 }
             }
         },
@@ -208,24 +182,17 @@ export class NlpController {
     @Post('update')
     async updateNlp(
         @Body('id') serviceID: string,
-        @Body('name') serviceName: string,
-        @Body('version') serviceVersion: string,
-        @Body('description') serviceDesc: string,
-        @Body('address') serviceAddr: string,
-        @Body('type') serviceType: string,
-        @Body('endpoints') serviceEndpoints: NlpEndpoint[]
+        @Body('name') serviceName?: string,
+        @Body('version') serviceVersion?: string,
+        @Body('description') serviceDesc?: string,
+        @Body('address') serviceAddr?: string,
+        @Body('type') serviceType?: string
     ) {
-        await this.nlpService.unsubscribe(serviceID);
-        const newID = await this.nlpService.subscribe(
-            serviceName,
-            serviceVersion,
-            serviceDesc,
-            serviceAddr,
-            serviceType,
-            serviceEndpoints
+        
+        const message = await this.nlpService.updateService(
+            serviceID, serviceName, serviceVersion, serviceAddr, serviceDesc, serviceType
         )
-
-        return { id: newID }
+        return message;
     }
 
     @ApiOperation({ summary: 'Removes an NLP service from the server' })
@@ -249,7 +216,8 @@ export class NlpController {
     @ApiResponse({ 
         status: 400, 
         schema: httpException,
-        description: 'Invalid service ID format.'})
+        description: 'Invalid service ID format.'
+    })
     @ApiResponse({ 
         status: 201, 
         schema: {
@@ -455,7 +423,8 @@ export class NlpController {
                 }
             }
         },
-        description: 'Successful retrieval of endpoints.'})
+        description: 'Successful retrieval of endpoints.'
+    })
     @ApiResponse({ 
         status: 404, 
         schema: httpException,
@@ -484,10 +453,9 @@ export class NlpController {
 
         return { endpoints: returnData };
     }
-
 }
 
-@ApiTags('Service endpoints')
+@ApiTags('Endpoints')
 @Controller('endpoints')
 export class EndpointController {
     constructor(
@@ -543,7 +511,8 @@ export class EndpointController {
                 }
             }
         },
-        description: 'Successful retrieval of endpoints.'})
+        description: 'Successful retrieval of endpoints.'
+    })
     @ApiResponse({ 
         status: 500, 
         schema: httpException,
@@ -628,7 +597,8 @@ export class EndpointController {
     @ApiResponse({ 
         status: 400, 
         schema: httpException,
-        description: 'Invalid endpoint ID format.'})
+        description: 'Invalid endpoint ID format.'
+    })
     @Get(':id')
     async getEndpoint(@Param('id') endpointID: string) {
         const endpoint = await this.nlpService.retrieveOneEndpoint(endpointID);
@@ -810,7 +780,8 @@ export class EndpointController {
                 }
             }
         },
-        description: 'The endpoint is successfully updated.'})
+        description: 'The endpoint is successfully updated.'
+    })
     @ApiResponse({ 
         status: 400, 
         schema: httpException,
@@ -829,17 +800,15 @@ export class EndpointController {
     @Post('update') 
     async updateEndpoint(
         @Body('id') endpointID: string,
-        @Body('serviceID') serviceID: string,
-        @Body('method') method: string,
-        @Body('endpointPath') endpointPath: string,
-        @Body('task') task: string,
-        @Body('options') options: Record<string, string>
+        @Body('serviceID') serviceID?: string,
+        @Body('method') method?: string,
+        @Body('endpointPath') endpointPath?: string,
+        @Body('task') task?: string,
+        @Body('options') options?: Record<string, string>
     ) {
-        await this.nlpService.removeEndpoint(endpointID);
-        const newEndpointID = await this.nlpService.addEndpoint(
-            serviceID, endpointPath, method, task, options
+        const message = await this.nlpService.updateEndpoint(
+            endpointID, serviceID, endpointPath, task, options, method
         )
-
-        return { id: newEndpointID }
+        return message;
     }
 }

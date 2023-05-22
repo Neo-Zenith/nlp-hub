@@ -75,6 +75,28 @@ export class UserService {
         return { message: "User deleted" }
     }
 
+    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string) {
+        const user = await this.userModel.findById(id);
+        if (username) {
+            user.username = username;
+        }
+        if (name) {
+            user.name = name;
+        }
+        if (email) {
+            user.email = email;
+        }
+        if (password) {
+            user.password = await this.hashPassword(password)
+        }
+        if (department) {
+            user.department = department;
+        }
+
+        await user.save()
+        return { message: 'User updated' }
+    }
+
     private async hashPassword(password: string) {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
