@@ -9,7 +9,7 @@ import { QueryTrigger } from "./query.trigger";
  */
 @Schema()
 export class Query extends Document {
-    @Prop({ type: Types.ObjectId, ref: User.name, required: true })
+    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     userID: string;
 
     @Prop({ required: true, default: Date.now })

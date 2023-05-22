@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { AdminModel, AdminSchema, UserModel, UserSchema } from "./user.model";
+import { QueryModel } from "src/query/query.model";
 
 export function UserTrigger() {
     UserSchema.pre('save', async function(next) {
@@ -18,6 +19,13 @@ export function UserTrigger() {
         } else if (userEmail) {
             throw new HttpException("Email taken", HttpStatus.CONFLICT);
         }
+    })
+
+    UserSchema.pre('deleteOne', async function(next) {
+        await QueryModel.deleteMany({
+            serviceID: this.getFilter()["_id"]
+        })
+        return next();
     })
 
     AdminSchema.pre('save', async function(next) {

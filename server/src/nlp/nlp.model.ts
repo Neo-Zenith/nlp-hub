@@ -49,7 +49,7 @@ export class Nlp extends Document {
  */
 @Schema()
 export class NlpEndpoint extends Document {
-    @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
+    @Prop({ type: Types.ObjectId, ref: 'Nlp', required: true })
     serviceID: string;
 
     @Prop({ required: true, enum: MethodTypes })
