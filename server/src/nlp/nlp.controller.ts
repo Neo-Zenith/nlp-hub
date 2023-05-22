@@ -18,11 +18,13 @@ export class NlpController {
                 'name': { 
                     type: 'string', 
                     description: 'Name of the service',
-                    example: 'SUD Auto-punctuator' },
+                    example: 'SUD Auto-punctuator' 
+                },
                 'version': { 
                     type: 'string', 
                     description: 'Version of the service',
-                    example: '1.0' },
+                    example: '1.0' 
+                },
                 'description': { 
                     type: 'string', 
                     description: 'Description of the service',
@@ -30,11 +32,13 @@ export class NlpController {
                 'address': { 
                     type: 'string', 
                     description: 'IP address/URL of the service (include port number if necessary)',
-                    example: '192.168.0.1:3000' },
+                    example: '192.168.0.1:3000' 
+                },
                 'type': { 
                     type: 'string', 
                     description: `Valid types are: ${Object.values(NlpTypes).join(', ').toString()}`,
-                    example: 'SUD' },
+                    example: 'SUD' 
+                },
                 'endpoints': { 
                     type: 'array', 
                     description: 'Array of endpoints provided by the service',
@@ -44,18 +48,21 @@ export class NlpController {
                             'method': { 
                                 type: 'string',
                                 description: `HTTP method of the endpoint. Valid methods are: ${Object.values(MethodTypes).join(', ').toString()}`, 
-                                example: 'POST' },
+                                example: 'POST'
+                            },
                             'endpointPath': { 
                                 type: 'string', 
                                 description: 'Endpoint path for the endpoint, must include a leading backslash',
-                                example: '/predict'},
+                                example: '/predict'
+                            },
                             'options': { 
                                 type: 'object', 
                                 description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
                                 example: {
                                     'option1': 'string',
                                     'option2': 'boolean'
-                                } }
+                                } 
+                            }
                         }
                     }
                 }
@@ -92,27 +99,33 @@ export class NlpController {
                 'id': { 
                     type: 'string',
                     description: 'ID of the service to be updated', 
-                    example: '5467443817296ad01d46a430'},
+                    example: '5467443817296ad01d46a430'
+                },
                 'name': { 
                     type: 'string', 
                     description: 'Name of the service',
-                    example: 'SUD Auto-punctuator' },
+                    example: 'SUD Auto-punctuator' 
+                },
                 'version': { 
                     type: 'string', 
                     description: 'Version of the service',
-                    example: '1.0' },
+                    example: '1.0' 
+                },
                 'description': { 
                     type: 'string', 
                     description: 'Description of the service',
-                    example: 'This service auto-punctuates English sentences' },
+                    example: 'This service auto-punctuates English sentences' 
+                },
                 'address': { 
                     type: 'string', 
                     description: 'IP address/URL of the service (include port number if necessary)',
-                    example: '192.168.0.1:3000' },
+                    example: '192.168.0.1:3000' 
+                },
                 'type': { 
                     type: 'string', 
                     description: `Valid types are: ${Object.values(NlpTypes).join(', ').toString()}`,
-                    example: 'SUD' },
+                    example: 'SUD' 
+                },
                 'endpoints': { 
                     type: 'array', 
                     description: 'Array of endpoints provided by the service',
@@ -122,28 +135,43 @@ export class NlpController {
                             'method': { 
                                 type: 'string',
                                 description: `HTTP method of the endpoint. Valid methods are: ${Object.values(MethodTypes).join(', ').toString()}`, 
-                                example: 'POST' },
+                                example: 'POST' 
+                            },
                             'endpointPath': { 
                                 type: 'string', 
                                 description: 'Endpoint path for the endpoint, must include a leading backslash',
-                                example: '/predict'},
+                                example: '/predict'
+                            },
                             'options': { 
                                 type: 'object', 
                                 description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
                                 example: {
                                     'option1': 'string',
                                     'option2': 'boolean'
-                                } }
+                                } 
+                            }
                         }
                     }
                 }
             }
         }
      })
-    @ApiResponse({ status: 404, description: 'The requested service could not be found.'})
-    @ApiResponse({ status: 400, description: 'Invalid service ID format, or incomplete body.'})
-    @ApiResponse({ status: 201, description: 'The service is successfully updated.'})
-    @ApiResponse({ status: 409, description: 'The service already exist (duplicated address).'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested service could not be found.'
+    })
+    @ApiResponse({ 
+        status: 400, 
+        description: 'Invalid service ID format, or incomplete body.'
+    })
+    @ApiResponse({ 
+        status: 201, 
+        description: 'The service is successfully updated.'
+    })
+    @ApiResponse({ 
+        status: 409, 
+        description: 'The service already exist (duplicated address).'
+    })
     @Post('update')
     async updateNlp(
         @Body('id') serviceID: string,
@@ -175,13 +203,20 @@ export class NlpController {
                 'id': { 
                     type: 'string', 
                     description: 'ID of the service to be removed',
-                    example: '5467443817296ad01d46a430'}
+                    example: '5467443817296ad01d46a430'
+                }
             }
         }
     })
-    @ApiResponse({ status: 404, description: 'The requested service could not be found.'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested service could not be found.'
+    })
     @ApiResponse({ status: 400, description: 'Invalid service ID format.'})
-    @ApiResponse({ status: 201, description: 'The service is successfully updated.'})
+    @ApiResponse({ 
+        status: 201, 
+        description: 'The service is successfully updated.'
+    })
     @Post('unsubscribe')
     async unsubscribeNlp(
         @Body('id') serviceID: string
@@ -195,11 +230,13 @@ export class NlpController {
     @ApiQuery({ 
         name: 'name', 
         description: 'Name of the service (includes substring matches but case-sensitive)', 
-        required: false })
+        required: false 
+    })
     @ApiQuery({ 
         name: 'type', 
         description: `Type of the service. Valid types are ${Object.values(NlpTypes).join(', ').toString()}`, 
-        required: false })
+        required: false 
+    })
     @ApiResponse({ status: 200, description: 'Successful retrieval of services.'})
     @Get()
     async listAllServices(
@@ -223,10 +260,14 @@ export class NlpController {
     @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'id', 
-        description: 'ID of the service to be retrieved' })
+        description: 'ID of the service to be retrieved' 
+    })
     @ApiResponse({ status: 200, description: 'Successful retrieval of service.'})
     @ApiResponse({ status: 400, description: 'Invalid service ID format.'})
-    @ApiResponse({ status: 404, description: 'The requested service could not be found.'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested service could not be found.'
+    })
     @Get(':id')
     async getService(@Param('id') serviceID: string) {
         const service = await this.nlpService.retrieveOneService(serviceID);
@@ -247,17 +288,23 @@ export class NlpController {
     @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'id', 
-        description: 'Endpoints assoicated with this ID will be retrieved' })
+        description: 'Endpoints assoicated with this ID will be retrieved' 
+    })
     @ApiQuery({ 
         name: 'task',
         description: 'Task associated with the endpoint',
-        required: false })
+        required: false 
+    })
     @ApiQuery({ 
         name: 'method',
         description: `HTTP method of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
-        required: false })
+        required: false 
+    })
     @ApiResponse({ status: 200, description: 'Successful retrieval of endpoints.'})
-    @ApiResponse({ status: 404, description: 'The requested service could not be found.'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested service could not be found.'
+    })
     @Get(':id/endpoints')
     async getServiceEndpoint(
         @Param('id') serviceID: string,
@@ -292,16 +339,22 @@ export class EndpointController {
     ) {}
     
     @ApiOperation({ summary: "Retrieves all endpoints" })
+    @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'task',
         description: 'Task associated with the endpoint',
-        required: false })
+        required: false 
+    })
     @ApiQuery({ 
         name: 'method',
         description: `HTTP method of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
-        required: false })
+        required: false 
+    })
     @ApiResponse({ status: 200, description: 'Successful retrieval of endpoints.'})
-    @ApiResponse({ status: 500, description: 'Some endpoints have no associated services.'})
+    @ApiResponse({ 
+        status: 500, 
+        description: 'Some endpoints have no associated services.'
+    })
     @Get()
     async listAllEndpoints(
         @Query('method') method?: string,
@@ -332,11 +385,16 @@ export class EndpointController {
     }
 
     @ApiOperation({ summary: 'Retrieves an endpoint' })
+    @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'id',
-        description: 'ID of the endpoint to be retrieved' })
+        description: 'ID of the endpoint to be retrieved' 
+    })
     @ApiResponse({ status: 200, description: 'Successful retrieval of an endpoint.'})
-    @ApiResponse({ status: 404, description: 'The requested endpoint could not be found.'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested endpoint could not be found.'
+    })
     @ApiResponse({ status: 400, description: 'Invalid endpoint ID format.'})
     @Get(':id')
     async getEndpoint(@Param('id') endpointID: string) {
@@ -356,35 +414,52 @@ export class EndpointController {
     }
 
     @ApiOperation({ summary: 'Adds an endpoint to the server' })
+    @ApiSecurity('access-token')
     @ApiBody({
         schema: {
             properties: {
                 'serviceID': { 
                     type: 'string', 
                     description: 'ID of the service to be associated with this endpoint',
-                    example: '5467443817296ad01d46a430' },
+                    example: '5467443817296ad01d46a430' 
+                },
                 'method': { 
                     type: 'string',
                     description: `HTTP methods of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`, 
-                    example: 'POST' },
+                    example: 'POST' 
+                },
                 'endpointPath': { 
                     type: 'string', 
                     description: 'Endpoint path for the endpoint, must include a leading backslash',
-                    example: '/predict'},
+                    example: '/predict'
+                },
                 'options': { 
                     type: 'object', 
                     description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
                     example: {
                         'option1': 'string',
                         'option2': 'boolean'
-                    } }
+                    } 
+                }
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'The endpoint is successfully added to the server.'})
-    @ApiResponse({ status: 400, description: 'Invalid service ID format, or incomplete body.'})
-    @ApiResponse({ status: 409, description: 'Task for the service, or endpoint for the service of the given method already exist.'})
-    @ApiResponse({ status: 404, description: 'The requested service could not be found.'})
+    @ApiResponse({ 
+        status: 201, 
+        description: 'The endpoint is successfully added to the server.'
+    })
+    @ApiResponse({ 
+        status: 400, 
+        description: 'Invalid service ID format, or incomplete body.'
+    })
+    @ApiResponse({ 
+        status: 409, 
+        description: 'Task for the service, or endpoint for the service of the given method already exist.'
+    })
+    @ApiResponse({ 
+        status: 404,
+        description: 'The requested service could not be found.'
+    })
     @Post('add')
     async addEndpoint(
         @Body('serviceID') serviceID: string,
@@ -401,19 +476,27 @@ export class EndpointController {
     }
 
     @ApiOperation({ summary: 'Removes an endpoint from the server' })
+    @ApiSecurity('access-token')
     @ApiBody({
         schema: {
             properties: {
                 'id': { 
                     type: 'string', 
                     description: 'ID of the endpoint to be removed',
-                    example: '5467443817296ad01d46a430' }
+                    example: '5467443817296ad01d46a430' 
+                }
             }
         }
     })
-    @ApiResponse({ status: 201, description: 'The endpoint is successfully removed to the server.'})
+    @ApiResponse({ 
+        status: 201, 
+        description: 'The endpoint is successfully removed to the server.'
+    })
     @ApiResponse({ status: 400, description: 'Invalid endpoint ID format.'})
-    @ApiResponse({ status: 404, description: 'The requested endpoint could not be found.'})
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested endpoint could not be found.'
+    })
     @Post('remove')
     async removeEndpoint(
         @Body('id') endpointID: string
@@ -423,6 +506,7 @@ export class EndpointController {
     }
 
     @ApiOperation({ summary: 'Updates information of an endpoint' })
+    @ApiSecurity('access-token')
     @ApiBody({
         schema: {
             properties: {
@@ -434,29 +518,42 @@ export class EndpointController {
                 'serviceID': { 
                     type: 'string', 
                     description: 'ID of the service to be associated with this endpoint',
-                    example: '5467443817296ad01d46a430' },
+                    example: '5467443817296ad01d46a430' 
+                },
                 'method': { 
                     type: 'string',
                     description: `HTTP methods of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`, 
-                    example: 'POST' },
+                    example: 'POST' 
+                },
                 'endpointPath': { 
                     type: 'string', 
                     description: 'Endpoint path for the endpoint, must include a leading backslash',
-                    example: '/predict'},
+                    example: '/predict'
+                },
                 'options': { 
                     type: 'object', 
                     description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
                     example: {
                         'option1': 'string',
                         'option2': 'boolean'
-                    } }
+                    } 
+                }
             }
         }
     })
     @ApiResponse({ status: 201, description: 'The endpoint is successfully updated.'})
-    @ApiResponse({ status: 400, description: 'Invalid service ID format, invalid endpoint ID format, or incomplete body.'})
-    @ApiResponse({ status: 409, description: 'Task for the service, or endpoint for the service of the given method already exist.'})
-    @ApiResponse({ status: 404, description: 'The requested service or endpoint could not be found.'})
+    @ApiResponse({ 
+        status: 400, 
+        description: 'Invalid service ID format, invalid endpoint ID format, or incomplete body.'
+    })
+    @ApiResponse({ 
+        status: 409, 
+        description: 'Task for the service, or endpoint for the service of the given method already exist.'
+    })
+    @ApiResponse({ 
+        status: 404, 
+        description: 'The requested service or endpoint could not be found.'
+    })
     @Post('update') 
     async updateEndpoint(
         @Body('id') endpointID: string,

@@ -5,8 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger/dist';
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     const options = new DocumentBuilder()
-		.setTitle('Your API Title')
-		.setDescription('Your API Description')
+		.setTitle('NLP Hub')
+		.setDescription('API endpoints for NLP Hub')
 		.setVersion('1.0')
         .addBearerAuth(
             { 
