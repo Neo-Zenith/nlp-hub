@@ -63,6 +63,8 @@ export class QueryService {
             else {
                 if (! service) {
                     return Object.assign({'deleted': true}, usage['_doc'] )
+                } else {
+                    return usage;
                 }
             }
         }));
