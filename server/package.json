@@ -1,8 +1,8 @@
 {
-  "name": "server",
+  "name": "nlphub",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "NLP Hub: Centralised gateway for NLP services",
+  "author": "Lee Juin",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
