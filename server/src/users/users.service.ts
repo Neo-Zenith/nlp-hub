@@ -94,7 +94,7 @@ export class UserService {
             updates['department'] = department
         }
 
-        const result = await UserModel.updateOne(
+        await UserModel.updateOne(
             { _id: id }, 
             { $set: updates }
         )

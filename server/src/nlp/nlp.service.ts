@@ -204,12 +204,12 @@ export class NlpService {
             updates['method'] = method;
         }
         
-        const result = await NlpModel.updateOne(
+        await NlpModel.updateOne(
             { _id: endpointID }, 
             { $set: updates } 
         );
 
-        return { message: result }
+        return { message: 'Service updated' }
     }
 
     private async checkServiceExist(serviceID: string) {
