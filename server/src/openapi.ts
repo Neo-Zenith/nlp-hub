@@ -1,0 +1,28 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger/dist';
+
+async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    const options = new DocumentBuilder()
+		.setTitle('Your API Title')
+		.setDescription('Your API Description')
+		.setVersion('1.0')
+        .addBearerAuth(
+            { 
+              description: `Please enter your access token`,
+              name: 'Authorization',
+              bearerFormat: 'Bearer',
+              scheme: 'Bearer',
+              type: 'http', 
+              in: 'Header'
+            },
+            'access-token')
+        .build();
+
+	const document = SwaggerModule.createDocument(app, options);
+  	SwaggerModule.setup('api', app, document);
+    await app.listen(3000);
+}
+
+bootstrap();

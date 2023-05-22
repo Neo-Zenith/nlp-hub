@@ -100,16 +100,16 @@ export class NlpService {
             query.method = method;
         }
         query.serviceID = serviceID;
-    
-        const endpoints = await this.nlpEndpointModel.find(query).exec();
-    
-        if (endpoints.length === 0) {
+
+        const endpointsExist = await this.nlpEndpointModel.find({ serviceID: serviceID }) 
+        if (endpointsExist.length === 0) {
             throw new HttpException(
-                'No endpoints found for the requested service',
+                'Service not found',
                 HttpStatus.NOT_FOUND
             );
         }
     
+        const endpoints = await this.nlpEndpointModel.find(query).exec();
         return endpoints;
     }
 
@@ -144,18 +144,12 @@ export class NlpService {
     }
 
     private async checkServiceExist(serviceID: string) {
-        const service = await this.nlpModel.findById(serviceID);;
-        const endpoints = await this.nlpEndpointModel.find({serviceID: serviceID});
+        const service = await this.nlpModel.findById(serviceID);
 
         if (! service) {
             throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
         }
 
-        // A service without any endpoint is invalid
-        if (endpoints.length === 0) {
-            throw new HttpException(
-                "No endpoints found for requested service", HttpStatus.NOT_FOUND)
-        }
         return service;
     }
 }
