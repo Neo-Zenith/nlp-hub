@@ -28,6 +28,31 @@ export function UserTrigger() {
         return next();
     })
 
+    UserSchema.pre('updateOne', async function(next) {
+        const username = this.getUpdate()['$set']['username'];
+        const email = this.getUpdate()['$set']['email']
+        if (username) {
+            const user = await UserModel.findOne({
+                username: username
+            })
+
+            if (user && user.id !== this['_conditions']['_id']) {
+                throw new HttpException('Username already exist', HttpStatus.CONFLICT)
+            }
+        }
+
+        if (email) {
+            const user = await UserModel.findOne({
+                email: email
+            })
+
+            if (user && user.id !== this['_conditions']['_id']) {
+                throw new HttpException('Email already exist', HttpStatus.CONFLICT)
+            }
+        }
+        return next();
+    })
+
     AdminSchema.pre('save', async function(next) {
         const adminEmail = await AdminModel.findOne({
             email: this.email

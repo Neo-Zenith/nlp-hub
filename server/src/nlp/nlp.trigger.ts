@@ -78,4 +78,40 @@ export function NlpEndpointTrigger() {
 
         return next();
     })
+
+    NlpEndpointSchema.pre('updateOne', async function(next) {
+        const serviceID = this.getUpdate()['$set']['serviceID'];
+        const method = this.getUpdate()['$set']['method']
+        const endpointPath = this.getUpdate()['$set']['endpointPath']
+        const task = this.getUpdate()['$set']['task']
+
+        const service = await NlpModel.findById(serviceID);
+        if (! service) {
+            throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
+        }
+
+        const endpointExist = await NlpEndpointModel.findOne({
+            serviceID: serviceID,
+            endpointPath: endpointPath,
+            method: method
+        })
+        if (endpointExist && endpointExist.id !== this['_conditions']['_id']) {
+            throw new HttpException(
+                "Endpoint of the given method already registered",
+                HttpStatus.CONFLICT)
+        }
+
+        const taskExist = await NlpEndpointModel.findOne({
+            serviceID: serviceID,
+            task: task
+        })
+        if (taskExist && taskExist.id !== this['_conditions']['_id']) {
+            throw new HttpException(
+                "Task for the requested service already registered",
+                HttpStatus.CONFLICT
+            )
+        }
+
+        return next();
+    })
 }

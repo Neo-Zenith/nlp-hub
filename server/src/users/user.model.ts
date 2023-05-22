@@ -60,9 +60,8 @@ export class Admin extends DefaultUser {
 
 
 export const UserSchema = SchemaFactory.createForClass(User);
-export const UserModel = mongoose.model('User', UserSchema);
-
 export const AdminSchema = SchemaFactory.createForClass(Admin);
-export const AdminModel = mongoose.model('Admin', AdminSchema);
-
 UserTrigger();
+
+export const UserModel = mongoose.model('User', UserSchema);
+export const AdminModel = mongoose.model('Admin', AdminSchema);

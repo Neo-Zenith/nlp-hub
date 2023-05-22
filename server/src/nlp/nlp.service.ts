@@ -186,28 +186,30 @@ export class NlpService {
         options?: Record<string, any>,
         method?: string
     ) {
-        const endpoint = await this.nlpEndpointModel.findById(endpointID);
-        if (! endpoint) {
-            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
-        }
+        var updates = {}
+
         if (serviceID) {
-            await this.checkServiceExist(serviceID);
-            endpoint.serviceID = serviceID
+            updates['serviceID'] = serviceID;
         }
         if (endpointPath) {
-            endpoint.endpointPath = endpointPath
+            updates['endpointPath'] = endpointPath;
         }
         if (task) {
-            endpoint.task = task
-        }
-        if (method) {
-            endpoint.method = method;
+            updates['task'] = task;
         }
         if (options) {
-            endpoint.options = options
+            updates['options'] = options;
         }
-        await endpoint.save()
-        return { message: 'Endpoint updated successfully' }
+        if (method) {
+            updates['method'] = method;
+        }
+        
+        const result = await NlpModel.updateOne(
+            { _id: endpointID }, 
+            { $set: updates } 
+        );
+
+        return { message: result }
     }
 
     private async checkServiceExist(serviceID: string) {

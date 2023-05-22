@@ -4,7 +4,7 @@ import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
-import { Admin, User } from "./user.model";
+import { Admin, User, UserModel } from "./user.model";
 dotenv.config();
 
 @Injectable() 
@@ -76,24 +76,28 @@ export class UserService {
     }
 
     async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string) {
-        const user = await this.userModel.findById(id);
+        var updates = {}
+
         if (username) {
-            user.username = username;
+            updates['username'] = username
         }
         if (name) {
-            user.name = name;
+            updates['name'] = name
         }
         if (email) {
-            user.email = email;
+            updates['email'] = email
         }
         if (password) {
-            user.password = await this.hashPassword(password)
+            updates['password'] = await this.hashPassword(password);
         }
         if (department) {
-            user.department = department;
+            updates['department'] = department
         }
 
-        await user.save()
+        const result = await UserModel.updateOne(
+            { _id: id }, 
+            { $set: updates }
+        )
         return { message: 'User updated' }
     }
 
