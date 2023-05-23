@@ -95,7 +95,8 @@ export class CheckAuthMiddleware implements NestMiddleware {
     isAdmin(url: string): boolean {
         const restrictedRoutes = [
             '/admins/register',
-            '/admin/extend-subscription',
+            '/admins/extend-subscription',
+            '/admins/get-users',
             '/services/unsubscribe',
             '/services/subscribe',
             '/services/update',

@@ -105,3 +105,49 @@ export const updateUserSubscriptionSchema = {
         }
     }
 }
+
+export const userResponseSchema = {
+    properties: {
+        'id': {
+            type: 'string',
+            description: 'ID of the user.',
+            example: '5467443817296ad01d46a430'
+        },
+        'name': {
+            type: 'string',
+            description: 'Name of the user.',
+            example: 'John Doe'
+        },
+        'username': {
+            type: 'string',
+            description: 'Username of the user.',
+            example: 'User01'
+        },
+        'email': {
+            type: 'string',
+            description: 'Email of the user.',
+            example: 'test@example.com'
+        },
+        'department': {
+            type: 'string',
+            description: 'Department of the user.',
+            example: 'SCSE'
+        },
+        'subscriptionExpiryDate': {
+            type: 'string',
+            description: "Timestamp of the user's subscription expiry date in ISO 8601 date format.",
+            example: '2023-05-19T09:59:03.877Z'
+        }
+    }
+}
+
+export const retrieveUserSchema = {
+    required: ['userID'],
+    properties: {
+        'userID': {
+            type: 'string',
+            description: 'ID must be a valid 12-byte string.',
+            example: '5467443817296ad01d46a430'
+        }
+    }
+}

@@ -75,7 +75,7 @@ export class UserService {
         return { message: "User deleted" }
     }
 
-    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string, extension?: string) {
+    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string, extension?: number) {
         var updates = {}
 
         if (username) {
@@ -97,17 +97,47 @@ export class UserService {
         if (extension) {
             const user = await UserModel.findById(id);
             if (! user) {
-                throw new HttpException("The requested user could not be found", HttpStatus.NOT_FOUND)
+                throw new HttpException("User not found", HttpStatus.NOT_FOUND)
             }
             
-            updates['subscriptionExpiryDate'] = user.subscriptionExpiryDate + extension
+            updates['subscriptionExpiryDate'] = user.subscriptionExpiryDate.setDate(user.subscriptionExpiryDate.getDate() + extension);  
         }
-
+    
         await UserModel.updateOne(
             { _id: id }, 
             { $set: updates }
         )
         return { message: 'User updated' }
+    }
+
+    async getUser(userID: string) {
+        const user = await this.userModel.findById(userID);
+        if (! user) {
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
+        return user;
+    }
+
+    async getAllUsers(expireIn?: number, name?: string, department?: string) {
+        let query = {};
+      
+        if (expireIn) {
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + expireIn);
+      
+            query['subscriptionExpiryDate'] = { $lt: expiryDate };
+        }
+      
+        if (name) {
+            query['name'] = name;
+        }
+      
+        if (department) {
+            query['department'] = department;
+        }
+      
+        const users = await UserModel.find(query);
+        return users;
     }
 
     private async hashPassword(password: string) {

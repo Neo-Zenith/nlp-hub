@@ -1,8 +1,8 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { UserService } from "./users.service";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiSecurity } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiSecurity, ApiQuery, ApiParam } from "@nestjs/swagger";
 import { IDRequestSchema, IDResponseSchema, httpExceptionSchema, serverMessageResponseSchema } from "src/custom/custom.schema";
-import { addUserSchema, loginResponse as loginResponseSchema, updateUserSchema, updateUserSubscriptionSchema, userLoginSchema } from "./user.schema";
+import { addUserSchema, loginResponse as loginResponseSchema, retrieveUserSchema, updateUserSchema, updateUserSubscriptionSchema, userLoginSchema, userResponseSchema } from "./user.schema";
 
 @ApiTags('Users')
 @Controller('users')
@@ -141,6 +141,42 @@ export class UserController {
         const message = this.userService.updateUser(id, username, name, email, password, department)
         return message;
     }
+
+    @ApiOperation({ summary: 'Retrieves a user.' })
+    @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'id',
+        description: 'ID must be a valid 12-byte string.'
+    })
+    @ApiResponse({
+        status: 200,
+        schema: userResponseSchema,
+        description: 'User retrieved successfully.'
+    })
+    @ApiResponse({
+        status: 404,
+        schema: httpExceptionSchema,
+        description: 'The requested user could not be found.'
+    })
+    @ApiResponse({
+        status: 400,
+        schema: httpExceptionSchema,
+        description: 'Invalid user ID format.'
+    })
+    @Get('')
+    async getUser(
+        @Param('id') userID: string
+    ) {
+        const user = await this.userService.getUser(userID);
+        const obscuredUser = {
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            department: user.department
+        }
+        return obscuredUser;
+    }
 }
 
 @ApiTags('Admins')
@@ -234,7 +270,7 @@ export class AdminController {
     @Post('extend-subscription')
     async extendSubscription(
         @Body('userID') userID: string,
-        @Body('extension') extension: string
+        @Body('extension') extension: number
     ) {
         await this.adminService.updateUser(
             userID, 
@@ -246,5 +282,58 @@ export class AdminController {
             extension
         )
         return { message: 'User subscription extended successfully.' }
+    }
+
+    @ApiOperation({ summary: 'Retrieves all users.' })
+    @ApiSecurity('access-token')
+    @ApiQuery({ 
+        name: 'expireIn', 
+        required: false,
+        description: 'Returns all users with subscription expiring before current date + expireIn. Must be a positive integer.'
+    })
+    @ApiQuery({
+        name: 'name',
+        required: false,
+        description: 'Name of the user. Case-sensitive and must match full string.'
+    })
+    @ApiQuery({
+        name: 'department',
+        required: false,
+        description: 'Department of the user. Case-sensitive and must match full string.'
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'Users retrieved successfully.',
+        schema: {
+            properties: {
+                'users': {
+                    type: 'array', 
+                    description: 'Users matching the filter (if any).',
+                    items: userResponseSchema
+                }
+            }
+        }
+    })
+    @Get('get-users')
+    async getUsers(
+        @Query('expireIn') expireIn?: number,
+        @Query('name') name?: string,
+        @Query('department') department?: string,
+    ) {
+        const users = await this.adminService.getAllUsers(expireIn, name, department);
+        
+        var returnPayload = []
+        for (const user of users) {
+            const obscuredUser = {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                department: user.department,
+                subscriptionExpiryDate: user.subscriptionExpiryDate
+            }
+            returnPayload.push(obscuredUser)
+        }
+
+        return { users: returnPayload }
     }
 }

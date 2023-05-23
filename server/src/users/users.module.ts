@@ -1,9 +1,9 @@
-import { MiddlewareConsumer, Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
 import { AdminController, UserController } from "./users.controller";
 import { UserService } from "./users.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AdminSchema, UserSchema } from "./user.model";
-import { LoginUserMiddleware, RegisterUserMiddleware, RemoveUserMiddleware, UpdateUserMiddleware } from "./user.middleware";
+import { ExtendSubscriptionMiddleware, LoginUserMiddleware, RegisterUserMiddleware, RemoveUserMiddleware, RetrieveAllUsersMiddleware, RetrieveUserMiddleware, UpdateUserMiddleware } from "./user.middleware";
 
 @Module({
     imports: [
@@ -30,5 +30,17 @@ export class UserModule {
         consumer
             .apply(UpdateUserMiddleware)
             .forRoutes('/users/update')
+
+        consumer
+            .apply(RetrieveAllUsersMiddleware)
+            .forRoutes('/admins/get-users')
+
+        consumer
+            .apply(RetrieveUserMiddleware)
+            .forRoutes( { path: '/users/:id', method: RequestMethod.GET })
+
+        consumer
+            .apply(ExtendSubscriptionMiddleware)
+            .forRoutes('/admins/extend-subscription')
     }
 }
