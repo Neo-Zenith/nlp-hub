@@ -90,3 +90,18 @@ export const updateUserSchema = {
         }
     }
 }
+
+export const updateUserSubscriptionSchema = {
+    properties: {
+        'userID': {
+            type: 'string',
+            description: 'ID must be a valid 12-byte string.',
+            example: '5467443817296ad01d46a430'
+        },
+        'extension': {
+            type: 'number',
+            description: "Number of days to extend a user's subscription.",
+            example: 30
+        }
+    }
+}

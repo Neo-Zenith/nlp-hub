@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { NlpEndpointModel } from 'src/nlp/nlp.model';
+import { UserModel } from 'src/users/user.model';
 
 @Injectable()
 export class RegisterQueryMiddleware extends MissingFieldsMiddleware implements NestMiddleware{
@@ -14,7 +15,7 @@ export class RegisterQueryMiddleware extends MissingFieldsMiddleware implements 
     }
 
     async use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (! this.checkMissingFields(req)) {
+        if (checkValidSubscription(req) && ! this.checkMissingFields(req)) {
             if (! mongoose.isValidObjectId(req.body['serviceID'])) {
                 throw new HttpException(
                     "Invalid service ID format", HttpStatus.BAD_REQUEST)
@@ -53,5 +54,26 @@ async function validateField(req: CustomRequest) {
                 HttpStatus.BAD_REQUEST);
         }
     }
+    return true;
+}
+
+async function checkValidSubscription(req) {
+    const userID = req.payload.id;
+    const user = await UserModel.findById(userID);
+  
+    if (!user) {
+        throw new HttpException(
+            'The requested user could not be found',
+            HttpStatus.NOT_FOUND
+        );
+    }
+  
+    const expiryDate = user.subscriptionExpiryDate;
+    const currentDate = new Date();
+  
+    if (currentDate > expiryDate) {
+        throw new HttpException('Subscription expired.', HttpStatus.UNAUTHORIZED);
+    }
+
     return true;
 }

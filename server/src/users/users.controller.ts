@@ -2,7 +2,7 @@ import { Body, Controller, Post } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiSecurity } from "@nestjs/swagger";
 import { IDRequestSchema, IDResponseSchema, httpExceptionSchema, serverMessageResponseSchema } from "src/custom/custom.schema";
-import { addUserSchema, loginResponse as loginResponseSchema, updateUserSchema, userLoginSchema } from "./user.schema";
+import { addUserSchema, loginResponse as loginResponseSchema, updateUserSchema, updateUserSubscriptionSchema, userLoginSchema } from "./user.schema";
 
 @ApiTags('Users')
 @Controller('users')
@@ -211,5 +211,40 @@ export class AdminController {
     ) {
         const accessToken = await this.adminService.verifyUser(username, password, 'admin');
         return { accessToken: accessToken };
+    }
+
+    @ApiOperation({ summary: 'Modify user subscription.' })
+    @ApiSecurity('access-token')
+    @ApiBody({ schema: updateUserSubscriptionSchema })
+    @ApiResponse({
+        status: 404,
+        schema: httpExceptionSchema,
+        description: 'The requested user could not be found.'
+    })
+    @ApiResponse({
+        status: 400,
+        schema: httpExceptionSchema,
+        description: 'Invalid user ID format.'
+    })
+    @ApiResponse({
+        status: 201,
+        schema: serverMessageResponseSchema,
+        description: 'User subscription extended successfully.'
+    })
+    @Post('extend-subscription')
+    async extendSubscription(
+        @Body('userID') userID: string,
+        @Body('extension') extension: string
+    ) {
+        await this.adminService.updateUser(
+            userID, 
+            undefined, 
+            undefined, 
+            undefined, 
+            undefined, 
+            undefined, 
+            extension
+        )
+        return { message: 'User subscription extended successfully.' }
     }
 }

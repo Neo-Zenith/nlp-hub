@@ -75,7 +75,7 @@ export class UserService {
         return { message: "User deleted" }
     }
 
-    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string) {
+    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string, extension?: string) {
         var updates = {}
 
         if (username) {
@@ -92,6 +92,15 @@ export class UserService {
         }
         if (department) {
             updates['department'] = department
+        }
+
+        if (extension) {
+            const user = await UserModel.findById(id);
+            if (! user) {
+                throw new HttpException("The requested user could not be found", HttpStatus.NOT_FOUND)
+            }
+            
+            updates['subscriptionExpiryDate'] = user.subscriptionExpiryDate + extension
         }
 
         await UserModel.updateOne(
