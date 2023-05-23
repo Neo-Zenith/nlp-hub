@@ -2,7 +2,8 @@ import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Query } 
 import { NlpService } from "./nlp.service";
 import { MethodTypes, NlpEndpoint, NlpTypes } from "./nlp.model";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiSecurity, ApiParam } from "@nestjs/swagger";
-import { httpException } from "src/custom/custom.schema";
+import { IDRequestSchema, IDResponseSchema, httpExceptionSchema, serverMessageResponseSchema } from "src/custom/custom.schema";
+import { addEndpointSchema, endpointResponseSchema, insertServiceSchema, serviceResponseSchema, updateEndpointSchema, updateServiceSchema } from "./nlp.schema";
 
 @ApiTags('Services')
 @Controller('services')
@@ -11,86 +12,22 @@ export class NlpController {
         private readonly nlpService: NlpService
     ) {}
     
-    @ApiOperation({ summary: 'Adds an NLP service to the server' })
+    @ApiOperation({ summary: 'Registers an NLP service.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'name': { 
-                    type: 'string', 
-                    description: 'Name of the service',
-                    example: 'SUD Auto-punctuator' 
-                },
-                'version': { 
-                    type: 'string', 
-                    description: 'Version of the service',
-                    example: '1.0' 
-                },
-                'description': { 
-                    type: 'string', 
-                    description: 'Description of the service',
-                    example: 'This service auto-punctuates English sentences' },
-                'address': { 
-                    type: 'string', 
-                    description: 'IP address/URL of the service (include port number if necessary)',
-                    example: '192.168.0.1:3000' 
-                },
-                'type': { 
-                    type: 'string', 
-                    description: `Valid types are: ${Object.values(NlpTypes).join(', ').toString()}`,
-                    example: 'SUD' 
-                },
-                'endpoints': { 
-                    type: 'array', 
-                    description: 'Array of endpoints provided by the service',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            'method': { 
-                                type: 'string',
-                                description: `HTTP method of the endpoint. Valid methods are: ${Object.values(MethodTypes).join(', ').toString()}`, 
-                                example: 'POST'
-                            },
-                            'endpointPath': { 
-                                type: 'string', 
-                                description: 'Endpoint path for the endpoint, must include a leading backslash',
-                                example: '/predict'
-                            },
-                            'options': { 
-                                type: 'object', 
-                                description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
-                                example: {
-                                    'option1': 'string',
-                                    'option2': 'boolean'
-                                } 
-                            }
-                        }
-                    }
-                }
-            }
-        }
-     })
+    @ApiBody({ schema: insertServiceSchema })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the newly registered service',
-                    example: '5467443817296ad01d46a430'
-                }
-            }
-        },
-        description: 'The service is successfully registered.'
+        schema: IDResponseSchema,
+        description: 'Service registered successfully.'
     })
     @ApiResponse({ 
         status: 409, 
-        schema: httpException,
-        description: 'The service already exist (duplicated address).'
+        schema: httpExceptionSchema,
+        description: 'Service of the same address already exist within the database.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Incomplete body.'
     })
     @Post('subscribe')
@@ -113,71 +50,28 @@ export class NlpController {
         return { id: serviceID };
     }
 
-    @ApiOperation({ summary: 'Updates information of an NLP service' })
+    @ApiOperation({ summary: 'Updates information of an NLP service.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'id': { 
-                    type: 'string',
-                    description: 'ID of the service to be updated', 
-                    example: '5467443817296ad01d46a430'
-                },
-                'name': { 
-                    type: 'string', 
-                    description: 'Name of the service',
-                    example: 'SUD Auto-punctuator' 
-                },
-                'version': { 
-                    type: 'string', 
-                    description: 'Version of the service',
-                    example: '1.0' 
-                },
-                'description': { 
-                    type: 'string', 
-                    description: 'Description of the service',
-                    example: 'This service auto-punctuates English sentences' 
-                },
-                'address': { 
-                    type: 'string', 
-                    description: 'IP address/URL of the service (include port number if necessary)',
-                    example: '192.168.0.1:3000' 
-                },
-                'type': { 
-                    type: 'string', 
-                    description: `Valid types are: ${Object.values(NlpTypes).join(', ').toString()}`,
-                    example: 'SUD' 
-                }
-            }
-        }
-     })
+    @ApiBody({ schema: updateServiceSchema })
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service could not be found.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid service ID format, or incomplete body.'
     })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'message': {
-                    type: 'string',
-                    description: 'Return message from the server',
-                    example: 'Service updated'
-                }
-            }
-        },
-        description: 'The service is successfully updated.'
+        schema: serverMessageResponseSchema,
+        description: 'Service information updated successfully.'
     })
     @ApiResponse({ 
         status: 409, 
-        schema: httpException,
-        description: 'The service already exist (duplicated address).'
+        schema: httpExceptionSchema,
+        description: 'Another service with the updated address already exist in the database.'
     })
     @Post('update')
     async updateNlp(
@@ -195,41 +89,23 @@ export class NlpController {
         return message;
     }
 
-    @ApiOperation({ summary: 'Removes an NLP service from the server' })
+    @ApiOperation({ summary: 'Removes an NLP service.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'id': { 
-                    type: 'string', 
-                    description: 'ID of the service to be removed',
-                    example: '5467443817296ad01d46a430'
-                }
-            }
-        }
-    })
+    @ApiBody({ schema: IDRequestSchema })
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service could not be found.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid service ID format.'
     })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'message': {
-                    type: 'string',
-                    description: 'Return message from server',
-                    example: 'Service deleted'
-                }
-            }
-        },
-        description: 'The service is successfully deleted.'
+        schema: serverMessageResponseSchema,
+        description: 'Service deleted successfully.'
     })
     @Post('unsubscribe')
     async unsubscribeNlp(
@@ -239,16 +115,16 @@ export class NlpController {
         return response;
     }
 
-    @ApiOperation({ summary: 'Retrieves all NLP services' })
+    @ApiOperation({ summary: 'Retrieves all NLP services.' })
     @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'name', 
-        description: 'Name of the service (includes substring matches but case-sensitive)', 
+        description: 'Name of the service. Returns results with names containing the filter name.', 
         required: false 
     })
     @ApiQuery({ 
         name: 'type', 
-        description: `Type of the service. Valid types are ${Object.values(NlpTypes).join(', ').toString()}`, 
+        description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`, 
         required: false 
     })
     @ApiResponse({ 
@@ -257,41 +133,12 @@ export class NlpController {
             properties: {
                 'services': {
                     type: 'array',
-                    description: 'Array of the services',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            'id': {
-                                type: 'string',
-                                description: 'ID of the service',
-                                example: '5467443817296ad01d46a430'
-                            },
-                            'name': {
-                                type: 'string',
-                                description: 'Name of the service',
-                                example: 'SUD (Auto-punctuator)'
-                            },
-                            'version': {
-                                type: 'string',
-                                description: 'Version of the service',
-                                example: '1.0'
-                            },
-                            'description': {
-                                type: 'string',
-                                description: 'Description of the service',
-                                example: 'This service can auto-punctuate all English sentences'
-                            },
-                            'type': {
-                                type: 'string',
-                                description: `Type of the service. Valid types are ${Object.values(NlpTypes).join(', ').toString()}`,
-                                example: 'SUD'
-                            }
-                        }
-                    }
+                    description: 'Services matching the filters (if any).',
+                    items: serviceResponseSchema
                 }
             }
         },
-        description: 'Successful retrieval of services.'
+        description: 'Services retrieved successfully.'
     })
     @Get()
     async listAllServices(
@@ -311,52 +158,24 @@ export class NlpController {
         return { services: obscuredServices };
     }
 
-    @ApiOperation({ summary: 'Retrieves a service' })
+    @ApiOperation({ summary: 'Retrieves a service.' })
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'id', 
-        description: 'ID of the service to be retrieved' 
+        description: 'ID must be a valid 12-byte string.'
     })
     @ApiResponse({ 
         status: 200, 
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the service',
-                    example: '5467443817296ad01d46a430'
-                },
-                'name': {
-                    type: 'string',
-                    description: 'Name of the service',
-                    example: 'SUD (Auto-punctuator)'
-                },
-                'version': {
-                    type: 'string',
-                    description: 'Version of the service',
-                    example: '1.0'
-                },
-                'description': {
-                    type: 'string',
-                    description: 'Description of the service',
-                    example: 'This service can auto-punctuate all English sentences'
-                },
-                'type': {
-                    type: 'string',
-                    description: `Type of the service. Valid types are ${Object.values(NlpTypes).join(', ').toString()}`,
-                    example: 'SUD'
-                }
-            }
-        },
-        description: 'Successful retrieval of service.'
+        schema: serviceResponseSchema,
+        description: 'Service retrieved successfully.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid service ID format.'})
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service could not be found.'
     })
     @Get(':id')
@@ -375,59 +194,33 @@ export class NlpController {
         return obscuredService
     }
 
-    @ApiOperation({ summary: 'Retrieves all endpoints of a service' })
+    @ApiOperation({ summary: 'Retrieves all endpoints of a service.' })
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'id', 
-        description: 'Endpoints assoicated with this ID will be retrieved' 
+        description: 'ID of the service. ID must be a valid 12-byte string.',
     })
     @ApiQuery({ 
         name: 'task',
-        description: 'Task associated with the endpoint',
+        description: 'Task associated with the endpoint for the requested service.',
         required: false 
     })
     @ApiQuery({ 
         name: 'method',
-        description: `HTTP method of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
+        description: `HTTP method. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}.`,
         required: false 
     })
     @ApiResponse({ 
         status: 200, 
         schema: {
             type: 'array',
-            items: {
-                properties: {
-                    'id': {
-                        type: 'string',
-                        description: 'ID of the endpoint',
-                        example: ''
-                    },
-                    'task': {
-                        type: 'string',
-                        description: 'Task corresponding to the endpoint',
-                        example: 'Predict'
-                    },
-                    'method': {
-                        type: 'string',
-                        description: `HTTP method for the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
-                        example: 'POST'
-                    },
-                    'options': {
-                        type: 'object',
-                        description: 'Option fields required by the endpoint',
-                        example: {
-                            'option1': 'option1',
-                            'option2': 'option2'
-                        }
-                    }
-                }
-            }
+            items: endpointResponseSchema
         },
-        description: 'Successful retrieval of endpoints.'
+        description: 'Endpoints retrieved successfully.'
     })
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service could not be found.'
     })
     @Get(':id/endpoints')
@@ -443,6 +236,7 @@ export class NlpController {
         for (const endpoint of endpoints) {
             const endpointData = {
                 id: endpoint._id,
+                serviceID: serviceID,
                 task: endpoint.task,
                 options: endpoint.options,
                 method: endpoint.method
@@ -462,60 +256,29 @@ export class EndpointController {
         private readonly nlpService: NlpService
     ) {}
     
-    @ApiOperation({ summary: "Retrieves all endpoints" })
+    @ApiOperation({ summary: "Retrieves all endpoints." })
     @ApiSecurity('access-token')
     @ApiQuery({ 
         name: 'task',
-        description: 'Task associated with the endpoint',
+        description: 'Task associated with the endpoint.',
         required: false 
     })
     @ApiQuery({ 
         name: 'method',
-        description: `HTTP method of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
+        description: `HTTP method. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
         required: false 
     })
     @ApiResponse({ 
         status: 200, 
         schema: {
             type: 'array',
-            items: {
-                properties: {
-                    'id': {
-                        type: 'string',
-                        description: 'ID of the endpoint',
-                        example: '5467443817296ad01d46a430'
-                    },
-                    'serviceID': {
-                        type: 'string',
-                        description: 'ID of the service associated with the endpoint',
-                        example: '5467443817296ad01d46a430'
-                    },
-                    'task': {
-                        type: 'string',
-                        description: 'Task corresponding to the endpoint',
-                        example: 'Predict'
-                    },
-                    'method': {
-                        type: 'string',
-                        description: `HTTP method for the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
-                        example: 'POST'
-                    },
-                    'options': {
-                        type: 'object',
-                        description: 'Option fields required by the endpoint',
-                        example: {
-                            'option1': 'option1',
-                            'option2': 'option2'
-                        }
-                    }
-                }
-            }
+            items: endpointResponseSchema
         },
-        description: 'Successful retrieval of endpoints.'
+        description: 'Endpoints retrieved successfully.'
     })
     @ApiResponse({ 
         status: 500, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Some endpoints have no associated services.'
     })
     @Get()
@@ -547,56 +310,25 @@ export class EndpointController {
         return { endpoints: returnData };
     }
 
-    @ApiOperation({ summary: 'Retrieves an endpoint' })
+    @ApiOperation({ summary: 'Retrieves an endpoint.' })
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'id',
-        description: 'ID of the endpoint to be retrieved' 
+        description: 'ID must be a valid 12-byte string.',
     })
     @ApiResponse({ 
         status: 200, 
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the endpoint',
-                    example: '5467443817296ad01d46a430'
-                },
-                'serviceID': {
-                    type: 'string',
-                    description: 'ID of the service associated with the endpoint',
-                    example: '5467443817296ad01d46a430'
-                },
-                'task': {
-                    type: 'string',
-                    description: 'Task corresponding to the endpoint',
-                    example: 'Predict'
-                },
-                'method': {
-                    type: 'string',
-                    description: `HTTP method for the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`,
-                    example: 'POST'
-                },
-                'options': {
-                    type: 'object',
-                    description: 'Option fields required by the endpoint',
-                    example: {
-                        'option1': 'option1',
-                        'option2': 'option2'
-                    }
-                }
-            }
-        },
-        description: 'Successful retrieval of an endpoint.'
+        schema: endpointResponseSchema,
+        description: 'Endpoint retrieved successfully.'
     })
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested endpoint could not be found.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid endpoint ID format.'
     })
     @Get(':id')
@@ -616,63 +348,27 @@ export class EndpointController {
         return endpointData;
     }
 
-    @ApiOperation({ summary: 'Adds an endpoint to the server' })
+    @ApiOperation({ summary: 'Adds an endpoint.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'serviceID': { 
-                    type: 'string', 
-                    description: 'ID of the service to be associated with this endpoint',
-                    example: '5467443817296ad01d46a430' 
-                },
-                'method': { 
-                    type: 'string',
-                    description: `HTTP methods of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`, 
-                    example: 'POST' 
-                },
-                'endpointPath': { 
-                    type: 'string', 
-                    description: 'Endpoint path for the endpoint, must include a leading backslash',
-                    example: '/predict'
-                },
-                'options': { 
-                    type: 'object', 
-                    description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
-                    example: {
-                        'option1': 'string',
-                        'option2': 'boolean'
-                    } 
-                }
-            }
-        }
-    })
+    @ApiBody({ schema: addEndpointSchema })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'id' : {
-                    type: 'string',
-                    description: 'ID of the newly added endpoint',
-                    example: '5467443817296ad01d46a430'
-                }
-            }
-        },
-        description: 'The endpoint is successfully added to the server.'
+        schema: IDRequestSchema,
+        description: 'Endpoint added successfully.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid service ID format, or incomplete body.'
     })
     @ApiResponse({ 
         status: 409, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Task for the service, or endpoint for the service of the given method already exist.'
     })
     @ApiResponse({ 
         status: 404,
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service could not be found.'
     })
     @Post('add')
@@ -690,39 +386,21 @@ export class EndpointController {
         return { id: endpointID }
     }
 
-    @ApiOperation({ summary: 'Removes an endpoint from the server' })
+    @ApiOperation({ summary: 'Removes an endpoint.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'id': { 
-                    type: 'string', 
-                    description: 'ID of the endpoint to be removed',
-                    example: '5467443817296ad01d46a430' 
-                }
-            }
-        }
-    })
+    @ApiBody({ schema: IDRequestSchema })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'message': {
-                    type: 'string',
-                    description: 'Return message from server',
-                    example: 'Endpoint deleted'
-                }
-            }
-        },
-        description: 'The endpoint is successfully removed to the server.'
+        schema: serverMessageResponseSchema,
+        description: 'Endpoint removed successfully.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid endpoint ID format.'})
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested endpoint could not be found.'
     })
     @Post('remove')
@@ -735,66 +413,25 @@ export class EndpointController {
 
     @ApiOperation({ summary: 'Updates information of an endpoint' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the endpoint to be updated',
-                    example: '5467443817296ad01d46a430'
-                },
-                'serviceID': { 
-                    type: 'string', 
-                    description: 'ID of the service to be associated with this endpoint',
-                    example: '5467443817296ad01d46a430' 
-                },
-                'method': { 
-                    type: 'string',
-                    description: `HTTP methods of the endpoint. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}`, 
-                    example: 'POST' 
-                },
-                'endpointPath': { 
-                    type: 'string', 
-                    description: 'Endpoint path for the endpoint, must include a leading backslash',
-                    example: '/predict'
-                },
-                'options': { 
-                    type: 'object', 
-                    description: 'Option fields for the endpoint. Key-value pair must be in the form <option, type>',
-                    example: {
-                        'option1': 'string',
-                        'option2': 'boolean'
-                    } 
-                }
-            }
-        }
-    })
+    @ApiBody({ schema: updateEndpointSchema })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the newly updated endpoint',
-                    example: '5467443817296ad01d46a430'
-                }
-            }
-        },
-        description: 'The endpoint is successfully updated.'
+        schema: IDResponseSchema,
+        description: 'Endpoint updated successfully.'
     })
     @ApiResponse({ 
         status: 400, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Invalid service ID format, invalid endpoint ID format, or incomplete body.'
     })
     @ApiResponse({ 
         status: 409,
-        schema: httpException, 
+        schema: httpExceptionSchema, 
         description: 'Task for the service, or endpoint for the service of the given method already exist.'
     })
     @ApiResponse({ 
         status: 404, 
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service or endpoint could not be found.'
     })
     @Post('update') 

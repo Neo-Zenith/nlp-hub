@@ -10,7 +10,8 @@ import {
     ApiSecurity
 } from "@nestjs/swagger";
 import { NlpTypes } from "src/nlp/nlp.model";
-import { httpException } from "src/custom/custom.schema";
+import { httpExceptionSchema } from "src/custom/custom.schema";
+import { queryOutputSchema, querySchema, usageResponseSchema } from "./query.schema";
 
 @ApiTags('Queries')
 @Controller('query')
@@ -19,68 +20,31 @@ export class QueryController {
         private readonly queryService: QueryService
     ) {}
     
-    @ApiOperation({ summary: 'Utilise an NLP service' })
+    @ApiOperation({ summary: 'Utilise an NLP service.' })
     @ApiSecurity('access-token')
-    @ApiBody({
-        schema: {
-            properties: {
-                'serviceID': { 
-                    type: 'string',
-                    description: 'ID of the service to utilize',
-                    example: '54674867bc3fb5168347b088'
-                },
-                'endpointID': {
-                    type: 'string',
-                    description: 'ID of the endpoint of the service to call',
-                    example: '54674867bc3fb5168347b088'
-                },
-                'options': {
-                    type: 'object',
-                    description: 'Option field that is required for the endpoint (Must match options registered under the endpoint)',
-                    example: {
-                        'option1': 'option1',
-                        'option2': 'option2'
-                    }
-                }
-            }
-        }
-    })
+    @ApiBody({ schema: querySchema })
     @ApiResponse({ 
         status: 201, 
-        schema: {
-            properties: {
-                'id': {
-                    type: 'string',
-                    description: 'ID of the query',
-                    example: '54674867bc3fb5168347b088'
-                },
-                'output': {
-                    type: 'object',
-                    description: 'Output from the NLP service',
-                    example: {
-                        'prediction': 'Output message'
-                    }
-                }
-            }
-        },
+        schema: queryOutputSchema,
         description: 'Successful query. Check response for output.'
     })
     @ApiResponse({
         status: 404,
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'The requested service or endpoint could not be found.'
     })
     @ApiResponse({
         status: 400,
-        schema: httpException,
+        schema: httpExceptionSchema,
         description: 'Incomplete body, or options do not match pre-defined parameters.'
     })
     @Post('')
-    async query(@Body('serviceID') serviceID: string, 
-            @Body('endpointID') endpointID: string,
-            @Body('options') options: Record<string, string>,
-            @Req() request: CustomRequest ) {
-        
+    async query(
+        @Body('serviceID') serviceID: string, 
+        @Body('endpointID') endpointID: string,
+        @Body('options') options: Record<string, string>,
+        @Req() request: CustomRequest 
+    ) { 
         const response = await this.queryService.serviceQuery(
             request.payload.id,
             serviceID,
@@ -102,61 +66,19 @@ export class UsageController {
     @ApiSecurity('access-token')
     @ApiQuery({
         name: 'type',
-        description: `Filter by types of service used. Available types are ${Object.values(NlpTypes).join(' ,').toString()}`,
+        description: `Service type. Available types are ${Object.values(NlpTypes).join(', ').toString()}.`,
         example: 'SUD',
         required: false
     })
     @ApiResponse({
         status: 200,
-        description: 'Successfully retrieved all usages',
+        description: 'Usages retrieved successfully.',
         schema: {
             properties: {
                 'usages': {
                     type: 'array', 
-                    description: 'Array of all usages. If type is defined, returns usages of current valid services with the defined type. Otherwise, serviceDeleted is true for usages associated with deleted services.',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            'userID': {
-                                type: 'string',
-                                description: 'ID of the user making the query',
-                                example: '54674867bc3fb5168347b088'
-                            },
-                            'serviceID': {
-                                type: 'string',
-                                description: 'ID of the service utilised',
-                                example: '54674867bc3fb5168347b088'
-                            },
-                            'endpointID': {
-                                type: 'string',
-                                description: 'ID of the endpoint of the service called',
-                                example: '54674867bc3fb5168347b088'
-                            },
-                            'dateTime': {
-                                type: 'string',
-                                description: 'Timestamp of the service utilised in ISO 8601 date format',
-                                example: '2023-05-19T09:59:03.877Z'
-                            },
-                            'output': {
-                                type: 'string',
-                                description: 'Output is a JSON object stored as string literals',
-                                example: '{\"prediction\":\"This is a test message.\"}'
-                            },
-                            'options': {
-                                type: 'object',
-                                description: 'Option field required by the endpoint',
-                                example: {
-                                    'option1': 'option1',
-                                    'option2': 'option2'
-                                }
-                            },
-                            'serviceDeleted': {
-                                type: 'boolean',
-                                description: 'True if service utilised for this query was removed from server',
-                                example: true
-                            }
-                        }
-                    }
+                    description: 'Usages matching the filter (if any).',
+                    items: usageResponseSchema
                 }
             }
         }

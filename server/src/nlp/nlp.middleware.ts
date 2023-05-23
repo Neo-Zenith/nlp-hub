@@ -5,7 +5,7 @@ import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { MethodTypes, NlpTypes } from './nlp.model';
 import { Debug } from 'src/custom/debug/debug';
-import { httpException } from 'src/custom/custom.schema';
+import { httpExceptionSchema } from 'src/custom/custom.schema';
 
 
 @Injectable()
