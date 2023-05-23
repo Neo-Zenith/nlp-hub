@@ -24,6 +24,7 @@ export const serverMessageResponseSchema = {
 }
 
 export const IDRequestSchema = {
+    required: ['id'],
     properties: {
         'id': {
             type: 'string',

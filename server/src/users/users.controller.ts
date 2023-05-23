@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiSecurity, ApiQuery, ApiParam } from "@nestjs/swagger";
 import { IDRequestSchema, IDResponseSchema, httpExceptionSchema, serverMessageResponseSchema } from "src/custom/custom.schema";
 import { addUserSchema, loginResponse as loginResponseSchema, retrieveUserSchema, updateUserSchema, updateUserSubscriptionSchema, userLoginSchema, userResponseSchema } from "./user.schema";
+import { CustomRequest } from "src/custom/request/request.model";
 
 @ApiTags('Users')
 @Controller('users')
@@ -77,7 +78,17 @@ export class UserController {
 
     @ApiOperation({ summary: 'Removes a user.' })
     @ApiSecurity('access-token')
-    @ApiBody({ schema: IDRequestSchema })
+    @ApiBody({ 
+        schema: {
+            properties: {
+                'id': {
+                    type: 'string',
+                    description: 'ID must be a valid 12-byte string.',
+                    example: '5467443817296ad01d46a430'
+                }
+            }
+        }, required: false 
+    })
     @ApiResponse({ 
         status: 400, 
         schema: httpExceptionSchema,
@@ -100,9 +111,14 @@ export class UserController {
     })
     @Post('remove') 
     async removeUser(
-        @Body('id') userID: string,
+        @Req() req: CustomRequest,
+        @Body('id') userID?: string
     ) {
-        const message = await this.userService.removeUser(userID);
+        if (userID) {
+            const message = await this.userService.removeUser(userID);
+            return message;
+        }
+        const message = await this.userService.removeUser(req.payload.id);
         return message;
     }
 

@@ -36,18 +36,12 @@ export class LoginUserMiddleware extends MissingFieldsMiddleware implements Nest
 }
 
 @Injectable()
-export class RemoveUserMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-	constructor() {
-		const requiredFields = ['id'];
-		super(requiredFields);
-		this.requiredFields = requiredFields;
-	}
-
+export class RemoveUserMiddleware implements NestMiddleware {
 	use(req: CustomRequest, res: Response, next: NextFunction) {
 		const role = req.payload.role;
 		const id = req.payload.id;
 
-		if (! this.checkMissingFields(req)) {
+		if (req.body['id']) {
 			if (! mongoose.isValidObjectId(req.body['id'])) {
 				throw new HttpException("Invalid user ID format", HttpStatus.BAD_REQUEST)
 			}
@@ -61,6 +55,7 @@ export class RemoveUserMiddleware extends MissingFieldsMiddleware implements Nes
 				return next();
 			}
 		}
+		return next();
  	}
 }
 
