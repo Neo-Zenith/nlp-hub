@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Nlp, NlpEndpoint, NlpModel } from "./nlp.model";
+import { Nlp, NlpEndpoint, NlpModel, NlpTypes } from "./nlp.model";
 
 @Injectable()
 export class NlpService {
@@ -92,6 +92,11 @@ export class NlpService {
             throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
         }
         return service;
+    }
+
+    getServiceTypes() {
+        const types = Object.values(NlpTypes);
+        return types;
     }
 
     async addEndpoint(

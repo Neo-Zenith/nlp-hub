@@ -65,18 +65,6 @@ export class InsertServiceSchema {
 }
 
 export class UpdateServiceSchema {
-    @ApiProperty({
-        description: `Type of the service to be updated. Valid types: ${Object.values(NlpTypes).join(', ')}.`,
-        example: "NER"
-    })
-    oldType: string
-
-    @ApiProperty({
-        description: 'Unique identifier for a service under a service type. Format is v{id}.',
-        example: 'v11'
-    })
-    oldVersion: string
-
     @ApiPropertyOptional({
         description: 'Updated name of the service. Names are not unique for each service.',
         example: 'SUD v1.1 (Auto-punctuator)'
@@ -87,13 +75,13 @@ export class UpdateServiceSchema {
         description: 'Update the unique identifier of the service.',
         example: 'v10'
     })
-    newVersion: string
+    version: string
 
     @ApiPropertyOptional({
         description: `New type for the service being updated. Valid types: ${Object.values(NlpTypes).join(', ')}.`,
         example: 'SUD'
     })
-    newType: string
+    type: string
 
     @ApiPropertyOptional({
         description: 'Updated description of the service',
@@ -108,35 +96,7 @@ export class UpdateServiceSchema {
     address: string
 }
 
-export class RemoveServiceSchema {
-    @ApiProperty({
-        description: `Type of the service to be removed. Valid types: ${Object.values(NlpTypes).join(', ')}.`,
-        example: 'SUD'
-    })
-    type: string
-
-    @ApiProperty({
-        description: 'Unique identifier for a service under a service type. Format is v{id}.',
-        example: 'v10'
-    })
-    version: string
-}
-
-export class RemoveEndpointSchema {
-    @ApiProperty({
-        description: 'Unique identifier for an endpoint of a service.',
-        example: 'predict'
-    })
-    task: string
-}
-
 export class UpdateEndpointSchema {
-    @ApiProperty({
-        description: 'Unique identifier for the endpoint of a service to be updated.',
-        example: 'predict'
-    })
-    oldTask: string
-
     @ApiPropertyOptional({
         description: 'Updated unique identifier for the endpoint.',
         example: 'change-lang'

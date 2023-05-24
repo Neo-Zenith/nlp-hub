@@ -7,9 +7,8 @@ import {
     ExtendSubscriptionMiddleware, 
     LoginUserMiddleware, 
     RegisterUserMiddleware, 
-    RemoveUserMiddleware, 
     RetrieveUsersMiddleware, 
-    UpdateUserMiddleware 
+    ModifyUserInterceptor 
 } from "./user.middleware";
 
 @Module({
@@ -24,26 +23,29 @@ export class UserModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(RegisterUserMiddleware)
-            .forRoutes('/users/register', '/admins/register');
+            .forRoutes(
+                { path: '/users/register', method: RequestMethod.POST }, 
+                { path: '/admins/register', method: RequestMethod.POST }
+            );
 
         consumer
             .apply(LoginUserMiddleware)
-            .forRoutes('/users/login', '/admins/login');
-
-        consumer
-            .apply(RemoveUserMiddleware)
-            .forRoutes('/users/remove')
-
-        consumer
-            .apply(UpdateUserMiddleware)
-            .forRoutes('/users/update')
+            .forRoutes(
+                { path: '/users/login', method: RequestMethod.POST }, 
+                { path: '/admins/login', method: RequestMethod.POST }
+            );
 
         consumer
             .apply(RetrieveUsersMiddleware)
-            .forRoutes('/admins/get-users')
+            .forRoutes({
+                path: '/users', method: RequestMethod.GET
+            })
 
         consumer
             .apply(ExtendSubscriptionMiddleware)
-            .forRoutes('/admins/extend-subscription')
+            .forRoutes({
+                path: '/users/:username/extend-subscription', 
+                method: RequestMethod.PUT
+            })
     }
 }

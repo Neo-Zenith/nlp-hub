@@ -5,9 +5,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
 import { 
     RegisterEndpointMiddleware, 
-    RegisterServiceMiddleware, 
-    RemoveEndpointMiddleware, 
-    RemoveServiceMiddleware, 
+    RegisterServiceMiddleware,  
     UpdateEndpointMiddleware, 
     UpdateServiceMiddleware 
 } from "./nlp.middleware";
@@ -25,35 +23,28 @@ export class NlpModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(RegisterServiceMiddleware)
-            .forRoutes('/services/subscribe');
-
-        consumer
-            .apply(RemoveServiceMiddleware)
-            .forRoutes('/services/unsubscribe');
+            .forRoutes({
+                path: '/services', method: RequestMethod.POST
+            });
 
         consumer
             .apply(UpdateServiceMiddleware)
-            .forRoutes('/services/update');
+            .forRoutes({
+                path: '/services', method: RequestMethod.PUT
+            });
 
         consumer
             .apply(RegisterEndpointMiddleware)
             .forRoutes({ 
-                path: '/services/:type/:version/endpoints/add', 
+                path: '/services/:type/:version/endpoints', 
                 method: RequestMethod.POST 
             });
 
         consumer
             .apply(UpdateEndpointMiddleware)
             .forRoutes({ 
-                path: '/services/:type/:version/endpoints/update', 
-                method: RequestMethod.POST 
+                path: '/services/:type/:version/endpoints/:task', 
+                method: RequestMethod.PUT 
             });
-
-        consumer
-            .apply(RemoveEndpointMiddleware)
-            .forRoutes({
-                path: '/services/:type/:version/endpoints/remove',
-                method: RequestMethod.POST
-            })
     }
 };

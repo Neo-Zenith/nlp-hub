@@ -23,29 +23,10 @@ export class RegisterServiceMiddleware extends MissingFieldsMiddleware implement
     }
 }
 
-@Injectable()
-export class RemoveServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-    constructor() {
-        const requiredFields = ['type', 'version'];
-        super(requiredFields);
-    }
-
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req)            
-        return next();
-    }
-}
-
 
 @Injectable()
-export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-    constructor() {
-        const requiredFields = ['oldType', 'oldVersion'];
-        super(requiredFields);
-    }
-
+export class UpdateServiceMiddleware implements NestMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req)
         if (validateServiceField(req)) {
             return next();
         }
@@ -69,30 +50,11 @@ export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implemen
 }
 
 @Injectable()
-export class UpdateEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-    constructor() {
-        const requiredFields = ['oldTask']
-        super(requiredFields);
-    }
-
+export class UpdateEndpointMiddleware implements NestMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req)
         if (validateEndpointField(req)) {
             return next();
         }
-    }
-}
-
-@Injectable()
-export class RemoveEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-    constructor() {
-        const requiredFields = ['task'];
-        super(requiredFields);
-    }
-
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req)
-        return next();
     }
 }
 
@@ -118,12 +80,12 @@ function validateServiceField(req: CustomRequest) {
         }
     }
     
-    if (req.body['newType'] && ! Object.values(NlpTypes).includes(req.body['newType'])) {
+    if (req.body['type'] && ! Object.values(NlpTypes).includes(req.body['type'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
     }
 
-    if (req.body['newVersion']) {
-        const version = req.body['newVersion']
+    if (req.body['version']) {
+        const version = req.body['version']
         if (version[0] !== 'v') {
             throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
         } 

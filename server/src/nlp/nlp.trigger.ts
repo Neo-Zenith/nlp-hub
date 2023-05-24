@@ -34,7 +34,10 @@ export function NlpTrigger() {
             });
       
             if (service && service.id !== this['_conditions']['_id']) {
-                throw new Error("Service with the same base address already registered");
+                throw new HttpException(
+                    "Service with the same base address already registered", 
+                    HttpStatus.CONFLICT
+                );
             }
         }
 

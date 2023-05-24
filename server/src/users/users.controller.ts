@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put, Delete, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
 import { UserService } from "./users.service";
 import { 
     ApiTags, 
@@ -10,7 +10,9 @@ import {
     ApiParam 
 } from "@nestjs/swagger";
 import { CustomRequest } from "src/custom/request/request.model";
-import { ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, RemoveUserSchema, UpdateUserSchema } from "./user.schema";
+import { ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, UpdateUserSchema } from "./user.schema";
+import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
+import { ModifyUserInterceptor } from "./user.middleware";
 
 @ApiTags('Users')
 @Controller('users')
@@ -49,30 +51,26 @@ export class UserController {
 
     @ApiOperation({ summary: 'Removes a user.' })
     @ApiSecurity('access-token')
-    @ApiBody({ type: RemoveUserSchema, required: false })
-    @Post('remove') 
+    @Delete(':username') 
+    @UseGuards(new UserAuthGuard(['DELETE']))
+    @UseInterceptors(ModifyUserInterceptor)
     async removeUser(
-        @Req() req: CustomRequest,
-        @Body('username') username?: string
+        @Param('username') username: string
     ) {
-        if (username) {
-            const message = await this.userService.removeUser(username);
-            return message;
-        }
-        const userID = req.payload['id'];
-        const user = await this.userService.getUser('user', undefined, undefined, userID);
-        const message = await this.userService.removeUser(user.username);
+        const message = await this.userService.removeUser(username);
         return message;
     }
 
     @ApiOperation({ summary: 'Updates information of a user.'})
     @ApiSecurity('access-token')
     @ApiBody({ type: UpdateUserSchema })
-    @Post('update')
+    @Put(':username')
+    @UseGuards(new UserAuthGuard(['PUT']))
+    @UseInterceptors(ModifyUserInterceptor)
     async updateUser(
-        @Body('oldUsername') oldUsername: string,
+        @Param('username') oldUsername: string,
         @Body('name') name?: string,
-        @Body('newUsername') newUsername?: string,
+        @Body('username') newUsername?: string,
         @Body('email') email?: string,
         @Body('password') password?: string,
         @Body('department') department?: string
@@ -91,6 +89,7 @@ export class UserController {
         description: 'Username of the user.'
     })
     @Get(':username')
+    @UseGuards(new UserAuthGuard(['GET']))
     async getUser(
         @Param('username') username: string
     ) {
@@ -103,6 +102,62 @@ export class UserController {
             subscriptionExpiryDate: user.subscriptionExpiryDate
         }
         return obscuredUser;
+    }
+
+    @ApiOperation({ summary: 'Modify user subscription.' })
+    @ApiSecurity('access-token')
+    @ApiBody({ type: ExtendSubscriptionSchema })
+    @Put(':username/extend-subscription')
+    @UseGuards(new AdminAuthGuard(['PUT']))
+    async extendSubscription(
+        @Param('username') username: string,
+        @Body('extension') extension: string
+    ) {
+        const user = await this.userService.getUser('user', username);
+        await this.userService.updateUser(
+            user, undefined, undefined, undefined, undefined, undefined, extension
+        );
+        return { message: 'User subscription extended successfully.' }
+    }
+
+    @ApiOperation({ summary: 'Retrieves all users.' })
+    @ApiSecurity('access-token')
+    @ApiQuery({ 
+        name: 'expireIn', 
+        required: false,
+        description: 'Returns all users with subscription expiring before current date + expireIn. Must be a positive integer.'
+    })
+    @ApiQuery({
+        name: 'name',
+        required: false,
+        description: 'Name of the user. Case-sensitive and must match full string.'
+    })
+    @ApiQuery({
+        name: 'department',
+        required: false,
+        description: 'Department of the user. Case-sensitive and must match full string.'
+    })
+    @Get('')
+    @UseGuards(new AdminAuthGuard(['GET']))
+    async getUsers(
+        @Query('expireIn') expireIn?: string,
+        @Query('name') name?: string,
+        @Query('department') department?: string,
+    ) {
+        const users = await this.userService.getUsers(expireIn, name, department);
+        
+        var returnPayload = []
+        for (const user of users) {
+            const obscuredUser = {
+                email: user.email,
+                name: user.name,
+                department: user.department,
+                subscriptionExpiryDate: user.subscriptionExpiryDate
+            }
+            returnPayload.push(obscuredUser)
+        }
+
+        return { users: returnPayload }
     }
 }
 
@@ -117,6 +172,7 @@ export class AdminController {
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertUserSchema })
     @Post('register')
+    @UseGuards(new AdminAuthGuard(['PUT']))
     async registerAdmin(
         @Body('name') name: string,
         @Body('username') username: string,
@@ -140,59 +196,5 @@ export class AdminController {
         const accessToken = await this.adminService
             .verifyUser(username, password, 'admin');
         return { accessToken: accessToken };
-    }
-
-    @ApiOperation({ summary: 'Modify user subscription.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: ExtendSubscriptionSchema })
-    @Post('extend-subscription')
-    async extendSubscription(
-        @Body('username') username: string,
-        @Body('extension') extension: string
-    ) {
-        const user = await this.adminService.getUser('user', username);
-        await this.adminService.updateUser(
-            user, undefined, undefined, undefined, undefined, undefined, extension
-        );
-        return { message: 'User subscription extended successfully.' }
-    }
-
-    @ApiOperation({ summary: 'Retrieves all users.' })
-    @ApiSecurity('access-token')
-    @ApiQuery({ 
-        name: 'expireIn', 
-        required: false,
-        description: 'Returns all users with subscription expiring before current date + expireIn. Must be a positive integer.'
-    })
-    @ApiQuery({
-        name: 'name',
-        required: false,
-        description: 'Name of the user. Case-sensitive and must match full string.'
-    })
-    @ApiQuery({
-        name: 'department',
-        required: false,
-        description: 'Department of the user. Case-sensitive and must match full string.'
-    })
-    @Get('get-users')
-    async getUsers(
-        @Query('expireIn') expireIn?: string,
-        @Query('name') name?: string,
-        @Query('department') department?: string,
-    ) {
-        const users = await this.adminService.getUsers(expireIn, name, department);
-        
-        var returnPayload = []
-        for (const user of users) {
-            const obscuredUser = {
-                email: user.email,
-                name: user.name,
-                department: user.department,
-                subscriptionExpiryDate: user.subscriptionExpiryDate
-            }
-            returnPayload.push(obscuredUser)
-        }
-
-        return { users: returnPayload }
     }
 }

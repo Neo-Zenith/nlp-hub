@@ -46,26 +46,12 @@ export class LoginUserSchema {
     password: string
 }
 
-export class RemoveUserSchema {
-    @ApiPropertyOptional({
-        description: 'Username for the user. Case sensitive.',
-        example: 'User01'
-    })
-    username: string
-}
-
 export class UpdateUserSchema {
-    @ApiProperty({
-        description: 'Username for the user to be updated. Case sensitive.',
-        example: 'User01'
-    })
-    oldUsername: string
-
     @ApiPropertyOptional({
         description: 'New username for the user. Case sensitive.',
         example: 'User02'
     })
-    newUsername: string
+    username: string
 
     @ApiPropertyOptional({
         description: 'New email for the user. Case sensitive.',
@@ -93,12 +79,6 @@ export class UpdateUserSchema {
 }
 
 export class ExtendSubscriptionSchema {
-    @ApiProperty({
-        description: 'Username for the user. Case sensitive.',
-        example: 'User01'
-    })
-    username: string
-
     @ApiProperty({
         description: "Extends a user's subscription period. Must be a positive integer in string literal.",
         example: "30"

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { NlpService } from "./nlp.service";
 import { MethodTypes, NlpEndpoint, NlpTypes } from "./nlp.model";
 import { 
@@ -13,11 +13,10 @@ import {
 import { 
     InsertEndpointSchema, 
     InsertServiceSchema, 
-    RemoveEndpointSchema, 
-    RemoveServiceSchema, 
     UpdateEndpointSchema, 
     UpdateServiceSchema 
 } from "./nlp.schema";
+import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
 
 @ApiTags('Services')
 @Controller('services')
@@ -25,55 +24,6 @@ export class NlpController {
     constructor(
         private readonly nlpService: NlpService
     ) {}
-    
-    @ApiOperation({ summary: 'Registers an NLP service.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: InsertServiceSchema })
-    @Post('subscribe')
-    async subscribeService(
-        @Body('name') name: string,
-        @Body('description') description: string,
-        @Body('address') address: string,
-        @Body('type') type: string,
-        @Body('endpoints') endpoints: NlpEndpoint[]
-    ) {
-        const message = await this.nlpService.addService(
-            name, description, address, type, endpoints
-        );
-        return message;
-    }
-
-    @ApiOperation({ summary: 'Updates information of an NLP service.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: UpdateServiceSchema})
-    @Post('update')
-    async updateService(
-        @Body('oldType') oldType: string,
-        @Body('oldVersion') oldVersion: string,
-        @Body('name') name?: string,
-        @Body('newVersion') newVersion?: string,
-        @Body('description') description?: string,
-        @Body('address') address?: string,
-        @Body('newType') newType?: string
-    ) {
-        const service = await this.nlpService.getService(oldType, oldVersion);
-        const message = await this.nlpService.updateService(
-            service, name, newVersion, address, description, newType
-        )
-        return message;
-    }
-
-    @ApiOperation({ summary: 'Removes an NLP service.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: RemoveServiceSchema })
-    @Post('unsubscribe')
-    async unsubscribeService(
-        @Body('type') type: string,
-        @Body('version') version: string
-    ) {
-        const response = await this.nlpService.removeService(type, version);
-        return response;
-    }
 
     @ApiOperation({ summary: 'Retrieves all NLP services.' })
     @ApiSecurity('access-token')
@@ -88,6 +38,7 @@ export class NlpController {
         required: false 
     })
     @Get()
+    @UseGuards(new UserAuthGuard(['GET']))
     async getServices(
         @Query('name') name?: string,
         @Query('type') type?: string,
@@ -104,6 +55,15 @@ export class NlpController {
         return { services: obscuredServices };
     }
 
+    @ApiOperation({ summary: 'Retrieves all service types available.' })
+    @ApiSecurity('access-token')
+    @Get('get-types')
+    @UseGuards(new UserAuthGuard(['GET']))
+    getServiceTypes() {
+        const types = this.nlpService.getServiceTypes();
+        return { types: types }
+    }
+
     @ApiOperation({ summary: 'Retrieves a service.' })
     @ApiSecurity('access-token')
     @ApiParam({ 
@@ -115,6 +75,7 @@ export class NlpController {
         description: 'Version of the service for the requested type.'
     })
     @Get(':type/:version')
+    @UseGuards(new UserAuthGuard(['GET']))
     async getService(
         @Param('type') type: string,
         @Param('version') version: string
@@ -130,6 +91,57 @@ export class NlpController {
         };
 
         return obscuredService
+    }
+    
+    @ApiOperation({ summary: 'Registers an NLP service.' })
+    @ApiSecurity('access-token')
+    @ApiBody({ type: InsertServiceSchema })
+    @Post('')
+    @UseGuards(new AdminAuthGuard(['POST']))
+    async subscribeService(
+        @Body('name') name: string,
+        @Body('description') description: string,
+        @Body('address') address: string,
+        @Body('type') type: string,
+        @Body('endpoints') endpoints: NlpEndpoint[]
+    ) {
+        const message = await this.nlpService.addService(
+            name, description, address, type, endpoints
+        );
+        return message;
+    }
+
+    @ApiOperation({ summary: 'Updates information of an NLP service.' })
+    @ApiSecurity('access-token')
+    @ApiBody({ type: UpdateServiceSchema})
+    @Put(':type/:version')
+    @UseGuards(new AdminAuthGuard(['PUT']))
+    async updateService(
+        @Param('type') oldType: string,
+        @Param('version') oldVersion: string,
+        @Body('name') name?: string,
+        @Body('version') newVersion?: string,
+        @Body('description') description?: string,
+        @Body('address') address?: string,
+        @Body('type') newType?: string
+    ) {
+        const service = await this.nlpService.getService(oldType, oldVersion);
+        const message = await this.nlpService.updateService(
+            service, name, newVersion, address, description, newType
+        )
+        return message;
+    }
+
+    @ApiOperation({ summary: 'Removes an NLP service.' })
+    @ApiSecurity('access-token')
+    @Delete(':type/:version')
+    @UseGuards(new AdminAuthGuard(['DELETE']))
+    async unsubscribeService(
+        @Param('type') type: string,
+        @Param('version') version: string
+    ) {
+        const response = await this.nlpService.removeService(type, version);
+        return response;
     }
 
     @ApiOperation({ summary: 'Retrieves all endpoints of a service.' })
@@ -153,6 +165,7 @@ export class NlpController {
         required: false 
     })
     @Get(':type/:version/endpoints')
+    @UseGuards(new UserAuthGuard(['GET']))
     async getEndpoints(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -190,7 +203,8 @@ export class NlpController {
         name: 'task',
         description: 'Task associated with the endpoint for the requested service.'
     })
-    @Get(':type/:version/:task') 
+    @Get(':type/:version/endpoints/:task') 
+    @UseGuards(new UserAuthGuard(['GET']))
     async getEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -211,7 +225,8 @@ export class NlpController {
     @ApiOperation({ summary: 'Adds an endpoint.' })
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertEndpointSchema })
-    @Post(':type/:version/endpoints/add')
+    @Post(':type/:version/endpoints')
+    @UseGuards(new AdminAuthGuard(['POST']))
     async addEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -227,28 +242,15 @@ export class NlpController {
         return message;
     }
 
-    @ApiOperation({ summary: 'Removes an endpoint.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: RemoveEndpointSchema })
-    @Post(':type/:version/endpoints/remove')
-    async removeEndpoint(
-        @Param('type') type: string,
-        @Param('version') version: string,
-        @Body('task') task: string
-    ) {
-        const service = await this.nlpService.getService(type, version);
-        const message = await this.nlpService.removeEndpoint(service, task);
-        return message;
-    }
-
     @ApiOperation({ summary: 'Updates information of an endpoint' })
     @ApiSecurity('access-token')
     @ApiBody({ type: UpdateEndpointSchema })
-    @Post(':type/:version/endpoints/update') 
+    @Put(':type/:version/endpoints/:task') 
+    @UseGuards(new AdminAuthGuard(['PUT']))
     async updateEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
-        @Body('oldTask') oldTask: string,
+        @Param('task') oldTask: string,
         @Body('method') method?: string,
         @Body('endpointPath') endpointPath?: string,
         @Body('newTask') newTask?: string,
@@ -259,6 +261,20 @@ export class NlpController {
         const message = await this.nlpService.updateEndpoint(
             endpoint, endpointPath, newTask, options, method
         )
+        return message;
+    }
+
+    @ApiOperation({ summary: 'Removes an endpoint.' })
+    @ApiSecurity('access-token')
+    @Delete(':type/:version/endpoints/:task')
+    @UseGuards(new AdminAuthGuard(['DELETE']))
+    async removeEndpoint(
+        @Param('type') type: string,
+        @Param('version') version: string,
+        @Param('task') task: string
+    ) {
+        const service = await this.nlpService.getService(type, version);
+        const message = await this.nlpService.removeEndpoint(service, task);
         return message;
     }
 }

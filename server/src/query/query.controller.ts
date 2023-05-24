@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, Param } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Req, Param, UseGuards } from "@nestjs/common";
 import { QueryService } from "./query.service";
 import { CustomRequest } from "src/custom/request/request.model";
 import { 
@@ -11,6 +11,7 @@ import {
 } from "@nestjs/swagger";
 import { NlpTypes } from "src/nlp/nlp.model";
 import { ServiceQuerySchema } from "./query.schema";
+import { UserAuthGuard } from "src/custom/custom.middleware";
 
 @ApiTags('Queries')
 @Controller('query')
@@ -23,6 +24,7 @@ export class QueryController {
     @ApiSecurity('access-token')
     @ApiBody({ type: ServiceQuerySchema })
     @Post(':type/:version/:task')
+    @UseGuards(new UserAuthGuard(['POST']))
     async serviceQuery(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -56,6 +58,7 @@ export class UsageController {
         required: false
     })
     @Get('')
+    @UseGuards(new UserAuthGuard(['GET']))
     async getUsages(
         @Req() request: CustomRequest,
         @Query('type') type?: string
