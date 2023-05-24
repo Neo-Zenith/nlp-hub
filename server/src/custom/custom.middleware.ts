@@ -60,7 +60,8 @@ abstract class AuthGuard implements CanActivate {
         const authHeader = req.headers.authorization;
         req.payload = {}
         if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-            return false;
+            throw new HttpException(
+                "Access token not present in header", HttpStatus.BAD_REQUEST)
         }
         
         // Check for JWT token
@@ -77,10 +78,18 @@ abstract class AuthGuard implements CanActivate {
             if (req.payload['role'] === role || req.payload['role'] === 'admin') {
                 return true;
             }
-            return false;
+            throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
 
         } catch (err) {
-            return false;
+            if (err.name === 'HttpException') {
+                throw new HttpException("User not authorized", HttpStatus.FORBIDDEN)
+            } else if (err.name === 'JsonWebTokenError') {
+                throw new HttpException(
+                    "Invalid access token", HttpStatus.BAD_REQUEST)
+            } else if (err.name === 'TokenExpiredError') {
+                throw new HttpException(
+                    "Access token expired", HttpStatus.BAD_REQUEST)
+            }
         }
     }
 

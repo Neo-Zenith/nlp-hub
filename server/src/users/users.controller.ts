@@ -49,77 +49,6 @@ export class UserController {
         return { accessToken: accessToken };
     }
 
-    @ApiOperation({ summary: 'Removes a user.' })
-    @ApiSecurity('access-token')
-    @Delete(':username') 
-    @UseGuards(new UserAuthGuard(['DELETE']))
-    @UseInterceptors(ModifyUserInterceptor)
-    async removeUser(
-        @Param('username') username: string
-    ) {
-        const message = await this.userService.removeUser(username);
-        return message;
-    }
-
-    @ApiOperation({ summary: 'Updates information of a user.'})
-    @ApiSecurity('access-token')
-    @ApiBody({ type: UpdateUserSchema })
-    @Put(':username')
-    @UseGuards(new UserAuthGuard(['PUT']))
-    @UseInterceptors(ModifyUserInterceptor)
-    async updateUser(
-        @Param('username') oldUsername: string,
-        @Body('name') name?: string,
-        @Body('username') newUsername?: string,
-        @Body('email') email?: string,
-        @Body('password') password?: string,
-        @Body('department') department?: string
-    ) {
-        const user = await this.userService.getUser('user', oldUsername);
-        const message = this.userService.updateUser(
-            user, newUsername, name, email, password, department
-        );
-        return message;
-    }
-
-    @ApiOperation({ summary: 'Retrieves a user.' })
-    @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'username',
-        description: 'Username of the user.'
-    })
-    @Get(':username')
-    @UseGuards(new UserAuthGuard(['GET']))
-    async getUser(
-        @Param('username') username: string
-    ) {
-        const user = await this.userService.getUser('user', username);
-        const obscuredUser = {
-            username: user.username,
-            name: user.name,
-            email: user.email,
-            department: user.department,
-            subscriptionExpiryDate: user.subscriptionExpiryDate
-        }
-        return obscuredUser;
-    }
-
-    @ApiOperation({ summary: 'Modify user subscription.' })
-    @ApiSecurity('access-token')
-    @ApiBody({ type: ExtendSubscriptionSchema })
-    @Put(':username/extend-subscription')
-    @UseGuards(new AdminAuthGuard(['PUT']))
-    async extendSubscription(
-        @Param('username') username: string,
-        @Body('extension') extension: string
-    ) {
-        const user = await this.userService.getUser('user', username);
-        await this.userService.updateUser(
-            user, undefined, undefined, undefined, undefined, undefined, extension
-        );
-        return { message: 'User subscription extended successfully.' }
-    }
-
     @ApiOperation({ summary: 'Retrieves all users.' })
     @ApiSecurity('access-token')
     @ApiQuery({ 
@@ -159,6 +88,79 @@ export class UserController {
 
         return { users: returnPayload }
     }
+
+    @ApiOperation({ summary: 'Retrieves a user.' })
+    @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'username',
+        description: 'Username of the user.'
+    })
+    @Get(':username')
+    @UseGuards(new UserAuthGuard(['GET']))
+    async getUser(
+        @Param('username') username: string
+    ) {
+        const user = await this.userService.getUser('user', username);
+        const obscuredUser = {
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            department: user.department,
+            subscriptionExpiryDate: user.subscriptionExpiryDate
+        }
+        return obscuredUser;
+    }
+
+    @ApiOperation({ summary: 'Updates information of a user.'})
+    @ApiSecurity('access-token')
+    @ApiBody({ type: UpdateUserSchema })
+    @Put(':username')
+    @UseGuards(new UserAuthGuard(['PUT']))
+    @UseInterceptors(ModifyUserInterceptor)
+    async updateUser(
+        @Param('username') oldUsername: string,
+        @Body('name') name?: string,
+        @Body('username') newUsername?: string,
+        @Body('email') email?: string,
+        @Body('password') password?: string,
+        @Body('department') department?: string
+    ) {
+        const user = await this.userService.getUser('user', oldUsername);
+        const message = this.userService.updateUser(
+            user, newUsername, name, email, password, department
+        );
+        return message;
+    }
+
+
+    @ApiOperation({ summary: 'Removes a user.' })
+    @ApiSecurity('access-token')
+    @Delete(':username') 
+    @UseGuards(new UserAuthGuard(['DELETE']))
+    @UseInterceptors(ModifyUserInterceptor)
+    async removeUser(
+        @Param('username') username: string
+    ) {
+        const message = await this.userService.removeUser(username);
+        return message;
+    }
+    
+
+    @ApiOperation({ summary: 'Modify user subscription.' })
+    @ApiSecurity('access-token')
+    @ApiBody({ type: ExtendSubscriptionSchema })
+    @Put(':username/extend-subscription')
+    @UseGuards(new AdminAuthGuard(['PUT']))
+    async extendSubscription(
+        @Param('username') username: string,
+        @Body('extension') extension: string
+    ) {
+        const user = await this.userService.getUser('user', username);
+        await this.userService.updateUser(
+            user, undefined, undefined, undefined, undefined, undefined, extension
+        );
+        return { message: 'User subscription extended successfully.' }
+    }
 }
 
 @ApiTags('Admins')
@@ -172,7 +174,7 @@ export class AdminController {
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertUserSchema })
     @Post('register')
-    @UseGuards(new AdminAuthGuard(['PUT']))
+    @UseGuards(new AdminAuthGuard(['POST']))
     async registerAdmin(
         @Body('name') name: string,
         @Body('username') username: string,
