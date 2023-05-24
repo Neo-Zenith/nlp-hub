@@ -34,6 +34,7 @@ export class CheckAuthMiddleware implements NestMiddleware {
         const isPublicRoute = this.isPublicRoute(baseUrl);
         const isAdminRoute = this.isAdminRoute(baseUrl);
         const authHeader = req.headers.authorization;
+
         req.payload = {};
 
         if (! isPublicRoute) {

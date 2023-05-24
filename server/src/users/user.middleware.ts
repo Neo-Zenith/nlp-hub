@@ -3,8 +3,6 @@ import { Response, NextFunction } from 'express';
 import * as dotenv from "dotenv";
 import { CustomRequest } from "src/custom/request/request.model";
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
-import mongoose from 'mongoose';
-import { Debug } from 'src/custom/debug/debug';
 import { UserModel } from './user.model';
 dotenv.config();
 
@@ -19,7 +17,16 @@ export class RegisterUserMiddleware extends MissingFieldsMiddleware implements N
 
 	use(req: CustomRequest, res: Response, next: NextFunction) {
 		this.checkMissingFields(req);
+		this.isStrongPassword(req);
 		return next();
+	}
+
+	private isStrongPassword(req) {
+		const password = req.body['password'];
+		if (password.length < 8) {
+			throw new HttpException("Password does not meet minimum requirements", HttpStatus.BAD_REQUEST);
+		}
+		return true;
 	}
 }
 
@@ -68,13 +75,32 @@ export class RemoveUserMiddleware implements NestMiddleware {
 @Injectable()
 export class UpdateUserMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
 	constructor() {
-		const requiredFields = ['username'];
+		const requiredFields = ['oldUsername'];
 		super(requiredFields);
 	}
 
-	use(req: CustomRequest, res: Response, next: NextFunction) {
+	async use(req: CustomRequest, res: Response, next: NextFunction) {
 		this.checkMissingFields(req)
-		return next();
+
+		const userID = req.payload['id'];
+		const role = req.payload['role'];
+
+		if (role === 'admin') {
+			return next()
+		}
+		const user = await this.retrieveUser(req.body['oldUsername']);
+		if (user.id === userID) {
+			return next();
+		}
+		throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
+	}
+
+	private async retrieveUser(username: string) {
+		const user = await UserModel.findOne({ username });
+		if (! user) {
+			throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+		}
+		return user;
 	}
 }
 
@@ -88,20 +114,14 @@ export class ExtendSubscriptionMiddleware extends MissingFieldsMiddleware implem
 	use(req: CustomRequest, res: Response, next: NextFunction) {
 		this.checkMissingFields(req);
 		const reqExtension = req.body['extension']
-		if (typeof reqExtension === 'string') {
-			if (reqExtension.includes('.')) {
+		if (typeof reqExtension === 'string') {	
+			if (! /^\d+$/.test(reqExtension)) {
 				throw new HttpException(
 					"Invalid extension format (Must be positive integer)", 
 					HttpStatus.BAD_REQUEST
 				)
 			}
 			const extension = parseInt(reqExtension)
-			if (Number.isNaN(extension)) {
-				throw new HttpException(
-					"Invalid extension format (Must be positive integer)", 
-					HttpStatus.BAD_REQUEST
-				)
-			}
 			if (extension <= 0) {
 				throw new HttpException(
 					"Invalid extension format (Must be positive integer)", 
@@ -127,37 +147,18 @@ export class ExtendSubscriptionMiddleware extends MissingFieldsMiddleware implem
 }
 
 @Injectable()
-export class RetrieveUserMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-	constructor() {
-		const requiredFields = ['username']
-		super(requiredFields);
-	}
-
-	use(req: CustomRequest, res: Response, next: NextFunction) {
-		this.checkMissingFields(req)
-		return next();
-	}
-}
-
-@Injectable()
 export class RetrieveUsersMiddleware implements NestMiddleware {
 	use(req: CustomRequest, res: Response, next: NextFunction) {
 		const reqExpireIn = req.query['expireIn']
 		if (reqExpireIn) {
 			if (typeof reqExpireIn === 'string') {
-				if (reqExpireIn.includes('.')) {
+				if (! /^\d+$/.test(reqExpireIn)) {
 					throw new HttpException(
-						"Invalid expireIn format (Must be positive integer)", 
+						"Invalid extension format (Must be positive integer)", 
 						HttpStatus.BAD_REQUEST
 					)
 				}
 				const expireIn = parseInt(reqExpireIn)
-				if (Number.isNaN(expireIn)) {
-					throw new HttpException(
-						"Invalid expireIn format (Must be positive integer)", 
-						HttpStatus.BAD_REQUEST
-					)
-				}
 				if (expireIn <= 0) {
 					throw new HttpException(
 						"Invalid expireIn format (Must be positive integer)", 

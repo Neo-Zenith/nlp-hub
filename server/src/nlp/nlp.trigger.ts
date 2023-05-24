@@ -8,14 +8,17 @@ export function NlpTrigger() {
         // Find if another service of the same address already exist
         const service = await NlpModel.findOne({
             baseAddress: this.baseAddress
-        }) || await NlpModel.findOne({
-            type: this.type,
-            version: this.version
-        })
+        }) 
 
         if (service) {
             throw new HttpException("Service already registered", HttpStatus.CONFLICT)
         }
+
+        const highestVersion = await NlpModel.findOne({ type: this.type })
+            .sort({ version: -1 });
+
+        const version = highestVersion ? parseInt(highestVersion.version.substring(1)) + 1: 1;
+        this.version = "v" + version;
 
         return next();
     })

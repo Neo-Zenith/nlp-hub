@@ -100,8 +100,8 @@ export class ExtendSubscriptionSchema {
     username: string
 
     @ApiProperty({
-        description: "Extends a user's subscription period. Must be a positive integer.",
-        example: 30
+        description: "Extends a user's subscription period. Must be a positive integer in string literal.",
+        example: "30"
     })
-    extension: number
+    extension: string
 }

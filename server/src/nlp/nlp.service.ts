@@ -11,11 +11,11 @@ export class NlpService {
     ) {}
 
     async addService(
-        name: string, version: string, description: string, 
-        address: string, type: string, endpoints: NlpEndpoint[]
+        name: string, description: string, address: string, 
+        type: string, endpoints: NlpEndpoint[]
     ) {
         const newService = new this.nlpModel({
-            name, version, description, address, type
+            name, description, baseAddress: address, type
         });
         await newService.save();
 

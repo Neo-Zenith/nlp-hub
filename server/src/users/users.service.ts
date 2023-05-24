@@ -49,7 +49,7 @@ export class UserService {
 
     async verifyUser(username: string, password: string, role: string) {
         // find user based on username
-        const user = await this.getUser(username);
+        const user = await this.getUser(role, username);
 
         // verify if the password matches the hashed password
         const passwordMatches = await bcrypt.compare(password, user.password);
@@ -62,14 +62,14 @@ export class UserService {
     }
 
     async removeUser(username: string) {
-        const user = await this.getUser(username);
+        const user = await this.getUser('user', username);
         await this.userModel.deleteOne({_id: user.id});
         return { message: "User deleted" }
     }
 
     async updateUser(
         user: User, username?: string, name?: string, email?: string, 
-        password?: string, department?: string, extension?: number
+        password?: string, department?: string, extension?: string
     ) {
         var updates = {}
 
@@ -92,9 +92,9 @@ export class UserService {
         if (extension) {            
             updates['subscriptionExpiryDate'] = user
                 .subscriptionExpiryDate
-                .setDate(user.subscriptionExpiryDate.getDate() + extension);  
+                .setDate(user.subscriptionExpiryDate.getDate() + parseInt(extension));  
         }
-    
+        
         await UserModel.updateOne(
             { _id: user.id }, 
             { $set: updates }
@@ -102,28 +102,39 @@ export class UserService {
         return { message: 'User updated' }
     }
 
-    async getUser(username?: string, email?: string, userID?: string) {
+    async getUser(role: string, username?: string, email?: string, userID?: string) {
         var user;
-        if (username) {
-            user = await this.userModel.findOne({ username });
-        } else if (email) {
-            user = await this.userModel.findOne({ email });
-        } else if (userID) {
-            user = await this.userModel.findById(userID)
+        if (role === 'admin') {
+            if (username) {
+                user = await this.adminModel.findOne({ username });
+                console.log(user)
+            } else if (email) {
+                user = await this.adminModel.findOne({ email });
+            } else if (userID) {
+                user = await this.adminModel.findById(userID)
+            }
+        } else {
+            if (username) {
+                user = await this.userModel.findOne({ username });
+            } else if (email) {
+                user = await this.userModel.findOne({ email });
+            } else if (userID) {
+                user = await this.userModel.findById(userID)
+            }
         }
-
+        
         if (! user) {
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }
         return user;
     }
 
-    async getUsers(expireIn?: number, name?: string, department?: string) {
+    async getUsers(expireIn?: string, name?: string, department?: string) {
         let query = {};
       
         if (expireIn) {
             const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + expireIn);
+            expiryDate.setDate(expiryDate.getDate() + parseInt(expireIn));
             query['subscriptionExpiryDate'] = { $lt: expiryDate };
         }
       

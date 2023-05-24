@@ -32,14 +32,13 @@ export class NlpController {
     @Post('subscribe')
     async subscribeService(
         @Body('name') name: string,
-        @Body('version') version: string,
         @Body('description') description: string,
         @Body('address') address: string,
         @Body('type') type: string,
         @Body('endpoints') endpoints: NlpEndpoint[]
     ) {
         const message = await this.nlpService.addService(
-            name, version, description, address, type, endpoints
+            name, description, address, type, endpoints
         );
         return message;
     }

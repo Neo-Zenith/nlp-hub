@@ -60,7 +60,7 @@ export class UserController {
             return message;
         }
         const userID = req.payload['id'];
-        const user = await this.userService.getUser(undefined, undefined, userID);
+        const user = await this.userService.getUser('user', undefined, undefined, userID);
         const message = await this.userService.removeUser(user.username);
         return message;
     }
@@ -77,7 +77,7 @@ export class UserController {
         @Body('password') password?: string,
         @Body('department') department?: string
     ) {
-        const user = await this.userService.getUser(oldUsername);
+        const user = await this.userService.getUser('user', oldUsername);
         const message = this.userService.updateUser(
             user, newUsername, name, email, password, department
         );
@@ -94,7 +94,7 @@ export class UserController {
     async getUser(
         @Param('username') username: string
     ) {
-        const user = await this.userService.getUser(username);
+        const user = await this.userService.getUser('user', username);
         const obscuredUser = {
             username: user.username,
             name: user.name,
@@ -114,6 +114,7 @@ export class AdminController {
     ) {}
 
     @ApiOperation({ summary: 'Adds a user with admin privillege.' })
+    @ApiSecurity('access-token')
     @ApiBody({ type: InsertUserSchema })
     @Post('register')
     async registerAdmin(
@@ -147,9 +148,9 @@ export class AdminController {
     @Post('extend-subscription')
     async extendSubscription(
         @Body('username') username: string,
-        @Body('extension') extension: number
+        @Body('extension') extension: string
     ) {
-        const user = await this.adminService.getUser(username);
+        const user = await this.adminService.getUser('user', username);
         await this.adminService.updateUser(
             user, undefined, undefined, undefined, undefined, undefined, extension
         );
@@ -175,7 +176,7 @@ export class AdminController {
     })
     @Get('get-users')
     async getUsers(
-        @Query('expireIn') expireIn?: number,
+        @Query('expireIn') expireIn?: string,
         @Query('name') name?: string,
         @Query('department') department?: string,
     ) {

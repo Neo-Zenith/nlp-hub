@@ -27,7 +27,7 @@ export class Nlp extends Document {
     @Prop({ required: true, index: 'text' })
     name: string;
 
-    @Prop({ required: true })
+    @Prop()
     version: string;
 
     @Prop({ required: true })

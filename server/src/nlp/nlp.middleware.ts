@@ -10,7 +10,7 @@ import { Debug } from 'src/custom/debug/debug';
 export class RegisterServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
         const requiredFields = [
-            'name', 'version', 'description', 'address', 'type', 'endpoints'
+            'name', 'description', 'address', 'type', 'endpoints'
         ];
         super(requiredFields);
     }
@@ -120,6 +120,20 @@ function validateServiceField(req: CustomRequest) {
     
     if (req.body['newType'] && ! Object.values(NlpTypes).includes(req.body['newType'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
+    }
+
+    if (req.body['newVersion']) {
+        const version = req.body['newVersion']
+        if (version[0] !== 'v') {
+            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
+        } 
+        if (version.substring(1).includes('.')) {
+            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
+        }
+        const versionNum = parseInt(version.substring(1))
+        if (Number.isNaN(versionNum)) {
+            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
+        }
     }
     
     return true;
