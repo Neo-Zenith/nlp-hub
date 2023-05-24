@@ -3,7 +3,7 @@ import { AdminController, UserController } from "./users.controller";
 import { UserService } from "./users.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AdminSchema, UserSchema } from "./user.model";
-import { ExtendSubscriptionMiddleware, LoginUserMiddleware, RegisterUserMiddleware, RemoveUserMiddleware, RetrieveAllUsersMiddleware, RetrieveUserMiddleware, UpdateUserMiddleware } from "./user.middleware";
+import { ExtendSubscriptionMiddleware, LoginUserMiddleware, RegisterUserMiddleware, RemoveUserMiddleware, RetrieveUsersMiddleware, RetrieveUserMiddleware, UpdateUserMiddleware } from "./user.middleware";
 
 @Module({
     imports: [
@@ -32,12 +32,12 @@ export class UserModule {
             .forRoutes('/users/update')
 
         consumer
-            .apply(RetrieveAllUsersMiddleware)
+            .apply(RetrieveUsersMiddleware)
             .forRoutes('/admins/get-users')
 
         consumer
             .apply(RetrieveUserMiddleware)
-            .forRoutes( { path: '/users/:id', method: RequestMethod.GET })
+            .forRoutes( { path: '/users/:username', method: RequestMethod.GET })
 
         consumer
             .apply(ExtendSubscriptionMiddleware)

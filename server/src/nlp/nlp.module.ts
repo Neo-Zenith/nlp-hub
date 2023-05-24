@@ -1,16 +1,23 @@
 import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
-import { EndpointController, NlpController } from "./nlp.controller";
+import { NlpController } from "./nlp.controller";
 import { NlpService } from "./nlp.service";
 import { MongooseModule } from "@nestjs/mongoose";
 import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
-import { RegisterEndpointMiddleware, RegisterServiceMiddleware, RetrieveEndpointMiddleware, RetrieveServiceMiddleware, UpdateEndpointMiddleware, UpdateServiceMiddleware } from "./nlp.middleware";
+import { 
+    RegisterEndpointMiddleware, 
+    RegisterServiceMiddleware, 
+    RemoveEndpointMiddleware, 
+    RemoveServiceMiddleware, 
+    UpdateEndpointMiddleware, 
+    UpdateServiceMiddleware 
+} from "./nlp.middleware";
 
 @Module({
     imports: [
         MongooseModule.forFeature([{name: 'Nlp', schema: NlpSchema}]),
         MongooseModule.forFeature([{name: 'NlpEndpoint', schema: NlpEndpointSchema}])
     ],
-    controllers: [NlpController, EndpointController],
+    controllers: [NlpController],
     providers: [NlpService]
 })
 
@@ -21,26 +28,32 @@ export class NlpModule {
             .forRoutes('/services/subscribe');
 
         consumer
-            .apply(RetrieveServiceMiddleware)
-            .forRoutes('/services/unsubscribe', 
-                        { path: '/services/:id', method: RequestMethod.GET },
-                        { path: '/services/:id/endpoints', method: RequestMethod.GET });
+            .apply(RemoveServiceMiddleware)
+            .forRoutes('/services/unsubscribe');
 
         consumer
             .apply(UpdateServiceMiddleware)
             .forRoutes('/services/update');
 
-        consumer    
-            .apply(RetrieveEndpointMiddleware)
-            .forRoutes('/endpoints/remove',
-                        { path: '/endpoints/:id', method: RequestMethod.GET });
-
         consumer
             .apply(RegisterEndpointMiddleware)
-            .forRoutes('/endpoints/add');
+            .forRoutes({ 
+                path: '/services/:type/:version/endpoints/add', 
+                method: RequestMethod.POST 
+            });
 
         consumer
             .apply(UpdateEndpointMiddleware)
-            .forRoutes('/endpoints/update')
+            .forRoutes({ 
+                path: '/services/:type/:version/endpoints/update', 
+                method: RequestMethod.POST 
+            });
+
+        consumer
+            .apply(RemoveEndpointMiddleware)
+            .forRoutes({
+                path: '/services/:type/:version/endpoints/remove',
+                method: RequestMethod.POST
+            })
     }
 };

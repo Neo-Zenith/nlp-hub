@@ -10,60 +10,52 @@ export class NlpService {
         @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
     ) {}
 
-    async subscribe(
-        serviceName: string, 
-        serviceVersion: string, 
-        serviceDescription: string, 
-        serviceAddress: string,
-        serviceType: string,
-        serviceEndpoints: NlpEndpoint[]
+    async addService(
+        name: string, version: string, description: string, 
+        address: string, type: string, endpoints: NlpEndpoint[]
     ) {
         const newService = new this.nlpModel({
-            name: serviceName,
-            version: serviceVersion,
-            description: serviceDescription,
-            baseAddress: serviceAddress,
-            type: serviceType
+            name, version, description, address, type
         });
-        const service = await newService.save();
+        await newService.save();
 
-        for (let i = 0; i < serviceEndpoints.length; i ++) {
+        for (let i = 0; i < endpoints.length; i ++) {
             const newEndpoint = new this.nlpEndpointModel({
-                serviceID: service.id,
-                method: serviceEndpoints[i].method,
-                options: serviceEndpoints[i].options,
-                endpointPath: serviceEndpoints[i].endpointPath,
-                task: serviceEndpoints[i].task
+                serviceID: newService.id,
+                method: endpoints[i].method,
+                options: endpoints[i].options,
+                endpointPath: endpoints[i].endpointPath,
+                task: endpoints[i].task
             });
             await newEndpoint.save();
         }
-        return service.id;
+        return { message: 'Service subscribed' }
     }
 
-    async unsubscribe(serviceID: string) {
-        const service = await this.checkServiceExist(serviceID);
-        await this.nlpModel.deleteOne({_id: service.id});
-        return {
-            message: "Service deleted"
-        };
+    async removeService(type: string, version: string) {
+        const service = await this.getService(type, version);
+        await this.nlpModel.deleteOne({ _id: service.id });
+        return { message: "Service unsubscribed" };
     }
 
     async updateService(
-        serviceID: string, 
-        name?: string, 
-        version?: string, 
-        baseAddress?: string, 
-        description?: string, 
-        type?: string
+        service: Nlp, name?: string, version?: string, 
+        baseAddress?: string, description?: string, type?: string
     ) {
-
         var updates = {}
 
-        if (name) {
-            updates['name'] = name;
-        }
         if (version) {
             updates['version'] = version;
+        } else {
+            updates['version'] = service.version;
+        }
+        if (type) {
+            updates['type'] = type;
+        } else {
+            updates['type'] = service.type;
+        }
+        if (name) {
+            updates['name'] = name;
         }
         if (baseAddress) {
             updates['baseAddress'] = baseAddress;
@@ -71,25 +63,21 @@ export class NlpService {
         if (description) {
             updates['description'] = description;
         }
-        if (type) {
-            updates['type'] = type;
-        }
-        
-        const result = await NlpModel.updateOne(
-            { _id: serviceID }, 
+
+        await NlpModel.updateOne(
+            { _id: service.id }, 
             { $set: updates } 
         );
 
-        return { message: result }
+        return { message: "Service updated" }
     }
 
-    async retrieveAllServices(name?: string, type?: string) {
-        const query: any = {};
+    async getServices(name?: string, type?: string) {
+        var query: any = {};
     
         if (name) {
             query.$text = { $search: name };
         }
-    
         if (type) {
             query.type = type;
         }
@@ -98,127 +86,87 @@ export class NlpService {
         return services;
     }
 
-    async retrieveOneService(serviceID: string) {
-        const service = await this.checkServiceExist(serviceID);
+    async getService(type: string, version: string) {
+        const service = await this.nlpModel.findOne({ type, version });
+        if (! service) {
+            throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
+        }
         return service;
     }
 
-    async retrieveAllEndpoints(task?: string, method?: string) {
-        const query: any = {};
-    
-        if (task) {
-            query.$text = { $search: task };
-        }
-    
-        if (method) {
-            query.method = method;
-        }
-    
-        const endpoints = await this.nlpEndpointModel.find(query).exec();
-        return endpoints;
-    }
-
-    async retrieveOneEndpoint(endpointID: string) {
-        const endpoint = await this.nlpEndpointModel.findById(endpointID);
-        if (! endpoint) {
-            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND);
-        }
-        return endpoint;
-    }
-
-    async retrieveEndpointsForOneService(serviceID: string, task?: string, method?: string) {
-        const query: any = {};
-        if (task) {
-            query.$text = { $search: task };
-        }
-        if (method) {
-            query.method = method;
-        }
-        query.serviceID = serviceID;
-
-        const endpointsExist = await this.nlpEndpointModel.find({ serviceID: serviceID }) 
-        if (endpointsExist.length === 0) {
-            throw new HttpException(
-                'Service not found',
-                HttpStatus.NOT_FOUND
-            );
-        }
-    
-        const endpoints = await this.nlpEndpointModel.find(query).exec();
-        return endpoints;
-    }
-
     async addEndpoint(
-        serviceID: string, 
-        endpointPath: string,
-        method: string, 
-        task: string,
-        options: Record<string, string>) {
-            const newEndpoint = await new this.nlpEndpointModel({
-                serviceID,
-                endpointPath,
-                method,
-                task,
-                options
-            })
-            await newEndpoint.save()
+        service: Nlp, endpointPath: string,
+        method: string, task: string, options: Record<string, string>
+    ) {
+        const newEndpoint = await new this.nlpEndpointModel({
+            serviceID: service.id, endpointPath, method, task, options
+        });
+        await newEndpoint.save()
 
-            return newEndpoint.id;
+        return { message: 'Endpoint added'};
     }
 
-    async removeEndpoint(endpointID: string) {
-        console.log(endpointID)
-        const endpoint = await this.nlpEndpointModel.findById(endpointID);
+    async removeEndpoint(service: Nlp, task: string) {
+        const endpoint = await this.nlpEndpointModel.findOne({ 
+            task, serviceID: service.id 
+        });
         if (! endpoint) {
             throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
         }
-        await this.nlpEndpointModel.deleteOne({_id: endpointID});
-        return {
-            message: "Endpoint deleted"
-        };
+        await this.nlpEndpointModel.deleteOne({ _id: endpoint.id });
+        return { message: "Endpoint deleted" };
     }
 
     async updateEndpoint(
-        endpointID: string,
-        serviceID?: string,
-        endpointPath?: string,
-        task?: string,
-        options?: Record<string, any>,
-        method?: string
+        endpoint: NlpEndpoint, newEndpointPath?: string,
+        newTask?: string, newOptions?: Record<string, any>, newMethod?: string
     ) {
         var updates = {}
-
-        if (serviceID) {
-            updates['serviceID'] = serviceID;
+        if (newEndpointPath) {
+            updates['endpointPath'] = newEndpointPath;
         }
-        if (endpointPath) {
-            updates['endpointPath'] = endpointPath;
+        if (newTask) {
+            updates['task'] = newTask;
         }
-        if (task) {
-            updates['task'] = task;
+        if (newOptions) {
+            updates['options'] = newOptions;
         }
-        if (options) {
-            updates['options'] = options;
-        }
-        if (method) {
-            updates['method'] = method;
+        if (newMethod) {
+            updates['method'] = newMethod;
         }
         
         await NlpModel.updateOne(
-            { _id: endpointID }, 
+            { _id: endpoint.id }, 
             { $set: updates } 
         );
 
         return { message: 'Service updated' }
     }
 
-    private async checkServiceExist(serviceID: string) {
-        const service = await this.nlpModel.findById(serviceID);
+    async getEndpoints(
+        service: Nlp, task?: string, method?: string
+    ) {
+        var query: any = {};
 
-        if (! service) {
-            throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
+        query.serviceID = service.id;
+        if (task) {
+            query.$text = { $search: task };
         }
+        if (method) {
+            query.method = method;
+        }
+        
+        const endpoints = await this.nlpEndpointModel.find(query).exec();
+        return endpoints;
+    }
 
-        return service;
+    async getEndpoint(serviceID: string, task: string) {
+        const endpoint = await this.nlpEndpointModel.findOne({ 
+            serviceID, task
+        });
+        if (! endpoint) {
+            throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
+        }
+        return endpoint;
     }
 }

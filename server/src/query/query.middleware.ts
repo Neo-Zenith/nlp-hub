@@ -1,32 +1,13 @@
 import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common';
 import { NextFunction } from 'express';
-import mongoose from 'mongoose';
-import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { NlpEndpointModel } from 'src/nlp/nlp.model';
 import { UserModel } from 'src/users/user.model';
 
 @Injectable()
-export class RegisterQueryMiddleware extends MissingFieldsMiddleware implements NestMiddleware{
-    constructor() {
-        const requiredFields = ['serviceID', 'endpointID', 'options']
-        super(requiredFields);
-        this.requiredFields = requiredFields;
-    }
-
+export class RegisterQueryMiddleware implements NestMiddleware{
     async use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (checkValidSubscription(req) && ! this.checkMissingFields(req)) {
-            if (! mongoose.isValidObjectId(req.body['serviceID'])) {
-                throw new HttpException(
-                    "Invalid service ID format", HttpStatus.BAD_REQUEST)
-            }
-
-            if (! mongoose.isValidObjectId(req.body['endpointID'])) {
-                throw new HttpException(
-                    "Invalid endpoint ID format", HttpStatus.BAD_REQUEST
-                )
-            }
-
+        if (checkValidSubscription(req)) {
             const legalFields = await validateField(req);
             if (legalFields) {
                 return next();

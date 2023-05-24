@@ -1,20 +1,18 @@
 import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common';
 import { NextFunction } from 'express';
-import mongoose from 'mongoose';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { MethodTypes, NlpTypes } from './nlp.model';
 import { Debug } from 'src/custom/debug/debug';
-import { httpExceptionSchema } from 'src/custom/custom.schema';
 
 
 @Injectable()
 export class RegisterServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['name', 'version', 'description', 'address', 'type',
-        'endpoints'];
+        const requiredFields = [
+            'name', 'version', 'description', 'address', 'type', 'endpoints'
+        ];
         super(requiredFields);
-        this.requiredFields = requiredFields;
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
@@ -26,28 +24,15 @@ export class RegisterServiceMiddleware extends MissingFieldsMiddleware implement
 }
 
 @Injectable()
-export class RetrieveServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+export class RemoveServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['id'];
+        const requiredFields = ['type', 'version'];
         super(requiredFields);
-        this.requiredFields = requiredFields;
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (! this.checkMissingFields(req)) {
-            var requestBody;
-            if (req.method === 'POST') {
-                requestBody = req.body;
-            } else if (req.method === 'GET') {
-                requestBody = req.params;
-            }
-
-            if (! mongoose.isValidObjectId(requestBody['id'])) {
-                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
-            }
-            
-            return next();
-        }
+        this.checkMissingFields(req)            
+        return next();
     }
 }
 
@@ -55,46 +40,13 @@ export class RetrieveServiceMiddleware extends MissingFieldsMiddleware implement
 @Injectable()
 export class UpdateServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['id'];
+        const requiredFields = ['oldType', 'oldVersion'];
         super(requiredFields);
-        this.requiredFields = requiredFields;
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        if(! this.checkMissingFields(req)) {
-            if (! mongoose.isValidObjectId(req.body['id'])) {
-                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
-            }
-
-            if (validateServiceField(req)) {
-                return next();
-            }
-        }
-    }
-}
-
-
-@Injectable()
-export class RetrieveEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
-    constructor() {
-        const requiredFields = ['id'];
-        super(requiredFields);
-        this.requiredFields = requiredFields;
-    }
-
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (! this.checkMissingFields(req)) {
-            var requestBody;
-            if (req.method === 'POST') {
-                requestBody = req.body;
-            } else if (req.method === 'GET') {
-                requestBody = req.params;
-            }
-
-            if (! mongoose.isValidObjectId(requestBody['id'])) {
-                throw new HttpException("Invalid endpoint ID format", HttpStatus.BAD_REQUEST)
-            }
-            
+        this.checkMissingFields(req)
+        if (validateServiceField(req)) {
             return next();
         }
     }
@@ -104,20 +56,14 @@ export class RetrieveEndpointMiddleware extends MissingFieldsMiddleware implemen
 export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
         const requiredFields = 
-            ['serviceID', 'method', 'options', 'endpointPath', 'task']
+            ['method', 'endpointPath', 'task']
         super(requiredFields);
-        this.requiredFields = requiredFields
     }
     
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (! this.checkMissingFields(req)) {
-            if (! mongoose.isValidObjectId(req.body['serviceID'])) {
-                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
-            }
-
-            if (validateEndpointField(req)) {
-                return next();
-            }
+        this.checkMissingFields(req)
+        if (validateEndpointField(req)) {
+            return next();
         }
     }
 }
@@ -125,23 +71,28 @@ export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implemen
 @Injectable()
 export class UpdateEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['id']
+        const requiredFields = ['oldTask']
         super(requiredFields);
-        this.requiredFields = requiredFields;
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        if(! this.checkMissingFields(req)) {
-            if (! mongoose.isValidObjectId(req.body['id'])) {
-                throw new HttpException("Invalid endpoint ID format", HttpStatus.BAD_REQUEST)
-            }
-            if (! mongoose.isValidObjectId(req.body['serviceID'])) {
-                throw new HttpException("Invalid service ID format", HttpStatus.BAD_REQUEST)
-            }
-            if (validateEndpointField(req)) {
-                return next();
-            }
+        this.checkMissingFields(req)
+        if (validateEndpointField(req)) {
+            return next();
         }
+    }
+}
+
+@Injectable()
+export class RemoveEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+    constructor() {
+        const requiredFields = ['task'];
+        super(requiredFields);
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction) {
+        this.checkMissingFields(req)
+        return next();
     }
 }
 
@@ -167,12 +118,8 @@ function validateServiceField(req: CustomRequest) {
         }
     }
     
-    if (req.body['type'] && ! Object.values(NlpTypes).includes(req.body['type'])) {
+    if (req.body['newType'] && ! Object.values(NlpTypes).includes(req.body['newType'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
-    }
-
-    if (req.body['method'] && ! Object.values(MethodTypes).includes(req.body['method'])) {
-        throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     
     return true;

@@ -4,6 +4,7 @@ import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from "crypto";
 import { Admin, User, UserModel } from "./user.model";
 dotenv.config();
 
@@ -14,13 +15,10 @@ export class UserService {
         @InjectModel('Admin') private readonly adminModel: Model<Admin>
     ) {}
     
-    async insertUser( username: string, 
-                name: string, 
-                email: string,
-                password: string,
-                department: string,
-                role: string) {
-
+    async addUser( 
+        username: string, name: string, email: string, 
+        password: string, department: string, role: string
+    ) {
         // hash the password before saving to db
         const hashedPassword = await this.hashPassword(password);
 
@@ -33,9 +31,10 @@ export class UserService {
                 password: hashedPassword,
                 department
             })
-            const user = await newUser.save();
-            return user.id;
-        } else { // save admin
+            await newUser.save();
+            return { message: 'User registered' };
+        } else { 
+            // save admin
             const newAdmin = new this.adminModel({
                 username,
                 name,
@@ -43,39 +42,35 @@ export class UserService {
                 password: hashedPassword,
                 department
             })
-            const admin = await newAdmin.save();
-            return admin.id;
+            await newAdmin.save();
+            return { message: 'Admin registered' };
         }
     }
 
     async verifyUser(username: string, password: string, role: string) {
-        // find if the username exists
-        const user = await this.existingUsername(username, role);
-        if (! user) {
-            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
-        }
+        // find user based on username
+        const user = await this.getUser(username);
 
         // verify if the password matches the hashed password
         const passwordMatches = await bcrypt.compare(password, user.password);
         if (passwordMatches) {
-            // if login successful, generate access token to be used as auth for consecutive
-            // access to restricted contents
-            return this.generateAccessToken(user.username, user.id, user.role);
+            // generate access token for future auth
+            return this.generateAccessToken(user.id, role);
         } else {
             throw new HttpException("Invalid password", HttpStatus.UNAUTHORIZED)
         }
     }
 
-    async removeUser(userID: string) {
-        const user = await this.userModel.findById(userID);
-        if (! user) {
-            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
-        }
-        await this.userModel.deleteOne({_id: userID});
+    async removeUser(username: string) {
+        const user = await this.getUser(username);
+        await this.userModel.deleteOne({_id: user.id});
         return { message: "User deleted" }
     }
 
-    async updateUser(id: string, username?: string, name?: string, email?: string, password?: string, department?: string, extension?: number) {
+    async updateUser(
+        user: User, username?: string, name?: string, email?: string, 
+        password?: string, department?: string, extension?: number
+    ) {
         var updates = {}
 
         if (username) {
@@ -94,37 +89,41 @@ export class UserService {
             updates['department'] = department
         }
 
-        if (extension) {
-            const user = await UserModel.findById(id);
-            if (! user) {
-                throw new HttpException("User not found", HttpStatus.NOT_FOUND)
-            }
-            
-            updates['subscriptionExpiryDate'] = user.subscriptionExpiryDate.setDate(user.subscriptionExpiryDate.getDate() + extension);  
+        if (extension) {            
+            updates['subscriptionExpiryDate'] = user
+                .subscriptionExpiryDate
+                .setDate(user.subscriptionExpiryDate.getDate() + extension);  
         }
     
         await UserModel.updateOne(
-            { _id: id }, 
+            { _id: user.id }, 
             { $set: updates }
         )
         return { message: 'User updated' }
     }
 
-    async getUser(userID: string) {
-        const user = await this.userModel.findById(userID);
+    async getUser(username?: string, email?: string, userID?: string) {
+        var user;
+        if (username) {
+            user = await this.userModel.findOne({ username });
+        } else if (email) {
+            user = await this.userModel.findOne({ email });
+        } else if (userID) {
+            user = await this.userModel.findById(userID)
+        }
+
         if (! user) {
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }
         return user;
     }
 
-    async getAllUsers(expireIn?: number, name?: string, department?: string) {
+    async getUsers(expireIn?: number, name?: string, department?: string) {
         let query = {};
       
         if (expireIn) {
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + expireIn);
-      
             query['subscriptionExpiryDate'] = { $lt: expiryDate };
         }
       
@@ -136,7 +135,7 @@ export class UserService {
             query['department'] = department;
         }
       
-        const users = await UserModel.find(query);
+        const users = await UserModel.find(query).exec();
         return users;
     }
 
@@ -146,23 +145,20 @@ export class UserService {
         return hashedPassword;
     }
 
-    private generateAccessToken(username: string, id: string, role: string) {
-        const payload = {username: username, id: id, role: role};
+    private generateAccessToken(id: string, role: string) {
+        const meta = this.encryptID(id + '+' + role);
+        const payload = { meta: meta };
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
         return accessToken;
     }
 
-    private async existingUsername(username: string, role: string) {
-        var user;
-        if (role === 'user') {
-            user = await this.userModel.findOne({username: username})
-        } else {
-            user = await this.adminModel.findOne({username: username})
-        }
-        
-        if (user) {
-            return user;
-        }
-        return false;
+    private encryptID(userID: string) {
+        const iv = crypto.randomBytes(16); 
+        const cipher = crypto.createCipheriv(
+            'aes-256-cbc', process.env.ENCRYPT_SECRET, iv
+        );
+        let encrypted = cipher.update(userID, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return iv.toString('hex') + encrypted;
     }
 }

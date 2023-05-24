@@ -4,6 +4,8 @@ import { Debug } from "./debug/debug";
 import { NextFunction, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
+import * as crypto from "crypto";
+import { UserModel } from "src/users/user.model";
 dotenv.config()
 
 export abstract class MissingFieldsMiddleware {
@@ -14,15 +16,7 @@ export abstract class MissingFieldsMiddleware {
     }
 
     checkMissingFields(req: CustomRequest) {
-        var requestBody;
-
-        if (req.method === 'POST') {
-            requestBody = req.body;
-        } else if (req.method === 'GET') {
-            requestBody = req.params;
-        }
-
-        const missingFields = this.requiredFields.filter((field) => ! requestBody[field]);
+        const missingFields = this.requiredFields.filter((field) => ! req.body[field]);
         if (missingFields.length > 0) {
             const message = `Incomplete body (${missingFields.join(', ')})`
             Debug.devLog("MissingFieldsMiddleware", message)
@@ -37,15 +31,16 @@ export abstract class MissingFieldsMiddleware {
 export class CheckAuthMiddleware implements NestMiddleware {
     async use(req: CustomRequest, res: Response, next: NextFunction) {
         const { baseUrl } = req;
-        const isPublicRoute = this.isPublic(baseUrl);
-        const isAdminRoute = this.isAdmin(baseUrl);
+        const isPublicRoute = this.isPublicRoute(baseUrl);
+        const isAdminRoute = this.isAdminRoute(baseUrl);
         const authHeader = req.headers.authorization;
         req.payload = {};
 
-
         if (! isPublicRoute) {
             if (! authHeader || ! authHeader.startsWith('Bearer ')) {
-                return res.status(400).json({ message: "Access token is not present" })
+                return res.status(400).json({ 
+                    message: "Access token is not present" 
+                })
             }
             
             // Check for JWT token
@@ -55,18 +50,21 @@ export class CheckAuthMiddleware implements NestMiddleware {
                 // Verify and decode the JWT token
                 const decoded = await jwt.verify(token, process.env.JWT_SECRET);
                 // Set the decoded user object on the request for future use
-                req.payload['id'] = decoded.id;
-                req.payload['role'] = decoded.role;
- 
+                const decrypted = this.decryptID(decoded.meta);
+                const metadata = decrypted.split('+')
+                req.payload['id'] = metadata[0]
+                req.payload['role'] = metadata[1]
+
                 if (isAdminRoute) {
                     // Check if the user is an admin
-                    const isAdmin = decoded.role === 'admin';
+                    const isAdmin = req.payload['role'] === 'admin';
 
                     if (! isAdmin) {
-                        return res.status(403).json({ message: 'User not authorized' });
+                        return res.status(403).json({ 
+                            message: 'User not authorized' 
+                        });
                     }
                 }
-
                 return next();
 
             } catch (err) {
@@ -76,13 +74,12 @@ export class CheckAuthMiddleware implements NestMiddleware {
                     return res.status(400).json({ message: 'Access token expired' })
                 }
             }
-
         } else {
             return next();
         }
     }
 
-    isPublic(url: string): boolean {
+    private isPublicRoute(url: string): boolean {
         const publicRoutes = [
             '/users/register',
             '/users/login',
@@ -92,7 +89,7 @@ export class CheckAuthMiddleware implements NestMiddleware {
         return publicRoutes.includes(url);
     }
 
-    isAdmin(url: string): boolean {
+    private isAdminRoute(url: string): boolean {
         const restrictedRoutes = [
             '/admins/register',
             '/admins/extend-subscription',
@@ -105,6 +102,27 @@ export class CheckAuthMiddleware implements NestMiddleware {
             '/endpoints/update',
         ];
 
-        return restrictedRoutes.includes(url);
+        for (const route of restrictedRoutes) {
+            if (url.includes(route)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private decryptID(encryptedID: string) {
+        const iv = Buffer.from(encryptedID.slice(0, 32), 'hex'); 
+        const decipher = crypto.createDecipheriv('aes-256-cbc', process.env.ENCRYPT_SECRET, iv);
+        let decrypted = decipher.update(encryptedID.slice(32), 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
+
+    private async retrieveUser(userID: string) {
+        const user = await UserModel.findById(userID);
+        if (! user) {
+            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+        }
+        return user;
     }
 }

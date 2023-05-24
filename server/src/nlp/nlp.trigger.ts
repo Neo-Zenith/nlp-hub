@@ -8,8 +8,11 @@ export function NlpTrigger() {
         // Find if another service of the same address already exist
         const service = await NlpModel.findOne({
             baseAddress: this.baseAddress
+        }) || await NlpModel.findOne({
+            type: this.type,
+            version: this.version
         })
-        
+
         if (service) {
             throw new HttpException("Service already registered", HttpStatus.CONFLICT)
         }
@@ -19,6 +22,8 @@ export function NlpTrigger() {
 
     NlpSchema.pre('updateOne', async function (next) {
         const baseAddress = this.getUpdate()['$set']['baseAddress'];
+        const type = this.getUpdate()['$set']['type'];
+        const version = this.getUpdate()['$set']['version'];
 
         if (baseAddress) {
             const service = await NlpModel.findOne({
@@ -28,6 +33,14 @@ export function NlpTrigger() {
             if (service && service.id !== this['_conditions']['_id']) {
                 throw new Error("Service with the same base address already registered");
             }
+        }
+
+        const service = await NlpModel.findOne({
+            type, version
+        })
+
+        if (service && service.id !== this['_conditions']['_id']) {
+            throw new Error("Service with the same base address already registered");
         }
       
         return next();
@@ -46,12 +59,6 @@ export function NlpTrigger() {
 // Pre-save trigger for NlpEndpoint
 export function NlpEndpointTrigger() {
     NlpEndpointSchema.pre('save', async function(next) {
-        // FK constraint check for serviceID
-        const service = await NlpModel.findById(this.serviceID);
-        if (! service) {
-            throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
-        }
-
         // Unique constraint check for <serviceID, endpoint, method>
         const endpointExist = await NlpEndpointModel.findOne({
             serviceID: this.serviceID,
