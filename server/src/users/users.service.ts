@@ -107,7 +107,6 @@ export class UserService {
         if (role === 'admin') {
             if (username) {
                 user = await this.adminModel.findOne({ username });
-                console.log(user)
             } else if (email) {
                 user = await this.adminModel.findOne({ email });
             } else if (userID) {
