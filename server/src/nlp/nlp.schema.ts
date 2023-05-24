@@ -21,12 +21,12 @@ export class InsertEndpointSchema {
     task: string;
 
     @ApiPropertyOptional({
-        description: 'Options required by the endpoint. Option fields must match the pre-defined options provided by the endpoint.',
+        description: 'Options required by the endpoint. Options must be stored in <field, type-accepted> pair',
         example: {
-            'message': 'This is a test message',
-            'isFluency': true,
-            'removeAutoCheck': false,
-            'passes': 0
+            'message': 'string',
+            'isFluency': 'boolean',
+            'removeAutoCheck': 'boolean',
+            'passes': 'number'
         }
     })
     options: Record<string, string>
@@ -156,12 +156,12 @@ export class UpdateEndpointSchema {
     endpointPath: string;
 
     @ApiPropertyOptional({
-        description: 'Updated options required by the endpoint. Option fields must match the pre-defined options provided by the endpoint.',
+        description: 'Options required by the endpoint. Options must be stored in <field, type-accepted> pair',
         example: {
-            'message': 'This is the 2nd test message',
-            'removeAutoCheck': false,
-            'passes': 0,
-            'scramble': false
+            'message': 'string',
+            'isFluency': 'boolean',
+            'removeAutoCheck': 'boolean',
+            'passes': 'number'
         }
     })
     options: Record<string, string>
