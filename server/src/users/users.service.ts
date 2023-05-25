@@ -184,7 +184,7 @@ export class UserService {
 
     private async updateUserDB(user: User, updates: Record<string, any>) {
         try {
-            await UserModel.updateOne(
+            await this.userModel.updateOne(
                 { _id: user.id }, 
                 { $set: updates }
             )

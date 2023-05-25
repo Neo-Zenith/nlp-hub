@@ -194,7 +194,7 @@ export class NlpService {
 
     private async updateServiceDB(service: Nlp, updates: Record<string, any>) {
         try {
-            await service.updateOne(
+            await this.nlpModel.updateOne(
                 { _id: service.id }, 
                 { $set: updates }
             )
@@ -218,7 +218,7 @@ export class NlpService {
 
     private async updateEndpointDB(endpoint: NlpEndpoint, updates: Record<string, any>) {
         try {
-            await endpoint.updateOne(
+            await this.nlpEndpointModel.updateOne(
                 { _id: endpoint.id }, 
                 { $set: updates }
             )

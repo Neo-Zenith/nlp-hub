@@ -102,7 +102,7 @@ function validateServiceField(req: CustomRequest) {
 }
 
 function validateEndpointField(req: CustomRequest) {
-    if (! Object.values(MethodTypes).includes(req.body['method'])) {
+    if (req.body['method'] && ! Object.values(MethodTypes).includes(req.body['method'])) {
         throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     return true;
