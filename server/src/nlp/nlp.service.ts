@@ -16,9 +16,8 @@ export class NlpService {
     ) {
         const newService = new this.nlpModel({
             name, description, baseAddress: address, type
-        });
-        await newService.save();
-
+        })
+        await this.saveService(newService);
         for (let i = 0; i < endpoints.length; i ++) {
             const newEndpoint = new this.nlpEndpointModel({
                 serviceID: newService.id,
@@ -27,7 +26,7 @@ export class NlpService {
                 endpointPath: endpoints[i].endpointPath,
                 task: endpoints[i].task
             });
-            await newEndpoint.save();
+            await this.saveEndpoint(newEndpoint);
         }
         return { message: 'Service subscribed' }
     }
@@ -64,11 +63,7 @@ export class NlpService {
             updates['description'] = description;
         }
 
-        await NlpModel.updateOne(
-            { _id: service.id }, 
-            { $set: updates } 
-        );
-
+        await this.updateServiceDB(service, updates);
         return { message: "Service updated" }
     }
 
@@ -115,7 +110,7 @@ export class NlpService {
         const newEndpoint = await new this.nlpEndpointModel({
             serviceID: service.id, endpointPath, method, task, options
         });
-        await newEndpoint.save()
+        await this.saveEndpoint(newEndpoint);
 
         return { message: 'Endpoint added'};
     }
@@ -149,12 +144,9 @@ export class NlpService {
             updates['method'] = newMethod;
         }
         
-        await NlpModel.updateOne(
-            { _id: endpoint.id }, 
-            { $set: updates } 
-        );
+        await this.updateEndpointDB(endpoint, updates);
 
-        return { message: 'Service updated' }
+        return { message: 'Endpoint updated' }
     }
 
     async getEndpoints(
@@ -182,5 +174,88 @@ export class NlpService {
             throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
         }
         return endpoint;
+    }
+
+    private async saveService(service: Nlp) {
+        try {
+            await service.save();
+            return;
+        } catch (err) {
+            if (err.message.includes('duplicate key')) {
+                if (err.message.includes('baseAddress')) {
+                    throw new HttpException(
+                        "Service with the same base address already registered", 
+                        HttpStatus.CONFLICT
+                    )
+                }
+            }
+        }
+    }
+
+    private async updateServiceDB(service: Nlp, updates: Record<string, any>) {
+        try {
+            await service.updateOne(
+                { _id: service.id }, 
+                { $set: updates }
+            )
+        } catch (err) {
+            if (err.message.includes("duplicate key")) {
+                if (err.message.includes("baseAddress")) {
+                    throw new HttpException(
+                        "Service with the same base address already registered", 
+                        HttpStatus.CONFLICT
+                    )
+                } 
+                if (err.message.includes("version")) {
+                    throw new HttpException(
+                        "Service with the same type and version already registered",
+                        HttpStatus.CONFLICT
+                    )
+                }
+            }
+        }
+    }
+
+    private async updateEndpointDB(endpoint: NlpEndpoint, updates: Record<string, any>) {
+        try {
+            await endpoint.updateOne(
+                { _id: endpoint.id }, 
+                { $set: updates }
+            )
+        } catch (err) {
+            if (err.message.includes("duplicate key")) {
+                if (err.message.includes("task")) {
+                    throw new HttpException(
+                        "Task already exist for the service", HttpStatus.CONFLICT
+                );
+                } 
+                if (err.message.includes("method")) {
+                    throw new HttpException(
+                        "Endpoint of the given method already registered",
+                        HttpStatus.CONFLICT
+                    )
+                }
+            }
+        }
+    }   
+
+    private async saveEndpoint(endpoint: NlpEndpoint) {
+        try {
+            await endpoint.save()
+        } catch (err) {
+            if (err.message.includes("duplicate key")) {
+                if (err.message.includes("task")) {
+                    throw new HttpException(
+                        "Task already exist for the service", HttpStatus.CONFLICT
+                    );
+                }
+                if (err.message.includes("method")) {
+                    throw new HttpException(
+                        "Endpoint of the given method already registered",
+                        HttpStatus.CONFLICT
+                    )
+                }
+            }
+        }
     }
 }

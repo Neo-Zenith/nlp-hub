@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { NlpEndpointTrigger, NlpTrigger } from './nlp.trigger';
+import { NlpTrigger } from './nlp.trigger';
 
 /**
  * Nlp(id, name, version, address, description)
@@ -30,13 +30,13 @@ export class Nlp extends Document {
     @Prop()
     version: string;
 
-    @Prop({ required: true })
+    @Prop({ required: true, unique: true })
     baseAddress: string;
 
     @Prop()
     description: string;
 
-    @Prop({ required: true, enum: NlpTypes, index: true })
+    @Prop({ required: true, enum: NlpTypes })
     type: string;
 }
 
@@ -66,11 +66,13 @@ export class NlpEndpoint extends Document {
 } 
 
 export const NlpSchema = SchemaFactory.createForClass(Nlp);
+NlpSchema.index({ type: 1, version: 1 }, { unique: true });
 NlpTrigger();
 export const NlpModel = mongoose.model('Nlp', NlpSchema);
 
 export const NlpEndpointSchema = SchemaFactory.createForClass(NlpEndpoint);
-NlpEndpointTrigger();
+NlpEndpointSchema.index({ serviceID: 1, endpointPath: 1, method: 1}, { unique: true })
+NlpEndpointSchema.index({ serviceID: 1, task: 1 }, { unique: true })
 export const NlpEndpointModel = mongoose.model('NlpEndpoint', NlpEndpointSchema);
 
 

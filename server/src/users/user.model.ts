@@ -9,19 +9,19 @@ import { UserTrigger } from './users.trigger';
  * UNIQUE: username, email
  */
 class DefaultUser extends Document {
-    @Prop( {required: true} )
+    @Prop({ required: true, unique: true })
     username: string;
 
-    @Prop( {required: true} )
+    @Prop({ required: true })
     name: string;
 
-    @Prop( {required: true} )
+    @Prop({ required: true, unique: true })
     email: string;
 
-    @Prop( {required: true} )
+    @Prop({ required: true })
     password: string;
 
-    @Prop( {required: true} ) 
+    @Prop({ required: true }) 
     department: string;
 }
 
@@ -33,7 +33,7 @@ class DefaultUser extends Document {
  */
 @Schema()
 export class User extends DefaultUser {
-    @Prop( {default: 'user', required: true} )
+    @Prop({ default: 'user', required: true })
     role: string;
 
     @Prop({
@@ -54,7 +54,7 @@ export class User extends DefaultUser {
  */
 @Schema()
 export class Admin extends DefaultUser {
-    @Prop({ default: 'admin' , required: true})
+    @Prop({ default: 'admin' , required: true })
     role: string;
 }
 

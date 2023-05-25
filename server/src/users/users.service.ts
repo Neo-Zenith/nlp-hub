@@ -31,8 +31,7 @@ export class UserService {
                 password: hashedPassword,
                 department
             })
-            await newUser.save();
-            return { message: 'User registered' };
+            return this.saveUser(newUser);
         } else { 
             // save admin
             const newAdmin = new this.adminModel({
@@ -42,8 +41,8 @@ export class UserService {
                 password: hashedPassword,
                 department
             })
-            await newAdmin.save();
-            return { message: 'Admin registered' };
+
+            return this.saveUser(newAdmin);
         }
     }
 
@@ -95,11 +94,7 @@ export class UserService {
                 .setDate(user.subscriptionExpiryDate.getDate() + parseInt(extension));  
         }
         
-        await UserModel.updateOne(
-            { _id: user.id }, 
-            { $set: updates }
-        )
-        return { message: 'User updated' }
+        return this.updateUserDB(user, updates);
     }
 
     async getUser(role: string, username?: string, email?: string, userID?: string) {
@@ -170,5 +165,38 @@ export class UserService {
         let encrypted = cipher.update(userID, 'utf8', 'hex');
         encrypted += cipher.final('hex');
         return iv.toString('hex') + encrypted;
+    }
+
+    private async saveUser(user: User | Admin) {
+        try {
+            await user.save();
+            return { message: 'User registered' };
+        } catch(err) {
+            if (err.message.includes('duplicate key')) {
+                if (err.message.includes('username')) {
+                    throw new HttpException("Username already exist", HttpStatus.CONFLICT)
+                } if (err.message.includes('email')) {
+                    throw new HttpException("Email already exist", HttpStatus.CONFLICT)
+                }
+            }
+        }
+    }
+
+    private async updateUserDB(user: User, updates: Record<string, any>) {
+        try {
+            await UserModel.updateOne(
+                { _id: user.id }, 
+                { $set: updates }
+            )
+            return { message: 'User updated' }
+        } catch(err) {
+            if (err.message.includes('duplicate key')) {
+                if (err.message.includes('username')) {
+                    throw new HttpException("Username already exist", HttpStatus.CONFLICT)
+                } if (err.message.includes('email')) {
+                    throw new HttpException("Email already exist", HttpStatus.CONFLICT)
+                }
+            }
+        }
     }
 }
