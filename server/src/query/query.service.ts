@@ -45,13 +45,13 @@ export class QueryService {
         
         await query.save();
         return { 
-            id: query.id,
+            uuid: query.uuid,
             output: response.data
         }
     }
 
-    async getUsages(userID: string, role: string, type?: string) {
-        var usages;
+    async getUsages(userID: string, role: string, type?: string, version?: string) {
+        let usages;
         if (role === 'admin') {
             usages = await this.queryModel.find().exec();
         } else {
@@ -59,22 +59,42 @@ export class QueryService {
         }
     
         const filteredUsages = await Promise.all(usages.map(async (usage) => {
-            const service = await this.nlpModel.findById(usage.serviceID); 
+            const service = await this.nlpModel.findById(usage.serviceID);
             if (type) {
-                if (service && service.type === type) {
+                if (service && service.type === type && (!version || service.version === version)) {
                     return usage;
                 }
-            }
-            else {
-                if (! service) {
-                    return Object.assign({'deleted': true}, usage['_doc'] )
-                } else {
+            } else {
+                if (!service) {
+                    return Object.assign({ 'deleted': true }, usage['_doc']);
+                } else if (!version || service.version === version) {
                     return usage;
                 }
             }
         }));
-
+    
         return filteredUsages.filter(Boolean);
+    }
+
+    async getUsage(uuid: string) {
+        const usage = await this.queryModel.findOne({ uuid: uuid });
+        if (! usage) {
+            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
+        }
+        const service = await this.nlpModel.findById(usage.serviceID);
+        if (! service) {
+            return Object.assign({ 'serviceDeleted': true }, usage['_doc']);
+        }
+        return usage;
+    }
+
+    async deleteUsage(uuid: string) {
+        const usage = await this.queryModel.findOne({ uuid: uuid });
+        if (! usage) {
+            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
+        }
+        await this.queryModel.deleteOne({ uuid: uuid })
+        return { message: 'Usage deleted' }
     }
 
     async retrieveService(type: string, version: string) {
@@ -94,7 +114,7 @@ export class QueryService {
     }
 
     async retrieveUser(userID: string) {
-        const user = await this.userModel.findById({ userID });
+        const user = await this.userModel.findById(userID);
         if (! user) {
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }

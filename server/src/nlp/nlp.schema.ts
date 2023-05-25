@@ -101,7 +101,7 @@ export class UpdateEndpointSchema {
         description: 'Updated unique identifier for the endpoint.',
         example: 'change-lang'
     })
-    newTask: string
+    task: string
 
     @ApiPropertyOptional({
         description: `Updated HTTP method. Valid methods: ${Object.values(MethodTypes).join(', ')}.`,

@@ -99,6 +99,15 @@ export class NlpService {
         return types;
     }
 
+    async getServiceVersions(type: string) {
+        const services = await this.nlpModel.find({ type })
+        var returnVersion = []
+        for (const service of services) {
+            returnVersion.push(service.version)
+        }
+        return returnVersion;
+    }
+
     async addEndpoint(
         service: Nlp, endpointPath: string,
         method: string, task: string, options: Record<string, string>

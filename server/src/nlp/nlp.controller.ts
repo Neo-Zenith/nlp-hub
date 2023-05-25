@@ -64,6 +64,17 @@ export class NlpController {
         return { types: types }
     }
 
+    @ApiOperation({ summary: 'Retrieves all versions under a service type.' })
+    @ApiSecurity('access-token')
+    @Get(':type/get-version')
+    @UseGuards(new UserAuthGuard(['GET']))
+    async getServiceVersion(
+        @Param('type') type: string
+    ) {
+        const versions = await this.nlpService.getServiceVersions(type);
+        return { versions: versions }
+    }
+
     @ApiOperation({ summary: 'Retrieves a service.' })
     @ApiSecurity('access-token')
     @ApiParam({ 
@@ -191,6 +202,7 @@ export class NlpController {
     }
 
     @ApiOperation({ summary: "Retrieves an endpoint." })
+    @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'type', 
         description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`
@@ -253,7 +265,7 @@ export class NlpController {
         @Param('task') oldTask: string,
         @Body('method') method?: string,
         @Body('endpointPath') endpointPath?: string,
-        @Body('newTask') newTask?: string,
+        @Body('task') newTask?: string,
         @Body('options') options?: Record<string, string>
     ) {
         const service = await this.nlpService.getService(type, version);

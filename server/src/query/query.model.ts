@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { Document, Types } from "mongoose";
 import { Nlp, NlpEndpoint } from "src/nlp/nlp.model";
-import { User } from "src/users/user.model";
+import { v4 as uuidv4 } from 'uuid';
 import { QueryTrigger } from "./query.trigger";
 
 /**
@@ -9,6 +9,9 @@ import { QueryTrigger } from "./query.trigger";
  */
 @Schema()
 export class Query extends Document {
+    @Prop({ default: uuidv4, unique: true }) 
+    uuid: string;
+
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     userID: string;
 

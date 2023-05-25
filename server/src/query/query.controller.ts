@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, Param, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Delete, Query, Req, Param, UseGuards, UseInterceptors } from "@nestjs/common";
 import { QueryService } from "./query.service";
 import { CustomRequest } from "src/custom/request/request.model";
 import { 
@@ -12,6 +12,7 @@ import {
 import { NlpTypes } from "src/nlp/nlp.model";
 import { ServiceQuerySchema } from "./query.schema";
 import { UserAuthGuard } from "src/custom/custom.middleware";
+import { RegisterQueryInterceptor, RetrieveUsageInterceptor } from "./query.middleware";
 
 @ApiTags('Queries')
 @Controller('query')
@@ -25,6 +26,7 @@ export class QueryController {
     @ApiBody({ type: ServiceQuerySchema })
     @Post(':type/:version/:task')
     @UseGuards(new UserAuthGuard(['POST']))
+    @UseInterceptors(RegisterQueryInterceptor)
     async serviceQuery(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -57,20 +59,27 @@ export class UsageController {
         example: 'SUD',
         required: false
     })
+    @ApiQuery({
+        name: 'version',
+        description: 'Unique identifier for a service. Version must follow v{id} format.',
+        example: 'v11',
+        required: false
+    })
     @Get('')
     @UseGuards(new UserAuthGuard(['GET']))
     async getUsages(
         @Req() request: CustomRequest,
-        @Query('type') type?: string
+        @Query('type') type?: string,
+        @Query('version') version?: string
     ) {
         var obscuredUsages = [];
         const role = request.payload.role;
         const userID = request.payload.id;
-        const usages = await this.queryService.getUsages(userID, role, type);
+        const usages = await this.queryService.getUsages(userID, role, type, version);
         
         for (const usage of usages) {
             const modifiedUsage = {
-                id: usage.id,
+                uuid: usage.uuid,
                 output: usage.output,
                 options: usage.options,
                 dateTime: usage.dateTime,
@@ -81,5 +90,35 @@ export class UsageController {
         }
 
         return { usages: obscuredUsages }
+    }
+
+    @ApiOperation({ summary: "Retrieves a usage" })
+    @ApiSecurity('access-token')
+    @Get(":uuid")
+    @UseGuards(new UserAuthGuard(['GET']))
+    @UseInterceptors(RetrieveUsageInterceptor)
+    async getUsage(
+        @Param('uuid') uuid: string
+    ) {
+        const usage = await this.queryService.getUsage(uuid);
+        const obscuredUsage = {
+            output: usage.output,
+            options: usage.options,
+            dateTime: usage.dateTime,
+            serviceDeleteed: usage.deleted
+        }
+        return obscuredUsage;
+    }
+
+    @ApiOperation({ summary: "Removes a usage" })
+    @ApiSecurity('access-token')
+    @Delete(":uuid")
+    @UseGuards(new UserAuthGuard(['DELETE']))
+    @UseInterceptors(RetrieveUsageInterceptor)
+    async removeUsage(
+        @Param('uuid') uuid: string
+    ) {
+        const message = await this.queryService.deleteUsage(uuid);
+        return message;
     }
 }
