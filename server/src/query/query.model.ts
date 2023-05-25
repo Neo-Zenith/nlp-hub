@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { Document, Types } from "mongoose";
-import { Nlp, NlpEndpoint } from "src/nlp/nlp.model";
+import { Nlp, NlpEndpoint } from "../nlp/nlp.model";
 import { v4 as uuidv4 } from 'uuid';
 import { QueryTrigger } from "./query.trigger";
 

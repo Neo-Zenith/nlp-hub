@@ -7,8 +7,7 @@ import {
     ExtendSubscriptionMiddleware, 
     LoginUserMiddleware, 
     RegisterUserMiddleware, 
-    RetrieveUsersMiddleware, 
-    ModifyUserInterceptor 
+    RetrieveUsersMiddleware
 } from "./user.middleware";
 
 @Module({

@@ -1,7 +1,7 @@
-import { UserModel } from "src/users/user.model";
+import { UserModel } from "../users/user.model";
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { QuerySchema } from "./query.model";
-import { NlpEndpointModel, NlpModel } from "src/nlp/nlp.model";
+import { NlpEndpointModel, NlpModel } from "../nlp/nlp.model";
 
 // Pre-save trigger for Query
 export function QueryTrigger() {

@@ -1,5 +1,5 @@
 import { UserSchema } from "./user.model";
-import { QueryModel } from "src/query/query.model";
+import { QueryModel } from "../query/query.model";
 
 export function UserTrigger() {
     UserSchema.pre('deleteOne', async function(next) {
