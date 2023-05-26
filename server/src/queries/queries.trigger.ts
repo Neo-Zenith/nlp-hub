@@ -1,7 +1,7 @@
 import { UserModel } from "../users/users.model";
 import { HttpException, HttpStatus } from "@nestjs/common";
 import { QuerySchema } from "./queries.model";
-import { NlpEndpointModel, NlpModel } from "../services/services.model";
+import { ServiceEndpointModel, ServiceModel } from "../services/services.model";
 
 // Pre-save trigger for Query
 export function QueryTrigger() {
@@ -13,13 +13,13 @@ export function QueryTrigger() {
         }
 
         // FK constraint check for serviceID
-        const service = await NlpModel.findById(this.serviceID);
+        const service = await ServiceModel.findById(this.serviceID);
         if (! service) {
             throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
         }
 
         // FK constraint check for endpointID
-        const endpoint = (await NlpEndpointModel.findById(this.endpointID).exec()).toJSON();
+        const endpoint = (await ServiceEndpointModel.findById(this.endpointID).exec()).toJSON();
         if (! endpoint) {
             throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
         }

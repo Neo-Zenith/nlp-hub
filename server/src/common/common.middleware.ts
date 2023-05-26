@@ -3,17 +3,12 @@ import {
     CanActivate, 
     ExecutionContext, 
     HttpStatus, 
-    Injectable, 
-    NestMiddleware 
+    Injectable
 } from "@nestjs/common";
 import { CustomRequest } from "./request/request.model";
-import { Observable } from 'rxjs';
-import { Debug } from "./debug/debug";
-import { NextFunction, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import * as crypto from "crypto";
-import { UserModel } from "src/users/users.model";
 dotenv.config()
 
 export abstract class MissingFieldsMiddleware {
@@ -27,7 +22,6 @@ export abstract class MissingFieldsMiddleware {
         const missingFields = this.requiredFields.filter((field) => ! req.body[field]);
         if (missingFields.length > 0) {
             const message = `Incomplete body (${missingFields.join(', ')})`
-            Debug.devLog("MissingFieldsMiddleware", message)
             throw new HttpException(message, 
                                     HttpStatus.BAD_REQUEST);
         }

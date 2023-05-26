@@ -1,9 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { MethodTypes, NlpTypes } from './services.model';
+import { HttpMethodType, ServiceType } from './services.model';
 
 export class InsertEndpointSchema {
     @ApiProperty({
-        description: `HTTP method. Valid methods: ${Object.values(MethodTypes).join(', ')}.`,
+        description: `HTTP method. Valid methods: ${Object.values(HttpMethodType).join(', ')}.`,
         example: 'POST'
     })
     method: string;
@@ -46,7 +46,7 @@ export class InsertServiceSchema {
     description: string;
 
     @ApiProperty({
-        description: `Type of service. Valid types: ${Object.values(NlpTypes).join(', ')}.`,
+        description: `Type of service. Valid types: ${Object.values(ServiceType).join(', ')}.`,
         example: 'SUD'
     })
     type: string;
@@ -78,7 +78,7 @@ export class UpdateServiceSchema {
     version: string
 
     @ApiPropertyOptional({
-        description: `New type for the service being updated. Valid types: ${Object.values(NlpTypes).join(', ')}.`,
+        description: `New type for the service being updated. Valid types: ${Object.values(ServiceType).join(', ')}.`,
         example: 'SUD'
     })
     type: string
@@ -104,7 +104,7 @@ export class UpdateEndpointSchema {
     task: string
 
     @ApiPropertyOptional({
-        description: `Updated HTTP method. Valid methods: ${Object.values(MethodTypes).join(', ')}.`,
+        description: `Updated HTTP method. Valid methods: ${Object.values(HttpMethodType).join(', ')}.`,
         example: 'GET'
     })
     method: string

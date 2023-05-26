@@ -5,7 +5,7 @@ import {
 	CallHandler,
 	HttpException
 } from '@nestjs/common';
-import { CustomRequest } from "src/custom/request/request.model";
+import { CustomRequest } from "src/common/request/request.model";
 import { User } from './users.model';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';

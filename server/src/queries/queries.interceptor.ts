@@ -2,21 +2,96 @@ import {
     Injectable, NestInterceptor, ExecutionContext, CallHandler, 
     HttpStatus, HttpException 
 } from '@nestjs/common';
-import { CustomRequest } from '../custom/request/request.model';
-import { NlpEndpointModel, NlpModel } from '../services/services.model';
-import { UserModel } from '../users/users.model';
-import { QueryModel } from './queries.model';
+import { CustomRequest } from '../common/request/request.model';
+import { Service, ServiceEndpoint } from '../services/services.model';
+import { User } from '../users/users.model';
+import { Query } from './queries.model';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class RegisterQueryInterceptor implements NestInterceptor {
+    constructor(
+        @InjectModel('User') private readonly userModel: Model<User>,
+        @InjectModel('Service') private readonly serviceModel: Model<Service>,
+        @InjectModel('ServiceEndpoint') private readonly serviceEndpointModel: Model<ServiceEndpoint>
+    ) {}
     async intercept(context: ExecutionContext, next: CallHandler) {
         const req = context.switchToHttp().getRequest<CustomRequest>();
-        if (checkValidSubscription(req)) {
-            const legalFields = await validateField(req);
+        if (this.checkValidSubscription(req)) {
+            const legalFields = await this.validateField(req);
             if (legalFields) {
                 return next.handle();
             }
         }
+    }
+
+    async checkValidSubscription(req) {
+        const role = req.payload.role;
+        // admins can query services without subscription restriction
+        if (role === 'admin') {
+            return true;
+        }
+    
+        const userID = req.payload.id;
+        const user = await this.userModel.findById(userID);
+      
+        if (!user) {
+            throw new HttpException(
+                'The requested user could not be found',
+                HttpStatus.NOT_FOUND
+            );
+        }
+      
+        const expiryDate = user.subscriptionExpiryDate;
+        const currentDate = new Date();
+      
+        if (currentDate > expiryDate) {
+            throw new HttpException('Subscription expired.', HttpStatus.UNAUTHORIZED);
+        }
+    
+        return true;
+    }
+
+    async validateField(req: CustomRequest) {
+        const query = req.body['options'];
+        const queryOptions =  Object.keys(query);
+        const service = await this.serviceModel.findOne({ 
+            type: req.params['type'], version: req.params['version']
+        })
+        if (! service ) {
+            throw new HttpException("Service not found", HttpStatus.NOT_FOUND)
+        }
+        const endpoint = (await this.serviceEndpointModel.findOne({ 
+            serviceID: service.id, task: req.params['task'] }).exec()).toJSON();
+        const nlpEndpointOptions = Object.keys(endpoint.options);
+    
+        if (queryOptions.length !== nlpEndpointOptions.length) {
+            throw new HttpException({
+                    message: "Options do not match pre-defined parameters",
+                    options: endpoint.options
+                }, HttpStatus.BAD_REQUEST
+            );
+        }
+    
+        for (const key of queryOptions) {
+            if (!nlpEndpointOptions.includes(key)) {
+                throw new HttpException({
+                        message: "Options do not match pre-defined parameters",
+                        options: endpoint.options
+                    }, HttpStatus.BAD_REQUEST
+                );
+            }
+    
+            if (typeof query[key] !== endpoint.options[key]) {
+                    throw new HttpException({
+                        message: "Options do not match pre-defined parameters",
+                        options: endpoint.options
+                    }, HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+        return true;
     }
 }
 
@@ -74,12 +149,16 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
 
 @Injectable()
 export class RetrieveUsageInterceptor implements NestInterceptor {
+    constructor(
+        @InjectModel('Query') private readonly queryModel: Model<Query>
+    ) {}
+
     async intercept(context: ExecutionContext, next: CallHandler) {
         const req = context.switchToHttp().getRequest<CustomRequest>();
         const userID = req.payload['id'];
         const role = req.payload['role']
         const uuid = req.params['uuid'];
-        const usage = await QueryModel.findOne({ uuid: uuid })
+        const usage = await this.queryModel.findOne({ uuid: uuid })
 
         if (! usage) {
             throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
@@ -94,70 +173,3 @@ export class RetrieveUsageInterceptor implements NestInterceptor {
 }
 
 
-async function validateField(req: CustomRequest) {
-    const query = req.body['options'];
-    const queryOptions =  Object.keys(query);
-    const service = await NlpModel.findOne({ 
-        type: req.params['type'], version: req.params['version']
-    })
-    if (! service ) {
-        throw new HttpException("Service not found", HttpStatus.NOT_FOUND)
-    }
-    const endpoint = (await NlpEndpointModel.findOne({ 
-        serviceID: service.id, task: req.params['task'] }).exec()).toJSON();
-    const nlpEndpointOptions = Object.keys(endpoint.options);
-
-    if (queryOptions.length !== nlpEndpointOptions.length) {
-        throw new HttpException({
-                message: "Options do not match pre-defined parameters",
-                options: endpoint.options
-            }, HttpStatus.BAD_REQUEST
-        );
-    }
-
-    for (const key of queryOptions) {
-        if (!nlpEndpointOptions.includes(key)) {
-            throw new HttpException({
-                    message: "Options do not match pre-defined parameters",
-                    options: endpoint.options
-                }, HttpStatus.BAD_REQUEST
-            );
-        }
-
-        if (typeof query[key] !== endpoint.options[key]) {
-                throw new HttpException({
-                    message: "Options do not match pre-defined parameters",
-                    options: endpoint.options
-                }, HttpStatus.BAD_REQUEST
-            );
-        }
-    }
-    return true;
-}
-
-async function checkValidSubscription(req) {
-    const role = req.payload.role;
-    // admins can query services without subscription restriction
-    if (role === 'admin') {
-        return true;
-    }
-
-    const userID = req.payload.id;
-    const user = await UserModel.findById(userID);
-  
-    if (!user) {
-        throw new HttpException(
-            'The requested user could not be found',
-            HttpStatus.NOT_FOUND
-        );
-    }
-  
-    const expiryDate = user.subscriptionExpiryDate;
-    const currentDate = new Date();
-  
-    if (currentDate > expiryDate) {
-        throw new HttpException('Subscription expired.', HttpStatus.UNAUTHORIZED);
-    }
-
-    return true;
-}

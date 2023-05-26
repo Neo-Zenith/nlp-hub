@@ -1,9 +1,10 @@
-import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common';
+import { 
+    Injectable, NestMiddleware, HttpStatus, HttpException 
+} from '@nestjs/common';
 import { NextFunction } from 'express';
-import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
-import { CustomRequest } from 'src/custom/request/request.model';
-import { MethodTypes, NlpTypes } from './services.model';
-import { Debug } from 'src/custom/debug/debug';
+import { MissingFieldsMiddleware } from 'src/common/common.middleware';
+import { CustomRequest } from 'src/common/request/request.model';
+import { HttpMethodType, ServiceType } from './services.model';
 
 
 @Injectable()
@@ -73,14 +74,13 @@ function validateServiceField(req: CustomRequest) {
                     }
             }
         } catch (err) {
-            Debug.devLog('validateServiceField', err);
             if (err.name === 'TypeError') {
                 throw new HttpException('Invalid body (endpoints)', HttpStatus.BAD_REQUEST)
             }
         }
     }
     
-    if (req.body['type'] && ! Object.values(NlpTypes).includes(req.body['type'])) {
+    if (req.body['type'] && ! Object.values(ServiceType).includes(req.body['type'])) {
         throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
     }
 
@@ -102,7 +102,7 @@ function validateServiceField(req: CustomRequest) {
 }
 
 function validateEndpointField(req: CustomRequest) {
-    if (req.body['method'] && ! Object.values(MethodTypes).includes(req.body['method'])) {
+    if (req.body['method'] && ! Object.values(HttpMethodType).includes(req.body['method'])) {
         throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
     }
     return true;

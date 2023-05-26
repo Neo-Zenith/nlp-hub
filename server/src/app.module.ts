@@ -2,7 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './users/users.module';
 import * as dotenv from "dotenv";
-import { NlpModule } from './services/services.module';
+import { ServiceModule } from './services/services.module';
 import mongoose from 'mongoose';
 import { QueryModule } from './queries/queries.module';
 
@@ -10,7 +10,7 @@ dotenv.config();
 @Module({
 	imports: [MongooseModule.forRoot('mongodb+srv://neozenith:'+ process.env.DB_SECRET +'@nlp-hub.mbc3aja.mongodb.net/nlp-hub-db?retryWrites=true&w=majority'), 
 	UserModule, 
-	NlpModule,
+	ServiceModule,
 	QueryModule],
 	controllers: [],
 	providers: [],

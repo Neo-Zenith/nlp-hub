@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { NlpTrigger } from './services.trigger';
+import { ServiceTrigger } from './services.trigger';
 
 /**
  * Nlp(id, name, version, address, description)
@@ -9,12 +9,12 @@ import { NlpTrigger } from './services.trigger';
  * NOT NULL: name, version, address
  */
 
-export enum NlpTypes {
+export enum ServiceType {
     SUD = 'SUD',
     NER = 'NER'
 }
 
-export enum MethodTypes {
+export enum HttpMethodType {
     POST = 'POST',
     GET = 'GET',
     PUT = 'PUT',
@@ -23,7 +23,7 @@ export enum MethodTypes {
 }
 
 @Schema()
-export class Nlp extends Document {
+export class Service extends Document {
     @Prop({ required: true, index: 'text' })
     name: string;
 
@@ -36,7 +36,7 @@ export class Nlp extends Document {
     @Prop()
     description: string;
 
-    @Prop({ required: true, enum: NlpTypes })
+    @Prop({ required: true, enum: ServiceType })
     type: string;
 }
 
@@ -48,11 +48,11 @@ export class Nlp extends Document {
  * NOT NULL: serviceID, method, endpoint, task
  */
 @Schema()
-export class NlpEndpoint extends Document {
+export class ServiceEndpoint extends Document {
     @Prop({ type: Types.ObjectId, ref: 'Nlp', required: true })
     serviceID: string;
 
-    @Prop({ required: true, enum: MethodTypes })
+    @Prop({ required: true, enum: HttpMethodType })
     method: string;
 
     @Prop({ type: Map, of: String })
@@ -65,14 +65,20 @@ export class NlpEndpoint extends Document {
     task: string;
 } 
 
-export const NlpSchema = SchemaFactory.createForClass(Nlp);
-NlpSchema.index({ type: 1, version: 1 }, { unique: true });
-NlpTrigger();
-export const NlpModel = mongoose.model('Nlp', NlpSchema);
+export const ServiceSchema = SchemaFactory.createForClass(Service);
+ServiceSchema.index({ type: 1, version: 1 }, { unique: true });
+ServiceTrigger();
+export const ServiceModel = mongoose.model('Service', ServiceSchema);
 
-export const NlpEndpointSchema = SchemaFactory.createForClass(NlpEndpoint);
-NlpEndpointSchema.index({ serviceID: 1, endpointPath: 1, method: 1}, { unique: true })
-NlpEndpointSchema.index({ serviceID: 1, task: 1 }, { unique: true })
-export const NlpEndpointModel = mongoose.model('NlpEndpoint', NlpEndpointSchema);
+export const ServiceEndpointSchema = SchemaFactory.createForClass(ServiceEndpoint);
+ServiceEndpointSchema.index(
+    { serviceID: 1, endpointPath: 1, method: 1}, { unique: true }
+)
+ServiceEndpointSchema.index(
+    { serviceID: 1, task: 1 }, { unique: true }
+)
+export const ServiceEndpointModel = mongoose.model(
+    'ServiceEndpoint', ServiceEndpointSchema
+);
 
 

@@ -6,9 +6,8 @@ import {
 } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 import * as dotenv from "dotenv";
-import { CustomRequest } from "src/custom/request/request.model";
-import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
-import { UserModel } from './users.model';
+import { CustomRequest } from "src/common/request/request.model";
+import { MissingFieldsMiddleware } from 'src/common/common.middleware';
 dotenv.config();
 
 @Injectable()

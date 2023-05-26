@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
-import { NlpController } from "./services.controller";
-import { NlpService } from "./services.service";
+import { ServiceController } from "./services.controller";
+import { ServiceService } from "./services.service";
 import { MongooseModule } from "@nestjs/mongoose";
-import { NlpEndpointSchema, NlpSchema } from "./services.model";
+import { ServiceEndpointSchema, ServiceSchema } from "./services.model";
 import { 
     RegisterEndpointMiddleware, 
     RegisterServiceMiddleware,  
@@ -12,14 +12,14 @@ import {
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{name: 'Nlp', schema: NlpSchema}]),
-        MongooseModule.forFeature([{name: 'NlpEndpoint', schema: NlpEndpointSchema}])
+        MongooseModule.forFeature([{name: 'Service', schema: ServiceSchema}]),
+        MongooseModule.forFeature([{name: 'ServiceEndpoint', schema: ServiceEndpointSchema}])
     ],
-    controllers: [NlpController],
-    providers: [NlpService]
+    controllers: [ServiceController],
+    providers: [ServiceService]
 })
 
-export class NlpModule {
+export class ServiceModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(RegisterServiceMiddleware)

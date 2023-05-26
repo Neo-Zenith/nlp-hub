@@ -1,28 +1,22 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
-import { NlpService } from "./services.service";
-import { MethodTypes, NlpEndpoint, NlpTypes } from "./services.model";
 import { 
-    ApiTags, 
-    ApiOperation, 
-    ApiBody, 
-    ApiResponse, 
-    ApiQuery, 
-    ApiSecurity, 
-    ApiParam 
+    Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards 
+} from "@nestjs/common";
+import { ServiceService } from "./services.service";
+import { HttpMethodType, ServiceEndpoint, ServiceType } from "./services.model";
+import { 
+    ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiSecurity, ApiParam 
 } from "@nestjs/swagger";
 import { 
-    InsertEndpointSchema, 
-    InsertServiceSchema, 
-    UpdateEndpointSchema, 
+    InsertEndpointSchema, InsertServiceSchema, UpdateEndpointSchema, 
     UpdateServiceSchema 
 } from "./services.schema";
-import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
+import { AdminAuthGuard, UserAuthGuard } from "src/common/common.middleware";
 
 @ApiTags('Services')
 @Controller('services')
-export class NlpController {
+export class ServiceController {
     constructor(
-        private readonly nlpService: NlpService
+        private readonly nlpService: ServiceService
     ) {}
 
     @ApiOperation({ summary: 'Retrieves all NLP services.' })
@@ -34,7 +28,7 @@ export class NlpController {
     })
     @ApiQuery({ 
         name: 'type', 
-        description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`, 
+        description: `Service type. Valid types are ${Object.values(ServiceType).join(', ').toString()}.`, 
         required: false 
     })
     @Get()
@@ -79,7 +73,7 @@ export class NlpController {
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'type', 
-        description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`
+        description: `Service type. Valid types are ${Object.values(ServiceType).join(', ').toString()}.`
     })
     @ApiParam({
         name: 'version',
@@ -114,7 +108,7 @@ export class NlpController {
         @Body('description') description: string,
         @Body('address') address: string,
         @Body('type') type: string,
-        @Body('endpoints') endpoints: NlpEndpoint[]
+        @Body('endpoints') endpoints: ServiceEndpoint[]
     ) {
         const message = await this.nlpService.addService(
             name, description, address, type, endpoints
@@ -159,7 +153,7 @@ export class NlpController {
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'type', 
-        description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`
+        description: `Service type. Valid types are ${Object.values(ServiceType).join(', ').toString()}.`
     })
     @ApiParam({
         name: 'version',
@@ -172,7 +166,7 @@ export class NlpController {
     })
     @ApiQuery({ 
         name: 'method',
-        description: `HTTP method. Valid methods are ${Object.values(MethodTypes).join(', ').toString()}.`,
+        description: `HTTP method. Valid methods are ${Object.values(HttpMethodType).join(', ').toString()}.`,
         required: false 
     })
     @Get(':type/:version/endpoints')
@@ -205,7 +199,7 @@ export class NlpController {
     @ApiSecurity('access-token')
     @ApiParam({ 
         name: 'type', 
-        description: `Service type. Valid types are ${Object.values(NlpTypes).join(', ').toString()}.`
+        description: `Service type. Valid types are ${Object.values(ServiceType).join(', ').toString()}.`
     })
     @ApiParam({
         name: 'version',

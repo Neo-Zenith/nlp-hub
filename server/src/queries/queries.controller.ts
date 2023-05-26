@@ -10,9 +10,9 @@ import { QueryService } from "./queries.service";
 import { 
     RegisterQueryInterceptor, RetrieveUsageInterceptor, RetrieveUsagesInterceptor 
 } from "./queries.interceptor";
-import { CustomRequest } from "../custom/request/request.model";
-import { UserAuthGuard } from "../custom/custom.middleware";
-import { NlpTypes } from "../services/services.model";
+import { CustomRequest } from "../common/request/request.model";
+import { UserAuthGuard } from "../common/common.middleware";
+import { ServiceType } from "../services/services.model";
 
 
 @ApiTags('Queries')
@@ -58,7 +58,7 @@ export class UsageController {
     @ApiSecurity('access-token')
     @ApiQuery({
         name: 'type',
-        description: `Service type. Available types are ${Object.values(NlpTypes).join(', ').toString()}.`,
+        description: `Service type. Available types are ${Object.values(ServiceType).join(', ').toString()}.`,
         example: 'SUD',
         required: false
     })

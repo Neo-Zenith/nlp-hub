@@ -3,20 +3,20 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Query } from "./queries.model";
 import { Model } from "mongoose";
 import axios from 'axios';
-import { Nlp, NlpEndpoint } from "src/services/services.model";
-import { User } from "src/users/users.model";
+import { Service, ServiceEndpoint } from "../services/services.model";
+import { User } from "../users/users.model";
 
 @Injectable() 
 export class QueryService {
     constructor(
         @InjectModel('Query') private readonly queryModel: Model<Query>,
-        @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>,
+        @InjectModel('Service') private readonly serviceModel: Model<Service>,
         @InjectModel('User') private readonly userModel: Model<User>,
-        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
+        @InjectModel('ServiceEndpoint') private readonly serviceEndpointModel: Model<ServiceEndpoint>
     ) {}
 
     async serviceQuery(
-        user: User, service: Nlp, endpoint: NlpEndpoint, 
+        user: User, service: Service, endpoint: ServiceEndpoint, 
         options: Record<string, string>
     ) {
         const fullPath = service.baseAddress + endpoint.endpointPath;
@@ -91,7 +91,7 @@ export class QueryService {
         }
     
         const filteredUsages = await Promise.all(usages.map(async (usage) => {
-            const service = await this.nlpModel.findById(usage.serviceID);
+            const service = await this.serviceModel.findById(usage.serviceID);
             if (type) {
                 if (service && service.type === type && (!version || service.version === version)) {
                     return usage;
@@ -113,7 +113,7 @@ export class QueryService {
         if (! usage) {
             throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
         }
-        const service = await this.nlpModel.findById(usage.serviceID);
+        const service = await this.serviceModel.findById(usage.serviceID);
         if (! service) {
             return Object.assign({ 'serviceDeleted': true }, usage['_doc']);
         }
@@ -130,7 +130,7 @@ export class QueryService {
     }
 
     async retrieveService(type: string, version: string) {
-        const service = await this.nlpModel.findOne({ type: type, version: version });
+        const service = await this.serviceModel.findOne({ type: type, version: version });
         if (! service) {
             throw new HttpException("Service not found", HttpStatus.NOT_FOUND)
         }
@@ -138,7 +138,7 @@ export class QueryService {
     }
 
     async retrieveEndpoint(serviceID: string, task: string) {
-        const endpoint = await this.nlpEndpointModel.findOne({ serviceID: serviceID, task: task});
+        const endpoint = await this.serviceEndpointModel.findOne({ serviceID: serviceID, task: task});
         if (! endpoint) {
             throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND);
         }

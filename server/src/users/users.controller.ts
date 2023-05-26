@@ -1,17 +1,15 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, Query, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { 
+    Body, Controller, Get, Param, Post, Put, Delete, Query, 
+    Req, UseGuards, UseInterceptors 
+} from "@nestjs/common";
 import { UserService } from "./users.service";
 import { 
-    ApiTags, 
-    ApiOperation,
-    ApiBody, 
-    ApiResponse, 
-    ApiSecurity, 
-    ApiQuery, 
-    ApiParam 
+    ApiTags, ApiOperation,ApiBody, ApiResponse, ApiSecurity, ApiQuery, ApiParam 
 } from "@nestjs/swagger";
-import { CustomRequest } from "src/custom/request/request.model";
-import { ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, UpdateUserSchema } from "./users.schema";
-import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
+import { 
+    ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, UpdateUserSchema 
+} from "./users.schema";
+import { AdminAuthGuard, UserAuthGuard } from "src/common/common.middleware";
 import { ModifyUserInterceptor } from "./users.interceptor";
 
 @ApiTags('Users')

@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./services.model";
+import { ServiceEndpointModel, ServiceEndpointSchema, ServiceModel, ServiceSchema } from "./services.model";
 
 // Triggers for NlpSchema
-export function NlpTrigger() {
+export function ServiceTrigger() {
     // Pre-save trigger
-    NlpSchema.pre('save', async function(next) {
-        const highestVersion = await NlpModel.findOne({ type: this.type })
+    ServiceSchema.pre('save', async function(next) {
+        const highestVersion = await ServiceModel.findOne({ type: this.type })
             .sort({ version: -1 });
 
         const version = highestVersion ? parseInt(highestVersion.version.substring(1)) + 1: 1;
@@ -15,8 +15,8 @@ export function NlpTrigger() {
     })
 
     // Pre-delete trigger
-    NlpSchema.pre('deleteOne', async function(next) {
-        await NlpEndpointModel.deleteMany({
+    ServiceSchema.pre('deleteOne', async function(next) {
+        await ServiceEndpointModel.deleteMany({
             serviceID: this.getFilter()["_id"]
         })
 

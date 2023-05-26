@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { Document, Types } from "mongoose";
-import { Nlp, NlpEndpoint } from "../services/services.model";
+import { Service, ServiceEndpoint } from "../services/services.model";
 import { v4 as uuidv4 } from 'uuid';
 import { QueryTrigger } from "./queries.trigger";
 
@@ -18,10 +18,10 @@ export class Query extends Document {
     @Prop({ required: true, default: Date.now })
     dateTime: Date;
 
-    @Prop({ type: Types.ObjectId, ref: Nlp.name, required: true })
+    @Prop({ type: Types.ObjectId, ref: Service.name, required: true })
     serviceID: string;
 
-    @Prop({ type: Types.ObjectId, ref: NlpEndpoint.name, required: true })
+    @Prop({ type: Types.ObjectId, ref: ServiceEndpoint.name, required: true })
     endpointID: string;
 
     @Prop({ required: true })
@@ -30,7 +30,7 @@ export class Query extends Document {
     @Prop({ required: true })
     executionTime: number;
 
-    @Prop({ type: Types.Map, ref: NlpEndpoint.name, of: String })
+    @Prop({ type: Types.Map, ref: ServiceEndpoint.name, of: String })
     options: Record<string, string>;
 }
 

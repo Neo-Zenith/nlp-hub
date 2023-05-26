@@ -1,25 +1,25 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
-import { Nlp, NlpEndpoint, NlpModel, NlpTypes } from "./services.model";
+import { Service, ServiceEndpoint, ServiceType } from "./services.model";
 
 @Injectable()
-export class NlpService {
+export class ServiceService {
     constructor(
-        @InjectModel('Nlp') private readonly nlpModel: Model<Nlp>,
-        @InjectModel('NlpEndpoint') private readonly nlpEndpointModel: Model<NlpEndpoint>
+        @InjectModel('Service') private readonly serviceModel: Model<Service>,
+        @InjectModel('ServiceEndpoint') private readonly serviceEndpointModel: Model<ServiceEndpoint>
     ) {}
 
     async addService(
         name: string, description: string, address: string, 
-        type: string, endpoints: NlpEndpoint[]
+        type: string, endpoints: ServiceEndpoint[]
     ) {
-        const newService = new this.nlpModel({
+        const newService = new this.serviceModel({
             name, description, baseAddress: address, type
         })
         await this.saveService(newService);
         for (let i = 0; i < endpoints.length; i ++) {
-            const newEndpoint = new this.nlpEndpointModel({
+            const newEndpoint = new this.serviceEndpointModel({
                 serviceID: newService.id,
                 method: endpoints[i].method,
                 options: endpoints[i].options,
@@ -33,12 +33,12 @@ export class NlpService {
 
     async removeService(type: string, version: string) {
         const service = await this.getService(type, version);
-        await this.nlpModel.deleteOne({ _id: service.id });
+        await this.serviceModel.deleteOne({ _id: service.id });
         return { message: "Service unsubscribed" };
     }
 
     async updateService(
-        service: Nlp, name?: string, version?: string, 
+        service: Service, name?: string, version?: string, 
         baseAddress?: string, description?: string, type?: string
     ) {
         var updates = {}
@@ -77,12 +77,12 @@ export class NlpService {
             query.type = type;
         }
     
-        const services = await this.nlpModel.find(query).exec();
+        const services = await this.serviceModel.find(query).exec();
         return services;
     }
 
     async getService(type: string, version: string) {
-        const service = await this.nlpModel.findOne({ type, version });
+        const service = await this.serviceModel.findOne({ type, version });
         if (! service) {
             throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
         }
@@ -90,12 +90,12 @@ export class NlpService {
     }
 
     getServiceTypes() {
-        const types = Object.values(NlpTypes);
+        const types = Object.values(ServiceType);
         return types;
     }
 
     async getServiceVersions(type: string) {
-        const services = await this.nlpModel.find({ type })
+        const services = await this.serviceModel.find({ type })
         var returnVersion = []
         for (const service of services) {
             returnVersion.push(service.version)
@@ -104,10 +104,10 @@ export class NlpService {
     }
 
     async addEndpoint(
-        service: Nlp, endpointPath: string,
+        service: Service, endpointPath: string,
         method: string, task: string, options: Record<string, string>
     ) {
-        const newEndpoint = await new this.nlpEndpointModel({
+        const newEndpoint = await new this.serviceEndpointModel({
             serviceID: service.id, endpointPath, method, task, options
         });
         await this.saveEndpoint(newEndpoint);
@@ -115,19 +115,19 @@ export class NlpService {
         return { message: 'Endpoint added'};
     }
 
-    async removeEndpoint(service: Nlp, task: string) {
-        const endpoint = await this.nlpEndpointModel.findOne({ 
+    async removeEndpoint(service: Service, task: string) {
+        const endpoint = await this.serviceEndpointModel.findOne({ 
             task, serviceID: service.id 
         });
         if (! endpoint) {
             throw new HttpException("Endpoint not found", HttpStatus.NOT_FOUND)
         }
-        await this.nlpEndpointModel.deleteOne({ _id: endpoint.id });
+        await this.serviceEndpointModel.deleteOne({ _id: endpoint.id });
         return { message: "Endpoint deleted" };
     }
 
     async updateEndpoint(
-        endpoint: NlpEndpoint, newEndpointPath?: string,
+        endpoint: ServiceEndpoint, newEndpointPath?: string,
         newTask?: string, newOptions?: Record<string, any>, newMethod?: string
     ) {
         var updates = {}
@@ -150,7 +150,7 @@ export class NlpService {
     }
 
     async getEndpoints(
-        service: Nlp, task?: string, method?: string
+        service: Service, task?: string, method?: string
     ) {
         var query: any = {};
 
@@ -162,12 +162,12 @@ export class NlpService {
             query.method = method;
         }
         
-        const endpoints = await this.nlpEndpointModel.find(query).exec();
+        const endpoints = await this.serviceEndpointModel.find(query).exec();
         return endpoints;
     }
 
     async getEndpoint(serviceID: string, task: string) {
-        const endpoint = await this.nlpEndpointModel.findOne({ 
+        const endpoint = await this.serviceEndpointModel.findOne({ 
             serviceID, task
         });
         if (! endpoint) {
@@ -176,7 +176,7 @@ export class NlpService {
         return endpoint;
     }
 
-    private async saveService(service: Nlp) {
+    private async saveService(service: Service) {
         try {
             await service.save();
             return;
@@ -192,9 +192,9 @@ export class NlpService {
         }
     }
 
-    private async updateServiceDB(service: Nlp, updates: Record<string, any>) {
+    private async updateServiceDB(service: Service, updates: Record<string, any>) {
         try {
-            await this.nlpModel.updateOne(
+            await this.serviceModel.updateOne(
                 { _id: service.id }, 
                 { $set: updates }
             )
@@ -216,9 +216,9 @@ export class NlpService {
         }
     }
 
-    private async updateEndpointDB(endpoint: NlpEndpoint, updates: Record<string, any>) {
+    private async updateEndpointDB(endpoint: ServiceEndpoint, updates: Record<string, any>) {
         try {
-            await this.nlpEndpointModel.updateOne(
+            await this.serviceEndpointModel.updateOne(
                 { _id: endpoint.id }, 
                 { $set: updates }
             )
@@ -239,7 +239,7 @@ export class NlpService {
         }
     }   
 
-    private async saveEndpoint(endpoint: NlpEndpoint) {
+    private async saveEndpoint(endpoint: ServiceEndpoint) {
         try {
             await endpoint.save()
         } catch (err) {
