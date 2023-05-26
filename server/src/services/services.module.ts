@@ -1,14 +1,14 @@
 import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
-import { NlpController } from "./nlp.controller";
-import { NlpService } from "./nlp.service";
+import { NlpController } from "./services.controller";
+import { NlpService } from "./services.service";
 import { MongooseModule } from "@nestjs/mongoose";
-import { NlpEndpointSchema, NlpSchema } from "./nlp.model";
+import { NlpEndpointSchema, NlpSchema } from "./services.model";
 import { 
     RegisterEndpointMiddleware, 
     RegisterServiceMiddleware,  
     UpdateEndpointMiddleware, 
     UpdateServiceMiddleware 
-} from "./nlp.middleware";
+} from "./services.middleware";
 
 @Module({
     imports: [

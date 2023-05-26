@@ -1,18 +1,19 @@
-import { Body, Controller, Get, Post, Delete, Query, Req, Param, UseGuards, UseInterceptors } from "@nestjs/common";
-import { QueryService } from "./query.service";
-import { CustomRequest } from "src/custom/request/request.model";
 import { 
-    ApiTags, 
-    ApiOperation, 
-    ApiBody, 
-    ApiResponse, 
-    ApiQuery, 
-    ApiSecurity
+    Body, Controller, Get, Post, Delete, Query, Req, 
+    Param, UseGuards, UseInterceptors 
+} from "@nestjs/common";
+import { 
+    ApiTags, ApiOperation, ApiBody, ApiQuery, ApiSecurity
 } from "@nestjs/swagger";
-import { NlpTypes } from "src/nlp/nlp.model";
-import { ServiceQuerySchema } from "./query.schema";
-import { UserAuthGuard } from "src/custom/custom.middleware";
-import { RegisterQueryInterceptor, RetrieveUsageInterceptor, RetrieveUsagesInterceptor } from "./query.middleware";
+import { ServiceQuerySchema } from "./queries.schema";
+import { QueryService } from "./queries.service";
+import { 
+    RegisterQueryInterceptor, RetrieveUsageInterceptor, RetrieveUsagesInterceptor 
+} from "./queries.interceptor";
+import { CustomRequest } from "../custom/request/request.model";
+import { UserAuthGuard } from "../custom/custom.middleware";
+import { NlpTypes } from "../services/services.model";
+
 
 @ApiTags('Queries')
 @Controller('query')
@@ -51,7 +52,9 @@ export class UsageController {
         private readonly queryService: QueryService
     ) {}
     
-    @ApiOperation({ summary: 'Retrieves all usages of the user/everyone (for admins).'})
+    @ApiOperation({ 
+        summary: 'Retrieves all usages of the user/everyone (for admins).'
+    })
     @ApiSecurity('access-token')
     @ApiQuery({
         name: 'type',
@@ -110,7 +113,6 @@ export class UsageController {
                 dateTime: usage.dateTime,
                 serviceDeleteed: usage.deleted
             }
-
             obscuredUsages.push(modifiedUsage)
         }
 

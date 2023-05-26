@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { MethodTypes, NlpTypes } from './nlp.model';
+import { MethodTypes, NlpTypes } from './services.model';
 
 export class InsertEndpointSchema {
     @ApiProperty({

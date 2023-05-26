@@ -2,9 +2,9 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './users/users.module';
 import * as dotenv from "dotenv";
-import { NlpModule } from './nlp/nlp.module';
+import { NlpModule } from './services/services.module';
 import mongoose from 'mongoose';
-import { QueryModule } from './query/query.module';
+import { QueryModule } from './queries/queries.module';
 
 dotenv.config();
 @Module({

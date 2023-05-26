@@ -2,7 +2,7 @@ import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/c
 import { NextFunction } from 'express';
 import { MissingFieldsMiddleware } from 'src/custom/custom.middleware';
 import { CustomRequest } from 'src/custom/request/request.model';
-import { MethodTypes, NlpTypes } from './nlp.model';
+import { MethodTypes, NlpTypes } from './services.model';
 import { Debug } from 'src/custom/debug/debug';
 
 

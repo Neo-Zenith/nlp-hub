@@ -10,9 +10,9 @@ import {
     ApiParam 
 } from "@nestjs/swagger";
 import { CustomRequest } from "src/custom/request/request.model";
-import { ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, UpdateUserSchema } from "./user.schema";
+import { ExtendSubscriptionSchema, InsertUserSchema, LoginUserSchema, UpdateUserSchema } from "./users.schema";
 import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
-import { ModifyUserInterceptor } from "./user.middleware";
+import { ModifyUserInterceptor } from "./users.interceptor";
 
 @ApiTags('Users')
 @Controller('users')

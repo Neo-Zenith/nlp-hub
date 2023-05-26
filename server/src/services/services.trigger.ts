@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus } from "@nestjs/common";
-import { NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./nlp.model";
+import { NlpEndpointModel, NlpEndpointSchema, NlpModel, NlpSchema } from "./services.model";
 
 // Triggers for NlpSchema
 export function NlpTrigger() {

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { NlpTrigger } from './nlp.trigger';
+import { NlpTrigger } from './services.trigger';
 
 /**
  * Nlp(id, name, version, address, description)

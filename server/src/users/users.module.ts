@@ -2,13 +2,13 @@ import { MiddlewareConsumer, Module, RequestMethod } from "@nestjs/common";
 import { AdminController, UserController } from "./users.controller";
 import { UserService } from "./users.service";
 import { MongooseModule } from "@nestjs/mongoose";
-import { AdminSchema, UserSchema } from "./user.model";
+import { AdminSchema, UserSchema } from "./users.model";
 import { 
     ExtendSubscriptionMiddleware, 
     LoginUserMiddleware, 
     RegisterUserMiddleware, 
     RetrieveUsersMiddleware
-} from "./user.middleware";
+} from "./users.middleware";
 
 @Module({
     imports: [

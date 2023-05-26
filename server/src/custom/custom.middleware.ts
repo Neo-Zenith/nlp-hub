@@ -13,7 +13,7 @@ import { NextFunction, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import * as crypto from "crypto";
-import { UserModel } from "src/users/user.model";
+import { UserModel } from "src/users/users.model";
 dotenv.config()
 
 export abstract class MissingFieldsMiddleware {

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from "@nestjs/common";
-import { NlpService } from "./nlp.service";
-import { MethodTypes, NlpEndpoint, NlpTypes } from "./nlp.model";
+import { NlpService } from "./services.service";
+import { MethodTypes, NlpEndpoint, NlpTypes } from "./services.model";
 import { 
     ApiTags, 
     ApiOperation, 
@@ -15,7 +15,7 @@ import {
     InsertServiceSchema, 
     UpdateEndpointSchema, 
     UpdateServiceSchema 
-} from "./nlp.schema";
+} from "./services.schema";
 import { AdminAuthGuard, UserAuthGuard } from "src/custom/custom.middleware";
 
 @ApiTags('Services')

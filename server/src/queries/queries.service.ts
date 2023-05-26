@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Query } from "./query.model";
+import { Query } from "./queries.model";
 import { Model } from "mongoose";
 import axios from 'axios';
-import { Nlp, NlpEndpoint } from "src/nlp/nlp.model";
-import { User } from "src/users/user.model";
+import { Nlp, NlpEndpoint } from "src/services/services.model";
+import { User } from "src/users/users.model";
 
 @Injectable() 
 export class QueryService {

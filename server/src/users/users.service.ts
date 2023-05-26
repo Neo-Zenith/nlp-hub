@@ -5,7 +5,7 @@ import * as bcrypt from "bcrypt";
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 import * as crypto from "crypto";
-import { Admin, User, UserModel } from "./user.model";
+import { Admin, User, UserModel } from "./users.model";
 dotenv.config();
 
 @Injectable() 

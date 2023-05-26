@@ -1,9 +1,11 @@
-import { Injectable, NestInterceptor, NestMiddleware, ExecutionContext, CallHandler, HttpStatus, HttpException } from '@nestjs/common';
-import { CustomRequest } from 'src/custom/request/request.model';
-import { NlpEndpointModel, NlpModel } from 'src/nlp/nlp.model';
-import { UserModel } from 'src/users/user.model';
-import { QueryModel } from './query.model';
-import { NextFunction } from 'express';
+import { 
+    Injectable, NestInterceptor, ExecutionContext, CallHandler, 
+    HttpStatus, HttpException 
+} from '@nestjs/common';
+import { CustomRequest } from '../custom/request/request.model';
+import { NlpEndpointModel, NlpModel } from '../services/services.model';
+import { UserModel } from '../users/users.model';
+import { QueryModel } from './queries.model';
 
 @Injectable()
 export class RegisterQueryInterceptor implements NestInterceptor {
