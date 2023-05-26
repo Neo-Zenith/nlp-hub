@@ -88,10 +88,16 @@ export class UserService {
             updates['department'] = department
         }
 
-        if (extension) {            
-            updates['subscriptionExpiryDate'] = user
-                .subscriptionExpiryDate
-                .setDate(user.subscriptionExpiryDate.getDate() + parseInt(extension));  
+        if (extension) {   
+            const newExpiryDate = new Date(user.subscriptionExpiryDate);
+            newExpiryDate.setDate(newExpiryDate.getDate() + parseInt(extension));
+            if (newExpiryDate < new Date('1970-01-01')) {
+                throw new HttpException(
+                    "Invalid extension (Earliest subscription must be from Jan 1st, 1970 onwards)",
+                    HttpStatus.BAD_REQUEST
+                );
+            }        
+            updates['subscriptionExpiryDate'] = newExpiryDate;
         }
         
         return this.updateUserDB(user, updates);

@@ -74,10 +74,10 @@ export class UserController {
         @Query('department') department?: string,
     ) {
         const users = await this.userService.getUsers(expireIn, name, department);
-        
         var returnPayload = []
         for (const user of users) {
             const obscuredUser = {
+                username: user.username,
                 email: user.email,
                 name: user.name,
                 department: user.department,

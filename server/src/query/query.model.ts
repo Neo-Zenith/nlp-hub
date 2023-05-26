@@ -27,6 +27,9 @@ export class Query extends Document {
     @Prop({ required: true })
     output: string;
 
+    @Prop({ required: true })
+    executionTime: number;
+
     @Prop({ type: Types.Map, ref: NlpEndpoint.name, of: String })
     options: Record<string, string>;
 }

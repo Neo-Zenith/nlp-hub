@@ -12,7 +12,7 @@ import {
 import { NlpTypes } from "src/nlp/nlp.model";
 import { ServiceQuerySchema } from "./query.schema";
 import { UserAuthGuard } from "src/custom/custom.middleware";
-import { RegisterQueryInterceptor, RetrieveUsageInterceptor } from "./query.middleware";
+import { RegisterQueryInterceptor, RetrieveUsageInterceptor, RetrieveUsagesInterceptor } from "./query.middleware";
 
 @ApiTags('Queries')
 @Controller('query')
@@ -65,21 +65,46 @@ export class UsageController {
         example: 'v11',
         required: false
     })
+    @ApiQuery({
+        name: 'executionTime',
+        description: 'Execution time in seconds. Usages with execution time at most this number will be returned.',
+        example: 1,
+        required: false
+    })
+    @ApiQuery({
+        name: 'startDate',
+        description: 'Start of the range of dates when the query was made. Usages with dateTime no earlier than this date will be returned. startDate must follow YYYY-MM-DD format.',
+        example: '2022-12-01',
+        required: false
+    })
+    @ApiQuery({
+        name: 'endDate',
+        description: 'End of the range of dates when the query was made. Usages with dateTime no later than this date will be returned. startDate must follow YYYY-MM-DD format.',
+        example: '2022-12-01',
+        required: false
+    })
     @Get('')
     @UseGuards(new UserAuthGuard(['GET']))
+    @UseInterceptors(RetrieveUsagesInterceptor)
     async getUsages(
         @Req() request: CustomRequest,
         @Query('type') type?: string,
-        @Query('version') version?: string
+        @Query('version') version?: string,
+        @Query('executionTime') execTime?: string,
+        @Query('startDate') startDate?: string,
+        @Query('endDate') endDate?: string
     ) {
         var obscuredUsages = [];
         const role = request.payload.role;
         const userID = request.payload.id;
-        const usages = await this.queryService.getUsages(userID, role, type, version);
+        const usages = await this.queryService.getUsages(
+            userID, role, type, version, execTime, startDate, endDate
+        );
         
         for (const usage of usages) {
             const modifiedUsage = {
                 uuid: usage.uuid,
+                executionTime: usage.executionTime,
                 output: usage.output,
                 options: usage.options,
                 dateTime: usage.dateTime,

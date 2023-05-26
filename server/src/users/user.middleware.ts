@@ -99,31 +99,24 @@ export class ExtendSubscriptionMiddleware extends MissingFieldsMiddleware implem
 		this.checkMissingFields(req);
 		const reqExtension = req.body['extension']
 		if (typeof reqExtension === 'string') {	
-			if (! /^\d+$/.test(reqExtension)) {
+			if (! /^-?\d+$/.test(reqExtension)) {
 				throw new HttpException(
-					"Invalid extension format (Must be positive integer)", 
-					HttpStatus.BAD_REQUEST
-				)
-			}
-			const extension = parseInt(reqExtension)
-			if (extension <= 0) {
-				throw new HttpException(
-					"Invalid extension format (Must be positive integer)", 
-					HttpStatus.BAD_REQUEST
-				)
+				  	"Invalid extension format (Must be an integer)",
+				  	HttpStatus.BAD_REQUEST
+				);
 			}
 			return next();
 		} else if (typeof reqExtension === 'number') {
-			if (Number.isInteger(reqExtension) && reqExtension > 0) {
+			if (Number.isInteger(reqExtension)) {
 				return next();
 			}
 			throw new HttpException(
-				"Invalid extension format (Must be positive integer)", 
+				"Invalid extension format (Must be an integer)", 
 				HttpStatus.BAD_REQUEST
 			)
 		} else {
 			throw new HttpException(
-				"Invalid extension format (Must be positive integer)", 
+				"Invalid extension format (Must be an integer)", 
 				HttpStatus.BAD_REQUEST
 			)
 		}		

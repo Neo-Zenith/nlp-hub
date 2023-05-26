@@ -1,9 +1,9 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, HttpStatus, HttpException } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Injectable, NestInterceptor, NestMiddleware, ExecutionContext, CallHandler, HttpStatus, HttpException } from '@nestjs/common';
 import { CustomRequest } from 'src/custom/request/request.model';
 import { NlpEndpointModel, NlpModel } from 'src/nlp/nlp.model';
 import { UserModel } from 'src/users/user.model';
 import { QueryModel } from './query.model';
+import { NextFunction } from 'express';
 
 @Injectable()
 export class RegisterQueryInterceptor implements NestInterceptor {
@@ -15,6 +15,58 @@ export class RegisterQueryInterceptor implements NestInterceptor {
                 return next.handle();
             }
         }
+    }
+}
+
+@Injectable()
+export class RetrieveUsagesInterceptor implements NestInterceptor {
+    async intercept(context: ExecutionContext, next: CallHandler) {
+        const req = context.switchToHttp().getRequest<CustomRequest>();
+        const queries = req.query;
+      
+        if (queries['executionTime']) {
+            const execTime = +queries['executionTime'];
+            if (isNaN(execTime)) {
+                throw new HttpException(
+                    'Invalid executionTime format (Must be a number)',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+        }
+      
+        if (queries['startDate'] && typeof queries['startDate'] === 'string') {
+            const startDate = queries['startDate'];
+            if (! /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+                throw new HttpException(
+                    'Invalid startDate format (Must be in YYYY-MM-DD format)',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+            if (isNaN(new Date(startDate).getTime())) {
+                throw new HttpException(
+                    "Invalid year, month (01 - 12), or date (01 - 31)",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
+        }
+      
+        if (queries['endDate'] && typeof queries['endDate'] === 'string') {
+            const endDate = queries['endDate'];
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+                throw new HttpException(
+                    'Invalid endDate format (Must be in YYYY-MM-DD format)',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+            if (isNaN(new Date(endDate).getTime())) {
+                throw new HttpException(
+                    "Invalid year, month (01 - 12), or date (01 - 31)",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
+        }
+      
+        return next.handle();
     }
 }
 
@@ -41,7 +93,8 @@ export class RetrieveUsageInterceptor implements NestInterceptor {
 
 
 async function validateField(req: CustomRequest) {
-    const queryOptions =  Object.keys(req.body['options']);
+    const query = req.body['options'];
+    const queryOptions =  Object.keys(query);
     const service = await NlpModel.findOne({ 
         type: req.params['type'], version: req.params['version']
     })
@@ -53,22 +106,40 @@ async function validateField(req: CustomRequest) {
     const nlpEndpointOptions = Object.keys(endpoint.options);
 
     if (queryOptions.length !== nlpEndpointOptions.length) {
-        throw new HttpException(
-            "Options do not match pre-defined parameters", 
-            HttpStatus.BAD_REQUEST);
+        throw new HttpException({
+                message: "Options do not match pre-defined parameters",
+                options: endpoint.options
+            }, HttpStatus.BAD_REQUEST
+        );
     }
 
     for (const key of queryOptions) {
         if (!nlpEndpointOptions.includes(key)) {
-            throw new HttpException(
-                "Options do not match pre-defined parameters", 
-                HttpStatus.BAD_REQUEST);
+            throw new HttpException({
+                    message: "Options do not match pre-defined parameters",
+                    options: endpoint.options
+                }, HttpStatus.BAD_REQUEST
+            );
+        }
+
+        if (typeof query[key] !== endpoint.options[key]) {
+                throw new HttpException({
+                    message: "Options do not match pre-defined parameters",
+                    options: endpoint.options
+                }, HttpStatus.BAD_REQUEST
+            );
         }
     }
     return true;
 }
 
 async function checkValidSubscription(req) {
+    const role = req.payload.role;
+    // admins can query services without subscription restriction
+    if (role === 'admin') {
+        return true;
+    }
+
     const userID = req.payload.id;
     const user = await UserModel.findById(userID);
   
