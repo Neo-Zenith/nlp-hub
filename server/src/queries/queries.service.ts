@@ -4,7 +4,7 @@ import { Query } from "./queries.model";
 import { Model } from "mongoose";
 import axios from 'axios';
 import { Service, ServiceEndpoint } from "../services/services.model";
-import { User } from "../users/users.model";
+import { Admin, User } from "../users/users.model";
 
 @Injectable() 
 export class QueryService {
@@ -12,6 +12,7 @@ export class QueryService {
         @InjectModel('Query') private readonly queryModel: Model<Query>,
         @InjectModel('Service') private readonly serviceModel: Model<Service>,
         @InjectModel('User') private readonly userModel: Model<User>,
+        @InjectModel('Admin') private readonly adminModel: Model<Admin>,
         @InjectModel('ServiceEndpoint') private readonly serviceEndpointModel: Model<ServiceEndpoint>
     ) {}
 
@@ -44,9 +45,10 @@ export class QueryService {
         const serviceID = service.id;
         const endpointID = endpoint.id;
         const userID = user.id;
+        const isAdminQuery = user.role === 'admin' ? true : false;
         const query = new this.queryModel({
             userID, serviceID, endpointID, output: JSON.stringify(response.data),
-            options, executionTime: elapsedTime
+            options, executionTime: elapsedTime, isAdminQuery
         })
         
         await query.save();
@@ -59,7 +61,8 @@ export class QueryService {
 
     async getUsages(
         userID: string, role: string, type?: string, version?: string,
-        execTime?: string, startDate?: string, endDate?: string
+        execTime?: string, startDate?: string, endDate?: string, 
+        returnDelUser?: boolean, returnDelService?: boolean
     ) {
         let usages;
         let query = {}
@@ -92,19 +95,36 @@ export class QueryService {
     
         const filteredUsages = await Promise.all(usages.map(async (usage) => {
             const service = await this.serviceModel.findById(usage.serviceID);
-            if (type) {
-                if (service && service.type === type && (!version || service.version === version)) {
-                    return usage;
+            var user;
+            if (usage.isAdminQuery) {
+                user = await this.adminModel.findById(usage.userID) 
+            } else {
+                user = await this.userModel.findById(usage.userID) 
+            }
+
+            var updates = {}
+            if (service) {
+                if (! (service.type === type && service.version === version)) {
+                    return;
                 }
             } else {
-                if (!service) {
-                    return Object.assign({ 'deleted': true }, usage['_doc']);
-                } else if (!version || service.version === version) {
-                    return usage;
+                if (returnDelService) {
+                    updates['serviceDeleted'] = true;
+                } else {
+                    return;
                 }
             }
+
+            if (! user) {
+                if (returnDelUser) {
+                    updates['userDeleted'] = true;
+                } else {
+                    return;
+                }
+            } 
+            return Object.assign(updates, usage['_doc']);;
         }));
-    
+        
         return filteredUsages.filter(Boolean);
     }
 
@@ -145,8 +165,13 @@ export class QueryService {
         return endpoint;
     }
 
-    async retrieveUser(userID: string) {
-        const user = await this.userModel.findById(userID);
+    async retrieveUser(userID: string, role: string) {
+        var user;
+        if (role === 'admin') {
+            user = await this.adminModel.findById(userID);
+        } else {
+            user = await this.userModel.findById(userID);
+        }
         if (! user) {
             throw new HttpException("User not found", HttpStatus.NOT_FOUND);
         }

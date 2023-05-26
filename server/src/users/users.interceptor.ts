@@ -40,7 +40,7 @@ export class ModifyUserInterceptor implements NestInterceptor {
 	private async retrieveUser(username: string) {
 		const user = await this.userModel.findOne({ username });
 		if (!user) {
-			throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+			throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
 		}
 		return user;
 	}

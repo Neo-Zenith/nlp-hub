@@ -37,7 +37,9 @@ export class QueryController {
     ) { 
         const service = await this.queryService.retrieveService(type, version);
         const endpoint = await this.queryService.retrieveEndpoint(service.id, task);
-        const user = await this.queryService.retrieveUser(request.payload.id);
+        const user = await this.queryService.retrieveUser(
+            request.payload.id, request.payload.role
+        );
         const response = await this.queryService.serviceQuery(
             user, service, endpoint, options
         )
@@ -83,7 +85,19 @@ export class UsageController {
     @ApiQuery({
         name: 'endDate',
         description: 'End of the range of dates when the query was made. Usages with dateTime no later than this date will be returned. startDate must follow YYYY-MM-DD format.',
-        example: '2022-12-01',
+        example: '2023-12-01',
+        required: false
+    })
+    @ApiQuery({
+        name: 'returnDelUser',
+        description: 'Indicate if the server should return filtered results including those made by deleted users.',
+        example: true,
+        required: false
+    })
+    @ApiQuery({
+        name: 'returnDelService',
+        description: 'Indicate if the server should return filtered results, on top return all usages of which the service no longer exists (these usages will have serviceDeleted attribute set to true).',
+        example: true,
         required: false
     })
     @Get('')
@@ -95,13 +109,17 @@ export class UsageController {
         @Query('version') version?: string,
         @Query('executionTime') execTime?: string,
         @Query('startDate') startDate?: string,
-        @Query('endDate') endDate?: string
+        @Query('endDate') endDate?: string,
+        @Query('returnDelUser') returnDelUser?: boolean,
+        @Query('returnDelService') returnDelService?: boolean
     ) {
         var obscuredUsages = [];
+        console.log(returnDelUser)
         const role = request.payload.role;
         const userID = request.payload.id;
         const usages = await this.queryService.getUsages(
-            userID, role, type, version, execTime, startDate, endDate
+            userID, role, type, version, execTime, startDate, endDate,
+            returnDelUser, returnDelService
         );
         
         for (const usage of usages) {
@@ -111,7 +129,8 @@ export class UsageController {
                 output: usage.output,
                 options: usage.options,
                 dateTime: usage.dateTime,
-                serviceDeleteed: usage.deleted
+                serviceDeleteed: usage.serviceDeleted,
+                userDeleted: usage.userDeleted
             }
             obscuredUsages.push(modifiedUsage)
         }
@@ -132,7 +151,8 @@ export class UsageController {
             output: usage.output,
             options: usage.options,
             dateTime: usage.dateTime,
-            serviceDeleteed: usage.deleted
+            serviceDeleteed: usage.serviceDeleted,
+            userDeleted: usage.userDeleted
         }
         return obscuredUsage;
     }

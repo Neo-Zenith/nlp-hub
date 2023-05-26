@@ -12,16 +12,16 @@ export class Query extends Document {
     @Prop({ default: uuidv4, unique: true }) 
     uuid: string;
 
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+    @Prop({ type: Types.ObjectId, required: true })
     userID: string;
 
     @Prop({ required: true, default: Date.now })
     dateTime: Date;
 
-    @Prop({ type: Types.ObjectId, ref: Service.name, required: true })
+    @Prop({ type: Types.ObjectId, required: true })
     serviceID: string;
 
-    @Prop({ type: Types.ObjectId, ref: ServiceEndpoint.name, required: true })
+    @Prop({ type: Types.ObjectId, required: true })
     endpointID: string;
 
     @Prop({ required: true })
@@ -30,8 +30,11 @@ export class Query extends Document {
     @Prop({ required: true })
     executionTime: number;
 
-    @Prop({ type: Types.Map, ref: ServiceEndpoint.name, of: String })
+    @Prop({ type: Types.Map, of: String })
     options: Record<string, string>;
+
+    @Prop({ required: true, default: false })
+    isAdminQuery: boolean;
 }
 
 export const QuerySchema = SchemaFactory.createForClass(Query);

@@ -38,7 +38,7 @@ export class RegisterQueryInterceptor implements NestInterceptor {
       
         if (!user) {
             throw new HttpException(
-                'The requested user could not be found',
+                'User not found',
                 HttpStatus.NOT_FOUND
             );
         }
@@ -108,7 +108,7 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
                     'Invalid executionTime format (Must be a number)',
                     HttpStatus.BAD_REQUEST
                 );
-            }
+            } 
         }
       
         if (queries['startDate'] && typeof queries['startDate'] === 'string') {
@@ -140,6 +140,29 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
                     "Invalid year, month (01 - 12), or date (01 - 31)",
                     HttpStatus.BAD_REQUEST
                 )
+            }
+        }
+
+        const booleanValues = ['true', 'false']
+        if (queries['returnDelUser'] && typeof queries['returnDelUser'] === 'string') {
+            if (! booleanValues.includes((queries['returnDelUser'].toLowerCase()))) {
+                throw new HttpException(
+                    "Invalid boolean value (true or false)",
+                    HttpStatus.BAD_REQUEST
+                )
+            } else {
+                req.query['returnDelUser'] = JSON.parse(queries['returnDelUser'].toLowerCase())
+            }
+        }
+
+        if (queries['returnDelService'] && typeof queries['returnDelService'] === 'string') {
+            if (! booleanValues.includes((queries['returnDelService'].toLowerCase()))) {
+                throw new HttpException(
+                    "Invalid boolean value (true or false)",
+                    HttpStatus.BAD_REQUEST
+                )
+            } else {
+                req.query['returnDelService'] = JSON.parse(queries['returnDelService'].toLowerCase())
             }
         }
       

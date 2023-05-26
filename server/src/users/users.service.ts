@@ -113,6 +113,11 @@ export class UserService {
             } else if (userID) {
                 user = await this.adminModel.findById(userID)
             }
+
+            if (! user) {
+                throw new HttpException("User not found", HttpStatus.NOT_FOUND);
+            }
+
         } else {
             if (username) {
                 user = await this.userModel.findOne({ username });
@@ -121,11 +126,13 @@ export class UserService {
             } else if (userID) {
                 user = await this.userModel.findById(userID)
             }
+
+            if (! user) {
+                throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
+            }
         }
         
-        if (! user) {
-            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
-        }
+        
         return user;
     }
 
