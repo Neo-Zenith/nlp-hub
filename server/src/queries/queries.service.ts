@@ -133,11 +133,25 @@ export class QueryService {
         if (! usage) {
             throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
         }
+
+        var updates = {}
         const service = await this.serviceModel.findById(usage.serviceID);
         if (! service) {
-            return Object.assign({ 'serviceDeleted': true }, usage['_doc']);
+            updates['serviceDeleted'] = true;
         }
-        return usage;
+        
+        const isAdminQuery = usage.isAdminQuery;
+        var user;
+        if (isAdminQuery) {
+            user = await this.adminModel.findById(usage.userID)
+        } else {
+            user = await this.userModel.findById(usage.userID);
+        }
+        if (! user) {
+            updates['userDeleted'] = true;
+        }
+
+        return Object.assign(updates, usage['_doc']);
     }
 
     async deleteUsage(uuid: string) {

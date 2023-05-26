@@ -183,15 +183,15 @@ export class RetrieveUsageInterceptor implements NestInterceptor {
         const uuid = req.params['uuid'];
         const usage = await this.queryModel.findOne({ uuid: uuid })
 
-        if (! usage) {
-            throw new HttpException("Usage not found", HttpStatus.NOT_FOUND);
+        if (role === 'admin') {
+            return next.handle()
         }
 
-        if (usage.userID === userID || role === 'admin') {
-            return next.handle();
-        } else {
-            throw new HttpException("User not authorized", HttpStatus.FORBIDDEN)
+        if (! usage || usage.userID !== userID) {
+            throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
         }
+
+        return next.handle();
     }
 }
 
