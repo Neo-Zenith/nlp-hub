@@ -6,12 +6,6 @@ import { ServiceEndpointModel, ServiceModel } from "../services/services.model";
 // Pre-save trigger for Query
 export function QueryTrigger() {
     QuerySchema.pre('save', async function(next) {
-        // FK constraint check for userID
-        const user = await UserModel.findById(this.userID);
-        if (! user) {
-            throw new HttpException("User not found", HttpStatus.NOT_FOUND);
-        }
-
         // FK constraint check for serviceID
         const service = await ServiceModel.findById(this.serviceID);
         if (! service) {
