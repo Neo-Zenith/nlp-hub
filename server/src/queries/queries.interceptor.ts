@@ -1,198 +1,235 @@
-import { 
-    Injectable, NestInterceptor, ExecutionContext, CallHandler, 
-    HttpStatus, HttpException 
-} from '@nestjs/common';
-import { CustomRequest } from '../common/request/request.model';
-import { Service, ServiceEndpoint } from '../services/services.model';
-import { User } from '../users/users.model';
-import { Query } from './queries.model';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {
+    Injectable,
+    NestInterceptor,
+    ExecutionContext,
+    CallHandler,
+    HttpStatus,
+    HttpException,
+} from '@nestjs/common'
 
+import { InjectModel } from '@nestjs/mongoose'
+import { Model } from 'mongoose'
+import { Observable } from 'rxjs'
+
+import { CustomRequest } from '../common/request/request.model'
+import { Service, ServiceEndpoint } from '../services/services.model'
+import { User } from '../users/users.model'
+import { Query } from './queries.model'
+
+/**
+ * * Validates the request body for POST /query/:type/:version/:task
+ * * 1. If request body is present, check if the options provided matches the options define in the endpoint.
+ * * 2. Verify that the user's subscription is still valid before allowing user to access the service.
+ */
 @Injectable()
 export class RegisterQueryInterceptor implements NestInterceptor {
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
         @InjectModel('Service') private readonly serviceModel: Model<Service>,
-        @InjectModel('ServiceEndpoint') private readonly serviceEndpointModel: Model<ServiceEndpoint>
+        @InjectModel('ServiceEndpoint')
+        private readonly serviceEndpointModel: Model<ServiceEndpoint>,
     ) {}
-    async intercept(context: ExecutionContext, next: CallHandler) {
-        const req = context.switchToHttp().getRequest<CustomRequest>();
-        if (this.checkValidSubscription(req)) {
-            const legalFields = await this.validateField(req);
-            if (legalFields) {
-                return next.handle();
+
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+        const req = context.switchToHttp().getRequest<CustomRequest>()
+        const validSubscription = await this.validateSubscription(req)
+        if (validSubscription) {
+            const validFields = await this.validateFields(req)
+            if (validFields) {
+                return next.handle()
             }
         }
     }
 
-    async checkValidSubscription(req) {
-        const role = req.payload.role;
-        // admins can query services without subscription restriction
+    async validateSubscription(req: CustomRequest): Promise<boolean> {
+        const role = req.payload.role
         if (role === 'admin') {
-            return true;
+            return true
         }
-    
-        const userID = req.payload.id;
-        const user = await this.userModel.findById(userID);
-      
+
+        const userID = req.payload.id
+        const user = await this.userModel.findById(userID)
         if (!user) {
-            throw new HttpException(
-                'User not found',
-                HttpStatus.NOT_FOUND
-            );
+            const message = 'User not found. The requested resource could not be found.'
+            throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
-      
-        const expiryDate = user.subscriptionExpiryDate;
-        const currentDate = new Date();
-      
+
+        const expiryDate = user.subscriptionExpiryDate
+        const currentDate = new Date()
         if (currentDate > expiryDate) {
-            throw new HttpException('Subscription expired.', HttpStatus.UNAUTHORIZED);
+            const message =
+                'Subscription expired. Please renew subscription to continue accessing this resource.'
+            throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
-    
-        return true;
+
+        return true
     }
 
-    async validateField(req: CustomRequest) {
-        const query = req.body['options'];
-        const queryOptions =  Object.keys(query);
-        const service = await this.serviceModel.findOne({ 
-            type: req.params['type'], version: req.params['version']
+    async validateFields(req: CustomRequest): Promise<boolean> {
+        const service = await this.serviceModel.findOne({
+            type: req.params['type'],
+            version: req.params['version'],
         })
-        if (! service ) {
-            throw new HttpException("Service not found", HttpStatus.NOT_FOUND)
+        if (!service) {
+            const message = 'Service not found. The requested resource could not be found.'
+            throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
-        const endpoint = (await this.serviceEndpointModel.findOne({ 
-            serviceID: service.id, task: req.params['task'] }).exec()).toJSON();
-        const nlpEndpointOptions = Object.keys(endpoint.options);
-    
-        if (queryOptions.length !== nlpEndpointOptions.length) {
-            throw new HttpException({
-                    message: "Options do not match pre-defined parameters",
-                    options: endpoint.options
-                }, HttpStatus.BAD_REQUEST
-            );
+
+        const endpoint = await this.serviceEndpointModel
+            .findOne({
+                serviceID: service.id,
+                task: req.params['task'],
+            })
+            .exec()
+        if (!endpoint) {
+            const message = 'Endpoint not found. The requested resource could not be found.'
+            throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
-    
+
+        const options = req.body['options']
+        const endpointOptions = Object.keys(endpoint.options)
+        const queryOptions = Object.keys(options)
+        if (
+            queryOptions.length !== endpointOptions.length ||
+            !queryOptions.every((key) => endpointOptions.includes(key))
+        ) {
+            throw new HttpException(
+                {
+                    message: 'Options do not match pre-defined schema.',
+                    expectedOptions: endpoint.options,
+                },
+                HttpStatus.BAD_REQUEST,
+            )
+        }
+
         for (const key of queryOptions) {
-            if (!nlpEndpointOptions.includes(key)) {
-                throw new HttpException({
-                        message: "Options do not match pre-defined parameters",
-                        options: endpoint.options
-                    }, HttpStatus.BAD_REQUEST
-                );
-            }
-    
-            if (typeof query[key] !== endpoint.options[key]) {
-                    throw new HttpException({
-                        message: "Options do not match pre-defined parameters",
-                        options: endpoint.options
-                    }, HttpStatus.BAD_REQUEST
-                );
+            const expectedType = endpoint.options[key]
+            const valueType = typeof options[key]
+            if (valueType !== expectedType) {
+                throw new HttpException(
+                    {
+                        message: `Invalid value type for option '${key}'. Expected '${expectedType}', but received '${valueType}'.`,
+                        expectedOptions: endpoint.options,
+                    },
+                    HttpStatus.BAD_REQUEST,
+                )
             }
         }
-        return true;
+
+        return true
     }
 }
 
+/**
+ * * Performs query input validation for GET /usages
+ * * 1. executionTime needs to be parsable to a number
+ * * 2. startDate & endDateneeds to be parsable to a Date object
+ * * 3. returnDelUser & returnDelService needs to be parsable to boolean values
+ */
 @Injectable()
 export class RetrieveUsagesInterceptor implements NestInterceptor {
-    async intercept(context: ExecutionContext, next: CallHandler) {
-        const req = context.switchToHttp().getRequest<CustomRequest>();
-        const queries = req.query;
-      
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+        const req = context.switchToHttp().getRequest<CustomRequest>()
+        const queries = req.query
+
         if (queries['executionTime']) {
-            const execTime = +queries['executionTime'];
+            const execTime = +queries['executionTime']
             if (isNaN(execTime)) {
                 throw new HttpException(
-                    'Invalid executionTime format (Must be a number)',
-                    HttpStatus.BAD_REQUEST
-                );
-            } 
-        }
-      
-        if (queries['startDate'] && typeof queries['startDate'] === 'string') {
-            const startDate = queries['startDate'];
-            if (! /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-                throw new HttpException(
-                    'Invalid startDate format (Must be in YYYY-MM-DD format)',
-                    HttpStatus.BAD_REQUEST
-                );
+                    'Invalid execution time format. Execution time must be a number.',
+                    HttpStatus.BAD_REQUEST,
+                )
             }
+        }
+
+        if (queries['startDate']) {
+            let startDate = queries['startDate'] as string
+            if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(startDate)) {
+                const message =
+                    'Invalid start date format. Start date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
+            }
+
+            if (!startDate.includes('T')) {
+                startDate += 'T00:00:00'
+            }
+
             if (isNaN(new Date(startDate).getTime())) {
-                throw new HttpException(
-                    "Invalid year, month (01 - 12), or date (01 - 31)",
-                    HttpStatus.BAD_REQUEST
-                )
+                const message = 'Invalid start date or time.'
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
         }
-      
-        if (queries['endDate'] && typeof queries['endDate'] === 'string') {
-            const endDate = queries['endDate'];
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
-                throw new HttpException(
-                    'Invalid endDate format (Must be in YYYY-MM-DD format)',
-                    HttpStatus.BAD_REQUEST
-                );
+
+        if (queries['endDate']) {
+            let endDate = queries['endDate'] as string
+            if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(endDate)) {
+                const message =
+                    'Invalid start date format. End date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
+
+            if (!endDate.includes('T')) {
+                endDate += 'T23:59:59'
+            }
+
             if (isNaN(new Date(endDate).getTime())) {
-                throw new HttpException(
-                    "Invalid year, month (01 - 12), or date (01 - 31)",
-                    HttpStatus.BAD_REQUEST
-                )
+                throw new HttpException('Invalid end date or time', HttpStatus.BAD_REQUEST)
             }
         }
 
         const booleanValues = ['true', 'false']
-        if (queries['returnDelUser'] && typeof queries['returnDelUser'] === 'string') {
-            if (! booleanValues.includes((queries['returnDelUser'].toLowerCase()))) {
-                throw new HttpException(
-                    "Invalid boolean value (true or false)",
-                    HttpStatus.BAD_REQUEST
-                )
+        if (queries['returnDelUser']) {
+            const returnDelUser = queries['returnDelUser'] as string
+            if (!booleanValues.includes(returnDelUser.toLowerCase())) {
+                const message = `Invalid type for returnDelUser. Expected ${Object.values(
+                    booleanValues,
+                ).join(', ')}, but received ${returnDelUser}.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             } else {
-                req.query['returnDelUser'] = JSON.parse(queries['returnDelUser'].toLowerCase())
+                req.query['returnDelUser'] = JSON.parse(returnDelUser.toLowerCase())
             }
         }
 
-        if (queries['returnDelService'] && typeof queries['returnDelService'] === 'string') {
-            if (! booleanValues.includes((queries['returnDelService'].toLowerCase()))) {
-                throw new HttpException(
-                    "Invalid boolean value (true or false)",
-                    HttpStatus.BAD_REQUEST
-                )
+        if (queries['returnDelService']) {
+            const returnDelService = queries['returnDelService'] as string
+            if (!booleanValues.includes(returnDelService.toLowerCase())) {
+                const message = `Invalid type for returnDelService. Expected ${Object.values(
+                    booleanValues,
+                ).join(', ')}, but received ${returnDelService}.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             } else {
-                req.query['returnDelService'] = JSON.parse(queries['returnDelService'].toLowerCase())
+                req.query['returnDelService'] = JSON.parse(returnDelService.toLowerCase())
             }
         }
-      
-        return next.handle();
+
+        return next.handle()
     }
 }
 
+/**
+ * * Performs parameter validation for GET /usage/:uuid
+ * * 1. User is forbidden to query a usage of other user if user is not admin
+ */
 @Injectable()
 export class RetrieveUsageInterceptor implements NestInterceptor {
-    constructor(
-        @InjectModel('Query') private readonly queryModel: Model<Query>
-    ) {}
+    constructor(@InjectModel('Query') private readonly queryModel: Model<Query>) {}
 
-    async intercept(context: ExecutionContext, next: CallHandler) {
-        const req = context.switchToHttp().getRequest<CustomRequest>();
-        const userID = req.payload['id'];
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+        const req = context.switchToHttp().getRequest<CustomRequest>()
+        const userID = req.payload['id']
         const role = req.payload['role']
-        const uuid = req.params['uuid'];
+        const uuid = req.params['uuid']
         const usage = await this.queryModel.findOne({ uuid: uuid })
 
         if (role === 'admin') {
             return next.handle()
         }
 
-        if (! usage || usage.userID !== userID) {
-            throw new HttpException("User not authorized", HttpStatus.FORBIDDEN);
+        if (!usage || usage.userID !== userID) {
+            const message = 'Access denied. User is not authorized to access this resource.'
+            throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
 
-        return next.handle();
+        return next.handle()
     }
 }
-
-

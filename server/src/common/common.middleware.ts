@@ -33,7 +33,7 @@ export abstract class ValidateRequestMiddleware {
     public hasInvalidFields(req: CustomRequest): boolean {
         const missingFields = this.requiredFields.filter((field) => !req.body[field])
         if (missingFields.length > 0) {
-            const message = `Incomplete body. Expecting ${missingFields.join(', ')}.`
+            const message = `Incomplete body. Expected ${missingFields.join(', ')}.`
             throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
         this.sanitizeFields(req)
@@ -59,7 +59,7 @@ export abstract class ValidateRequestMiddleware {
  * * Provides custom access control based on:
  * * 1. User roles (implementation logic found in matchRoles, role to be provided by inheriting Guard class).
  * * 2. HTTP method (implementation done by providing allowedMethods during class construction. Methods are not case-sensitive).
- * ? Admin guard and User guard must extend this class and provide the implementation for the abstract method accessControl which will utilise the matchRole method.
+ * ? Admin guard and User guard must extend this class and provide the implementation for the abstract method allowAccess which will utilise the matchRole method.
  */
 abstract class AuthGuard implements CanActivate {
     constructor(private readonly allowedMethods: string[]) {}
@@ -68,7 +68,7 @@ abstract class AuthGuard implements CanActivate {
         const request = context.switchToHttp().getRequest()
         const requestMethod = request.method.toUpperCase()
         if (this.allowedMethods.includes(requestMethod)) {
-            const allowAccess = await this.accessControl(request)
+            const allowAccess = await this.allowAccess(request)
             return allowAccess
         }
         return false
@@ -116,7 +116,7 @@ abstract class AuthGuard implements CanActivate {
         throw new HttpException(message, HttpStatus.FORBIDDEN)
     }
 
-    abstract accessControl(req: CustomRequest): Promise<boolean>
+    abstract allowAccess(req: CustomRequest): Promise<boolean>
 }
 
 /**
@@ -130,7 +130,7 @@ export class UserAuthGuard extends AuthGuard {
         super(allowedMethods)
     }
 
-    async accessControl(req: CustomRequest): Promise<boolean> {
+    async allowAccess(req: CustomRequest): Promise<boolean> {
         return this.matchRole(req, 'user')
     }
 }
@@ -146,7 +146,7 @@ export class AdminAuthGuard extends AuthGuard {
         super(allowedMethods)
     }
 
-    async accessControl(req: CustomRequest) {
+    async allowAccess(req: CustomRequest) {
         return this.matchRole(req, 'admin')
     }
 }
