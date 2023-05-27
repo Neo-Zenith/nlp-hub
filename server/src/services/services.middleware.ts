@@ -1,53 +1,63 @@
-import { 
-    Injectable, NestMiddleware, HttpStatus, HttpException 
-} from '@nestjs/common';
-import { NextFunction } from 'express';
-import { MissingFieldsMiddleware } from 'src/common/common.middleware';
-import { CustomRequest } from 'src/common/request/request.model';
-import { HttpMethodType, ServiceType } from './services.model';
-
+import {
+    Injectable,
+    NestMiddleware,
+    HttpStatus,
+    HttpException,
+} from '@nestjs/common'
+import { NextFunction } from 'express'
+import { ValidateRequestMiddleware } from 'src/common/common.middleware'
+import { CustomRequest } from 'src/common/request/request.model'
+import { HttpMethodType, ServiceType } from './services.model'
 
 @Injectable()
-export class RegisterServiceMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+export class RegisterServiceMiddleware
+    extends ValidateRequestMiddleware
+    implements NestMiddleware
+{
     constructor() {
         const requiredFields = [
-            'name', 'description', 'address', 'type', 'endpoints'
-        ];
+            'name',
+            'description',
+            'address',
+            'type',
+            'endpoints',
+        ]
         const fieldsType = ['string', 'string', 'string', 'string', 'object']
-        super(requiredFields, fieldsType);
+        super(requiredFields, fieldsType)
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req);
+        this.hasInvalidFields(req)
         if (validateServiceField(req)) {
-            return next();
+            return next()
         }
     }
 }
-
 
 @Injectable()
 export class UpdateServiceMiddleware implements NestMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         if (validateServiceField(req)) {
-            return next();
+            return next()
         }
     }
 }
 
 @Injectable()
-export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
+export class RegisterEndpointMiddleware
+    extends ValidateRequestMiddleware
+    implements NestMiddleware
+{
     constructor() {
-        const requiredFields = 
-            ['method', 'endpointPath', 'task']
+        const requiredFields = ['method', 'endpointPath', 'task']
         const fieldsType = ['string', 'string', 'string']
-        super(requiredFields, fieldsType);
+        super(requiredFields, fieldsType)
     }
-    
+
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.checkMissingFields(req)
+        this.hasInvalidFields(req)
         if (validateEndpointField(req)) {
-            return next();
+            return next()
         }
     }
 }
@@ -56,56 +66,77 @@ export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implemen
 export class UpdateEndpointMiddleware implements NestMiddleware {
     use(req: CustomRequest, res: Response, next: NextFunction) {
         if (validateEndpointField(req)) {
-            return next();
+            return next()
         }
     }
 }
-
 
 function validateServiceField(req: CustomRequest) {
     if (req.body['endpoints']) {
         try {
             for (const endpoint of req.body['endpoints']) {
-                if (typeof endpoint !== 'object' || 
-                    ! ('endpointPath' in endpoint) ||
-                    ! ('method' in endpoint) ||
-                    ! ('options' in endpoint) ||
-                    ! ('task' in endpoint)) {
-                        throw new HttpException(
-                            "Incomplete body (endpoints)", HttpStatus.BAD_REQUEST)
-                    }
+                if (
+                    typeof endpoint !== 'object' ||
+                    !('endpointPath' in endpoint) ||
+                    !('method' in endpoint) ||
+                    !('options' in endpoint) ||
+                    !('task' in endpoint)
+                ) {
+                    throw new HttpException(
+                        'Incomplete body (endpoints)',
+                        HttpStatus.BAD_REQUEST,
+                    )
+                }
             }
         } catch (err) {
             if (err.name === 'TypeError') {
-                throw new HttpException('Invalid body (endpoints)', HttpStatus.BAD_REQUEST)
+                throw new HttpException(
+                    'Invalid body (endpoints)',
+                    HttpStatus.BAD_REQUEST,
+                )
             }
         }
     }
-    
-    if (req.body['type'] && ! Object.values(ServiceType).includes(req.body['type'])) {
-        throw new HttpException("Invalid service type", HttpStatus.BAD_REQUEST)
+
+    if (
+        req.body['type'] &&
+        !Object.values(ServiceType).includes(req.body['type'])
+    ) {
+        throw new HttpException('Invalid service type', HttpStatus.BAD_REQUEST)
     }
 
     if (req.body['version']) {
         const version = req.body['version']
         if (version[0] !== 'v') {
-            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
-        } 
+            throw new HttpException(
+                'Invalid version format. Version must follow v{id} format.',
+                HttpStatus.BAD_REQUEST,
+            )
+        }
         if (version.substring(1).includes('.')) {
-            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
+            throw new HttpException(
+                'Invalid version format. Version must follow v{id} format.',
+                HttpStatus.BAD_REQUEST,
+            )
         }
         const versionNum = parseInt(version.substring(1))
         if (Number.isNaN(versionNum)) {
-            throw new HttpException("Invalid version format. Version must follow v{id} format.", HttpStatus.BAD_REQUEST)
+            throw new HttpException(
+                'Invalid version format. Version must follow v{id} format.',
+                HttpStatus.BAD_REQUEST,
+            )
         }
     }
-    
-    return true;
+
+    return true
 }
 
 function validateEndpointField(req: CustomRequest) {
-    if (req.body['method'] && ! Object.values(HttpMethodType).includes(req.body['method'])) {
-        throw new HttpException("Invalid method", HttpStatus.BAD_REQUEST)
+    if (
+        req.body['method'] &&
+        !Object.values(HttpMethodType).includes(req.body['method'])
+    ) {
+        throw new HttpException('Invalid method', HttpStatus.BAD_REQUEST)
     }
-    return true;
+    return true
 }
