@@ -17,7 +17,7 @@ export class ServiceService {
         const newService = new this.serviceModel({
             name, description, baseAddress: address, type
         })
-        await this.saveService(newService);
+        
         for (let i = 0; i < endpoints.length; i ++) {
             const newEndpoint = new this.serviceEndpointModel({
                 serviceID: newService.id,
@@ -28,6 +28,7 @@ export class ServiceService {
             });
             await this.saveEndpoint(newEndpoint);
         }
+        await this.saveService(newService);
         return { message: 'Service subscribed' }
     }
 
@@ -189,6 +190,13 @@ export class ServiceService {
                     )
                 }
             }
+
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
         }
     }
 
@@ -213,6 +221,13 @@ export class ServiceService {
                     )
                 }
             }
+
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
         }
     }
 
@@ -236,6 +251,13 @@ export class ServiceService {
                     )
                 }
             }
+
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
         }
     }   
 
@@ -255,6 +277,13 @@ export class ServiceService {
                         HttpStatus.CONFLICT
                     )
                 }
+            }
+            
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
             }
         }
     }

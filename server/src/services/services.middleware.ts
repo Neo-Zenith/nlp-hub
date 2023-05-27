@@ -13,7 +13,8 @@ export class RegisterServiceMiddleware extends MissingFieldsMiddleware implement
         const requiredFields = [
             'name', 'description', 'address', 'type', 'endpoints'
         ];
-        super(requiredFields);
+        const fieldsType = ['string', 'string', 'string', 'string', 'object']
+        super(requiredFields, fieldsType);
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
@@ -39,7 +40,8 @@ export class RegisterEndpointMiddleware extends MissingFieldsMiddleware implemen
     constructor() {
         const requiredFields = 
             ['method', 'endpointPath', 'task']
-        super(requiredFields);
+        const fieldsType = ['string', 'string', 'string']
+        super(requiredFields, fieldsType);
     }
     
     use(req: CustomRequest, res: Response, next: NextFunction) {

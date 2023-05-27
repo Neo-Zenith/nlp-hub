@@ -49,7 +49,6 @@ export class UserService {
     async verifyUser(username: string, password: string, role: string) {
         // find user based on username
         const user = await this.getUser(role, username);
-
         // verify if the password matches the hashed password
         const passwordMatches = await bcrypt.compare(password, user.password);
         if (passwordMatches) {
@@ -192,6 +191,13 @@ export class UserService {
                     throw new HttpException("Email already exist", HttpStatus.CONFLICT)
                 }
             }
+            
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
+            }
         }
     }
 
@@ -209,6 +215,13 @@ export class UserService {
                 } if (err.message.includes('email')) {
                     throw new HttpException("Email already exist", HttpStatus.CONFLICT)
                 }
+            }
+
+            if (err.name === 'ValidationError') {
+                throw new HttpException(
+                    "Invalid body type",
+                    HttpStatus.BAD_REQUEST
+                )
             }
         }
     }

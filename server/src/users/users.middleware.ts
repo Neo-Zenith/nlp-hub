@@ -16,7 +16,8 @@ export class RegisterUserMiddleware extends MissingFieldsMiddleware implements N
 		const requiredFields = [
 			'name', 'username', 'email', 'password', 'department'
 		];
-		super(requiredFields)
+		const fieldsType = ['string', 'string', 'string', 'string', 'string']
+		super(requiredFields, fieldsType)
 	}
 
 	use(req: CustomRequest, res: Response, next: NextFunction) {
@@ -38,7 +39,8 @@ export class RegisterUserMiddleware extends MissingFieldsMiddleware implements N
 export class LoginUserMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
 	constructor() {
 		const requiredFields = ['username', 'password']
-		super(requiredFields);
+		const fieldsType = ['string', 'string']
+		super(requiredFields, fieldsType);
 	}
 
 	use(req: CustomRequest, res: Response, next: NextFunction) {
@@ -51,7 +53,8 @@ export class LoginUserMiddleware extends MissingFieldsMiddleware implements Nest
 export class ExtendSubscriptionMiddleware extends MissingFieldsMiddleware implements NestMiddleware {
 	constructor() {
 		const requiredFields = ['extension'];
-		super(requiredFields);
+		const fieldsType = ['number']
+		super(requiredFields, fieldsType);
 	}
 
 	use(req: CustomRequest, res: Response, next: NextFunction) {

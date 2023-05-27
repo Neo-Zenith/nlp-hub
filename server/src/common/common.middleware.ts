@@ -12,10 +12,12 @@ import * as crypto from "crypto";
 dotenv.config()
 
 export abstract class MissingFieldsMiddleware {
-    protected requiredFields;
+    protected requiredFields: string[];
+    protected fieldsType: string[];
 
-    constructor(requiredFields: string[]) {
+    constructor(requiredFields: string[], fieldsType: string[]) {
         this.requiredFields = requiredFields;
+        this.fieldsType = fieldsType;
     }
 
     checkMissingFields(req: CustomRequest) {
@@ -24,6 +26,20 @@ export abstract class MissingFieldsMiddleware {
             const message = `Incomplete body (${missingFields.join(', ')})`
             throw new HttpException(message, 
                                     HttpStatus.BAD_REQUEST);
+        }
+        return this.sanitizeFields(req);
+    }
+
+    private sanitizeFields(req: CustomRequest) {
+        for (let i = 0; i < this.requiredFields.length; i++) {
+            const field = this.requiredFields[i];
+            const fieldType = this.fieldsType[i];
+            const fieldValue = req.body[field];
+
+            if (typeof fieldValue !== fieldType) {
+                const message = `Invalid type for ${field}. Expected ${fieldType}, but received ${typeof fieldValue}.`;
+                throw new HttpException(message, HttpStatus.BAD_REQUEST);
+            }
         }
         return false;
     }
