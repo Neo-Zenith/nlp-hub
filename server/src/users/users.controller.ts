@@ -11,6 +11,7 @@ import {
 } from "./users.schema";
 import { AdminAuthGuard, UserAuthGuard } from "src/common/common.middleware";
 import { ModifyUserInterceptor } from "./users.interceptor";
+import { QueryInterceptor } from "src/common/common.interceptor";
 
 @ApiTags('Users')
 @Controller('users')
@@ -66,6 +67,7 @@ export class UserController {
     })
     @Get('')
     @UseGuards(new AdminAuthGuard(['GET']))
+    @UseInterceptors(QueryInterceptor)
     async getUsers(
         @Query('expireIn') expireIn?: string,
         @Query('name') name?: string,

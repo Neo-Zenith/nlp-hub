@@ -9,6 +9,7 @@ import { CustomRequest } from "./request/request.model";
 import * as jwt from "jsonwebtoken";
 import * as dotenv from "dotenv";
 import * as crypto from "crypto";
+import * as sanitize from "mongo-sanitize";
 dotenv.config()
 
 export abstract class MissingFieldsMiddleware {
@@ -40,6 +41,7 @@ export abstract class MissingFieldsMiddleware {
                 const message = `Invalid type for ${field}. Expected ${fieldType}, but received ${typeof fieldValue}.`;
                 throw new HttpException(message, HttpStatus.BAD_REQUEST);
             }
+            req.body[field] = sanitize(req.body[field])
         }
         return false;
     }

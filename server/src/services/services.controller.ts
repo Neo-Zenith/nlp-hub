@@ -1,5 +1,5 @@
 import { 
-    Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards 
+    Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards, UseInterceptors
 } from "@nestjs/common";
 import { ServiceService } from "./services.service";
 import { HttpMethodType, ServiceEndpoint, ServiceType } from "./services.model";
@@ -11,6 +11,7 @@ import {
     UpdateServiceSchema 
 } from "./services.schema";
 import { AdminAuthGuard, UserAuthGuard } from "src/common/common.middleware";
+import { QueryInterceptor } from "src/common/common.interceptor";
 
 @ApiTags('Services')
 @Controller('services')
@@ -33,6 +34,7 @@ export class ServiceController {
     })
     @Get()
     @UseGuards(new UserAuthGuard(['GET']))
+    @UseInterceptors(QueryInterceptor)
     async getServices(
         @Query('name') name?: string,
         @Query('type') type?: string,
@@ -171,6 +173,7 @@ export class ServiceController {
     })
     @Get(':type/:version/endpoints')
     @UseGuards(new UserAuthGuard(['GET']))
+    @UseInterceptors(QueryInterceptor)
     async getEndpoints(
         @Param('type') type: string,
         @Param('version') version: string,

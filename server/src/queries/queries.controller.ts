@@ -13,6 +13,7 @@ import {
 import { CustomRequest } from "../common/request/request.model";
 import { UserAuthGuard } from "../common/common.middleware";
 import { ServiceType } from "../services/services.model";
+import { QueryInterceptor } from "src/common/common.interceptor";
 
 
 @ApiTags('Queries')
@@ -102,7 +103,7 @@ export class UsageController {
     })
     @Get('')
     @UseGuards(new UserAuthGuard(['GET']))
-    @UseInterceptors(RetrieveUsagesInterceptor)
+    @UseInterceptors(QueryInterceptor, RetrieveUsagesInterceptor)
     async getUsages(
         @Req() request: CustomRequest,
         @Query('type') type?: string,
@@ -142,7 +143,7 @@ export class UsageController {
     @ApiSecurity('access-token')
     @Get(":uuid")
     @UseGuards(new UserAuthGuard(['GET']))
-    @UseInterceptors(RetrieveUsageInterceptor)
+    @UseInterceptors(QueryInterceptor, RetrieveUsageInterceptor)
     async getUsage(
         @Param('uuid') uuid: string
     ) {

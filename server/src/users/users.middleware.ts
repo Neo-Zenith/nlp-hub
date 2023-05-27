@@ -93,7 +93,7 @@ export class RetrieveUsersMiddleware implements NestMiddleware {
 			if (typeof reqExpireIn === 'string') {
 				if (! /^\d+$/.test(reqExpireIn)) {
 					throw new HttpException(
-						"Invalid extension format (Must be positive integer)", 
+						"Invalid expireIn format (Must be positive integer)", 
 						HttpStatus.BAD_REQUEST
 					)
 				}
