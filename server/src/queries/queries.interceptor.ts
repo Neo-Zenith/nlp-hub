@@ -184,6 +184,14 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
             }
         }
 
+        if (queries['timezone']) {
+            const timezone = parseFloat(queries['timezone'] as string)
+            if (isNaN(timezone)) {
+                const message = 'Invalid timezone. Timezone must be a valid integer.'
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
+            }
+        }
+
         const booleanValues = ['true', 'false']
         if (queries['returnDelUser']) {
             const returnDelUser = queries['returnDelUser'] as string

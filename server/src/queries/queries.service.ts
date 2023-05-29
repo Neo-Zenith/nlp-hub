@@ -88,21 +88,33 @@ export class QueryService {
         execTime?: string,
         startDate?: string,
         endDate?: string,
+        timezone?: string,
         returnDelUser?: boolean,
         returnDelService?: boolean,
     ): Promise<(Query & Record<string, any>)[]> {
         let usages: Query[]
         let query: any = {}
+        let offset: number
 
         if (execTime) {
             query['executionTime'] = { $lte: +execTime }
         }
+        if (timezone) {
+            offset = Number.parseFloat(timezone)
+        } else {
+            offset = 0
+        }
+
         if (startDate) {
             const startDateTime = new Date(startDate)
+            startDateTime.setHours(startDateTime.getHours() - Math.floor(offset))
+            startDateTime.setMinutes(startDateTime.getMinutes() - (offset % 1) * 60)
             query['dateTime'] = { $gte: startDateTime }
         }
         if (endDate) {
             const endDateTime = new Date(endDate)
+            endDateTime.setHours(endDateTime.getHours() - Math.floor(offset))
+            endDateTime.setMinutes(endDateTime.getMinutes() - (offset % 1) * 60)
             if (query['dateTime']) {
                 query['dateTime'].$lte = endDateTime
             } else {

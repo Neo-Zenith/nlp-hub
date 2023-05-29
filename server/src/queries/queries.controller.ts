@@ -119,6 +119,12 @@ export class UsageController {
         required: false,
     })
     @ApiQuery({
+        name: 'timezone',
+        description: 'Integer indicating the timezone of the user. If not provided, the timezone defaults to UTC+0.',
+        example: '4',
+        required: false
+    })
+    @ApiQuery({
         name: 'returnDelUser',
         description: 'Indicate if result should include queries made by users who no longer exist.',
         example: true,
@@ -141,6 +147,7 @@ export class UsageController {
         @Query('executionTime') execTime?: string,
         @Query('startDate') startDate?: string,
         @Query('endDate') endDate?: string,
+        @Query('timezone') timezone?: string,
         @Query('returnDelUser') returnDelUser?: boolean,
         @Query('returnDelService') returnDelService?: boolean,
     ): Promise<Record<string, any>> {
@@ -155,6 +162,7 @@ export class UsageController {
             execTime,
             startDate,
             endDate,
+            timezone,
             returnDelUser,
             returnDelService,
         )
