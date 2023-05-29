@@ -1,20 +1,14 @@
-name: Run Jest Tests and Revert Commit
+name: Merge to Main on Test Pass
 
 on:
   push:
     branches:
-      - main
-      - dev
-  pull_request:
-    branches:
-      - main
       - dev
 
 jobs:
-  test-and-revert-main:
-    name: Run Tests and Revert Commit (main)
+  merge:
+    name: Merge to Main
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout Repository
@@ -26,53 +20,18 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
-        working-directory: ./server
+        working-directory: './server'
         run: npm ci
 
       - name: Run Jest Tests
-        working-directory: ./server
-        run: npm test
-        env:
-          CI: true
+        working-directory: './server'
+        run: npm run test
 
-      - name: Revert Commit on Test Failure
+      - name: Merge to Main Branch
+        if: ${{ success() }}
         run: |
-          if [ $? -ne 0 ]; then
-            git reset --hard HEAD^
-            git push -f
-          else
-            echo "Tests passed. No need to revert."
-          fi
-
-  test-and-revert-dev:
-    name: Run Tests and Revert Commit (dev)
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14
-
-      - name: Install Dependencies
-        working-directory: ./server
-        run: npm ci
-
-      - name: Run Jest Tests
-        working-directory: ./server
-        run: npm test
-        env:
-          CI: true
-
-      - name: Revert Commit on Test Failure
-        run: |
-          if [ $? -ne 0 ]; then
-            git reset --hard HEAD^
-            git push -f
-          else
-            echo "Tests passed. No need to revert."
-          fi
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git checkout main
+          git merge --ff-only dev
+          git push origin main
