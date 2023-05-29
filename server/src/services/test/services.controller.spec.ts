@@ -218,5 +218,3 @@ describe('ServiceController', () => {
         })
     })
 })
-
-
