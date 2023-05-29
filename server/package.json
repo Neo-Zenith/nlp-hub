@@ -21,10 +21,12 @@
   },
   "dependencies": {
     "@golevelup/ts-jest": "^0.3.7",
+    "@nestjs/axios": "^2.0.0",
     "@nestjs/common": "^9.0.0",
     "@nestjs/core": "^9.0.0",
     "@nestjs/mongoose": "^9.2.2",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/schedule": "^2.2.2",
     "@nestjs/swagger": "^6.3.0",
     "@typegoose/typegoose": "^11.1.0",
     "axios": "^1.4.0",

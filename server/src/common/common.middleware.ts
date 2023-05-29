@@ -4,7 +4,11 @@ import {
     ExecutionContext,
     HttpStatus,
     Injectable,
+    Logger,
 } from '@nestjs/common'
+
+import { Cron } from '@nestjs/schedule'
+import { HttpService } from '@nestjs/axios'
 
 import * as jwt from 'jsonwebtoken'
 import * as dotenv from 'dotenv'
@@ -153,5 +157,22 @@ export class AdminAuthGuard extends AuthGuard {
 
     async allowAccess(req: CustomRequest) {
         return this.matchRole(req, 'admin')
+    }
+}
+
+@Injectable()
+export class PingTask {
+    private readonly logger = new Logger(PingTask.name)
+
+    constructor(private httpService: HttpService) {}
+
+    @Cron('*/1 * * * *') // Runs every 1 minute
+    async pingServer() {
+        try {
+            await this.httpService.get('https://nlphub.azurewebsites.net/api').toPromise()
+            this.logger.log('Self-ping successful!')
+        } catch (error) {
+            this.logger.error(`Error during self-ping: ${error.message}`)
+        }
     }
 }
