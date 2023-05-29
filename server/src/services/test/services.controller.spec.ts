@@ -133,7 +133,7 @@ describe('ServiceController', () => {
 
         it('should return 409 - CONFLICT due to duplicated endpoint task', async () => {
             const serviceData = {
-                name: 'SUD Auto-punctuator test',
+                name: 'SUD Auto-punctuator',
                 description: 'Test description.',
                 address: 'https://sud-speechlab.sg',
                 type: 'SUD',
