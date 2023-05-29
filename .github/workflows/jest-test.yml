@@ -20,9 +20,11 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
+        working-directory: './server'
         run: npm ci
 
       - name: Run Jest Tests
+        working-directory: './server'
         run: npm run test
 
       - name: Merge to Main Branch
