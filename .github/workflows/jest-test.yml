@@ -1,19 +1,20 @@
-name: Run Jest Tests
+name: Run Jest Tests and Revert Commit
 
 on:
   push:
     branches:
-      - dev 
       - main
+      - dev
   pull_request:
     branches:
-      - dev
       - main
+      - dev
 
 jobs:
-  test:
-    name: Run Tests
+  test-and-revert-main:
+    name: Run Tests and Revert Commit (main)
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout Repository
@@ -25,16 +26,47 @@ jobs:
           node-version: 14
 
       - name: Install Dependencies
-        working-directory: ./server
         run: npm ci
 
       - name: Run Jest Tests
-        working-directory: ./server
         run: npm test
-        
+        env:
+          CI: true
+
       - name: Revert Commit on Test Failure
         run: |
-          if [ ${{ failure() }} == 'true' ]; then
+          if [ $? -ne 0 ]; then
+            git reset --hard HEAD^
+            git push -f
+          else
+            echo "Tests passed. No need to revert."
+          fi
+
+  test-and-revert-dev:
+    name: Run Tests and Revert Commit (dev)
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Jest Tests
+        run: npm test
+        env:
+          CI: true
+
+      - name: Revert Commit on Test Failure
+        run: |
+          if [ $? -ne 0 ]; then
             git reset --hard HEAD^
             git push -f
           else
