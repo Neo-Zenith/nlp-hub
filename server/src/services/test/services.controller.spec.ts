@@ -6,6 +6,7 @@ import { Connection, connect, Model } from 'mongoose'
 import { getModelToken } from '@nestjs/mongoose'
 import { Service, ServiceEndpoint, ServiceEndpointSchema, ServiceSchema } from '../services.model'
 import { HttpException, HttpStatus } from '@nestjs/common'
+import { mockRequestObject } from './mock/common.model'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController
@@ -468,6 +469,279 @@ describe('ServiceController', () => {
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
+
+    describe('retrieve services', () => {
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'Test name',
+                description: 'Test description.',
+                address: 'https://test-test.com',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    removeIsFluency: 'boolean',
+                },
+            }
+
+            const secondService = {
+                name: 'Test name 2',
+                description: 'Test description.',
+                address: 'https://test2-test.com',
+                type: 'SUD',
+            }
+
+            await serviceController.subscribeService(
+                genesisService.name,
+                genesisService.description,
+                genesisService.address,
+                genesisService.type,
+                [genesisEndpoint],
+            )
+
+            await serviceController.subscribeService(
+                secondService.name,
+                secondService.description,
+                secondService.address,
+                secondService.type,
+                [genesisEndpoint],
+            )
+        })
+
+        it('should retrieve all services', async () => {
+            const req = mockRequestObject()
+            req.payload.role = 'admin'
+            const returnedServicesAdmin = await serviceController.getServices(req)
+            returnedServicesAdmin.services.every((service: Service) =>
+                expect(service).toHaveProperty('address'),
+            )
+
+            req.payload.role = 'user'
+            const returnedServicesUser = await serviceController.getServices(req)
+            returnedServicesUser.services.every((service: Service) =>
+                expect(service).not.toHaveProperty('address'),
+            )
+        })
+
+        it('should retrieve service with specified type', async () => {
+            const req = mockRequestObject()
+            let type = 'NER'
+            let returnedServices = await serviceController.getServices(req, undefined, type)
+            expect(returnedServices.services.length).toEqual(0)
+
+            type = 'SUD'
+            returnedServices = await serviceController.getServices(req, undefined, type)
+            expect(returnedServices.services.length).toEqual(2)
+        })
+
+        it('should retrieve service with names matching the specified name', async () => {
+            const req = mockRequestObject()
+            let name = '2'
+            let returnedServices = await serviceController.getServices(req, name)
+            expect(returnedServices.services.length).toEqual(1)
+
+            name = 'Test'
+            returnedServices = await serviceController.getServices(req, name)
+            expect(returnedServices.services.length).toEqual(2)
+
+            name = 'test'
+            returnedServices = await serviceController.getServices(req, name)
+            expect(returnedServices.services.length).toEqual(2)
+        })
+    })
+
+    describe('retrieve a service', () => {
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'Test name',
+                description: 'Test description.',
+                address: 'https://test-test.com',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    removeIsFluency: 'boolean',
+                },
+            }
+
+            await serviceController.subscribeService(
+                genesisService.name,
+                genesisService.description,
+                genesisService.address,
+                genesisService.type,
+                [genesisEndpoint],
+            )
+        })
+
+        it('should retrieve a service based on type and version', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const req = mockRequestObject()
+            req.payload.role = 'admin'
+            let returnedService = await serviceController.getService(req, validType, validVersion)
+            expect(returnedService).toHaveProperty('name')
+            expect(returnedService).toHaveProperty('description')
+            expect(returnedService).toHaveProperty('type')
+            expect(returnedService).toHaveProperty('version')
+            expect(returnedService).toHaveProperty('address')
+
+            req.payload.role = 'user'
+            returnedService = await serviceController.getService(req, validType, validVersion)
+            expect(returnedService).toHaveProperty('name')
+            expect(returnedService).toHaveProperty('description')
+            expect(returnedService).toHaveProperty('type')
+            expect(returnedService).toHaveProperty('version')
+        })
+
+        it('should return 404 - NOT FOUND due to invalid type', async () => {
+            const invalidType = 'TUR'
+            const validVersion = 'v12'
+            const req = mockRequestObject()
+            await expect(
+                serviceController.getService(req, invalidType, validVersion),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Service not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+
+        it('should return 404 - NOT FOUND due to invalid version', async () => {
+            const validType = 'SUD'
+            const invalidVersion = 'v2'
+            const req = mockRequestObject()
+            await expect(
+                serviceController.getService(req, validType, invalidVersion),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Service not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
+
+    describe('add endpoint', () => {
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'Test name',
+                description: 'Test description.',
+                address: 'https://test-test.com',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    removeIsFluency: 'boolean',
+                },
+            }
+
+            await serviceController.subscribeService(
+                genesisService.name,
+                genesisService.description,
+                genesisService.address,
+                genesisService.type,
+                [genesisEndpoint],
+            )
+        })
+
+        it('should add endpoint and return success message', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+
+            const endpointData = {
+                task: 'Test task 2',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            const returnedMessage = await serviceController.addEndpoint(
+                validType,
+                validVersion,
+                endpointData.method,
+                endpointData.endpointPath,
+                endpointData.task,
+                endpointData.options,
+            )
+
+            expect(returnedMessage.message).toEqual('Endpoint registered.')
+        })
+
+        it('should return 409 - CONFLICT due to duplicated endpointPath and method', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+
+            const endpointData = {
+                task: 'Test task 2',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.addEndpoint(
+                    validType,
+                    validVersion,
+                    endpointData.method,
+                    endpointData.endpointPath,
+                    endpointData.task,
+                    endpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.',
+                    HttpStatus.CONFLICT,
+                ),
+            )
+        })
+
+        it('should return 409 - CONFLICT due to duplicated task', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+
+            const endpointData = {
+                task: 'Test task',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.addEndpoint(
+                    validType,
+                    validVersion,
+                    endpointData.method,
+                    endpointData.endpointPath,
+                    endpointData.task,
+                    endpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Invalid task. There is another endpoint of the same task for the specified service.',
+                    HttpStatus.CONFLICT,
                 ),
             )
         })
