@@ -211,7 +211,7 @@ describe('ServiceController', () => {
                 ),
             ).rejects.toThrow(
                 new HttpException(
-                    'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.',
+                    'Invalid to fail. There is another endpoint of the same method and endpointPath for the specified service.',
                     HttpStatus.CONFLICT,
                 ),
             )
