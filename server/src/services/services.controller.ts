@@ -21,8 +21,8 @@ import {
 
 import { ServiceService } from './services.service'
 import { HttpMethodType, ServiceEndpoint, ServiceType } from './services.model'
-import { AdminAuthGuard, UserAuthGuard } from 'src/common/common.middleware'
-import { CustomRequest } from 'src/common/request/request.model'
+import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
+import { CustomRequest } from '../common/request/request.model'
 
 @ApiTags('Services')
 @Controller('services')
@@ -159,7 +159,7 @@ export class ServiceController {
         @Body('description') description: string,
         @Body('address') address: string,
         @Body('type') type: string,
-        @Body('endpoints') endpoints: ServiceEndpoint[],
+        @Body('endpoints') endpoints: Record<string, any>[],
     ) {
         const message = await this.nlpService.addService(
             name,

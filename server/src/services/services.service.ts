@@ -16,7 +16,7 @@ export class ServiceService {
         description: string,
         address: string,
         type: string,
-        endpoints: ServiceEndpoint[],
+        endpoints: Record<string, any>[],
     ): Promise<Record<string, string>> {
         const newService = new this.serviceModel({
             name,
@@ -270,7 +270,7 @@ export class ServiceService {
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
                 if (err.message.includes('method')) {
-                    const message = 'Invalid method. There is another endpoint of the same method for the specified service.'
+                    const message = 'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
             }
