@@ -1,4 +1,0 @@
-{
-    "appService.defaultWebAppToDeploy": "undefined/subscriptions/be233251-7c35-487a-816d-b98967b129cc/resourceGroups/nlphub/providers/Microsoft.Web/sites/nlphub",
-    "appService.deploySubpath": "server"
-}
