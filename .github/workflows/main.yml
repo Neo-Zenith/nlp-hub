@@ -47,6 +47,7 @@ jobs:
       - name: Build app
         working-directory: "./server"
         run: |
+            npm install
             npm run build --if-present
             working-directory: "./server"
             
