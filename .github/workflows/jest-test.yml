@@ -32,6 +32,6 @@ jobs:
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "juin.lee@outlook.com"
-          git checkout "main"
+          git checkout origin/main
           git merge --ff-only dev
-          git checkout "main"
+          git checkout origin/main
