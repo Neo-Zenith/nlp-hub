@@ -18,38 +18,43 @@ dotenv.config()
 /**
  * * Validates the request body by:
  * * 1. Check if all required fields are present.
- * * 2. Check if each required field has the correct value type (to prevents malicious SQL injections).
- * ? All POST request middlewares with a compulsory request body must extend this middleware.
+ * * 2. Check if each field has the correct value type (to prevents malicious SQL injections).
+ * ? All POST/PUT request middlewares with a request body must extend this middleware.
  */
 export abstract class ValidateRequestMiddleware {
-    protected requiredFields: string[]
-    protected fieldsType: string[]
+    protected fields: { [field: string]: { type: string; required: boolean } }
 
-    constructor(requiredFields: string[], fieldsType: string[]) {
-        this.requiredFields = requiredFields
-        this.fieldsType = fieldsType
+    constructor(fields: { [field: string]: { type: string; required: boolean } }) {
+        this.fields = fields
     }
 
     public hasInvalidFields(req: CustomRequest): boolean {
-        const missingFields = this.requiredFields.filter((field) => !req.body[field])
+        const missingFields = Object.keys(this.fields).filter((field) => {
+            if (this.fields[field].required) {
+                return !req.body[field]
+            }
+            return false
+        })
+
         if (missingFields.length > 0) {
             const message = `Incomplete body. Expected ${missingFields.join(', ')}.`
             throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
+
         this.sanitizeFields(req)
         return false
     }
 
     private sanitizeFields(req: CustomRequest): void {
-        for (let i = 0; i < this.requiredFields.length; i++) {
-            const field = this.requiredFields[i]
-            const fieldType = this.fieldsType[i]
+        for (const field of Object.keys(this.fields)) {
+            const { type } = this.fields[field]
             const fieldValue = req.body[field]
 
-            if (typeof fieldValue !== fieldType) {
-                const message = `Invalid type for ${field}. Expected ${fieldType}, but received ${typeof fieldValue}.`
+            if (typeof fieldValue !== type) {
+                const message = `Invalid type for ${field}. Expected ${type}, but received ${typeof fieldValue}.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
+
             req.body[field] = sanitize(req.body[field])
         }
     }

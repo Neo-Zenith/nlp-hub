@@ -15,6 +15,7 @@ import { CustomRequest } from '../common/request/request.model'
 import { Service, ServiceEndpoint } from '../services/services.model'
 import { User } from '../users/users.model'
 import { Query } from './queries.model'
+import { ValidateRequestMiddleware } from 'src/common/common.middleware'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task
@@ -22,17 +23,23 @@ import { Query } from './queries.model'
  * * 2. Verify that the user's subscription is still valid before allowing user to access the service.
  */
 @Injectable()
-export class RegisterQueryInterceptor implements NestInterceptor {
+export class RegisterQueryInterceptor extends ValidateRequestMiddleware implements NestInterceptor {
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
         @InjectModel('Service') private readonly serviceModel: Model<Service>,
         @InjectModel('ServiceEndpoint')
         private readonly serviceEndpointModel: Model<ServiceEndpoint>,
-    ) {}
+    ) {
+        const fields = {
+            options: { type: 'object', required: false },
+        }
+        super(fields)
+    }
 
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
         const validSubscription = await this.validateSubscription(req)
+        await this.hasInvalidFields(req)
         if (validSubscription) {
             const validFields = await this.validateFields(req)
             if (validFields) {
@@ -134,9 +141,9 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
 
         if (queries['executionTime']) {
             const execTime = +queries['executionTime']
-            if (isNaN(execTime)) {
+            if (Number.isNaN(execTime)) {
                 throw new HttpException(
-                    'Invalid execution time format. Execution time must be a number.',
+                    `Invalid execution time format. Expected a parsable integer, but received '${typeof execTime}'.`,
                     HttpStatus.BAD_REQUEST,
                 )
             }
@@ -146,7 +153,7 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
             let startDate = queries['startDate'] as string
             if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(startDate)) {
                 const message =
-                    'Invalid start date format. Start date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
+                    'Invalid startDate format. Start date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
 
@@ -154,7 +161,7 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
                 startDate += 'T00:00:00'
             }
 
-            if (isNaN(new Date(startDate).getTime())) {
+            if (Number.isNaN(new Date(startDate).getTime())) {
                 const message = 'Invalid start date or time.'
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
@@ -164,7 +171,7 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
             let endDate = queries['endDate'] as string
             if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(endDate)) {
                 const message =
-                    'Invalid start date format. End date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
+                    'Invalid startDate format. End date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
 
@@ -172,8 +179,8 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
                 endDate += 'T23:59:59'
             }
 
-            if (isNaN(new Date(endDate).getTime())) {
-                throw new HttpException('Invalid end date or time', HttpStatus.BAD_REQUEST)
+            if (Number.isNaN(new Date(endDate).getTime())) {
+                throw new HttpException('Invalid end date or time.', HttpStatus.BAD_REQUEST)
             }
         }
 
@@ -181,9 +188,9 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
         if (queries['returnDelUser']) {
             const returnDelUser = queries['returnDelUser'] as string
             if (!booleanValues.includes(returnDelUser.toLowerCase())) {
-                const message = `Invalid type for returnDelUser. Expected ${Object.values(
+                const message = `Invalid type for returnDelUser. Expected any of '${Object.values(
                     booleanValues,
-                ).join(', ')}, but received ${returnDelUser}.`
+                ).join(', ')}', but received '${returnDelUser}'.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             } else {
                 req.query['returnDelUser'] = JSON.parse(returnDelUser.toLowerCase())
@@ -193,9 +200,9 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
         if (queries['returnDelService']) {
             const returnDelService = queries['returnDelService'] as string
             if (!booleanValues.includes(returnDelService.toLowerCase())) {
-                const message = `Invalid type for returnDelService. Expected ${Object.values(
+                const message = `Invalid type for returnDelService. Expected any of '${Object.values(
                     booleanValues,
-                ).join(', ')}, but received ${returnDelService}.`
+                ).join(', ')}', but received '${returnDelService}'.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             } else {
                 req.query['returnDelService'] = JSON.parse(returnDelService.toLowerCase())

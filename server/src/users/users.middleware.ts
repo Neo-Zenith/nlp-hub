@@ -1,64 +1,64 @@
-import {
-    Injectable,
-    NestMiddleware,
-    HttpStatus,
-    HttpException,
-} from '@nestjs/common'
+import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common'
 import { Response, NextFunction } from 'express'
 import * as dotenv from 'dotenv'
 
-import { CustomRequest } from 'src/common/request/request.model'
-import { ValidateRequestMiddleware } from 'src/common/common.middleware'
+import { CustomRequest } from '../common/request/request.model'
+import { ValidateRequestMiddleware } from '../common/common.middleware'
 
 dotenv.config()
 
 @Injectable()
-export class RegisterUserMiddleware
-    extends ValidateRequestMiddleware
-    implements NestMiddleware
-{
+export class RegisterUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = [
-            'name',
-            'username',
-            'email',
-            'password',
-            'department',
-        ]
-        const fieldsType = ['string', 'string', 'string', 'string', 'string']
-        super(requiredFields, fieldsType)
+        const fields = {
+            username: { type: 'string', required: true },
+            password: { type: 'string', required: true },
+            name: { type: 'string', required: true },
+            email: { type: 'string', required: true },
+            department: { type: 'string', required: true },
+        }
+        super(fields)
     }
 
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
         this.isStrongPassword(req)
+        this.isValidEmail(req)
         return next()
     }
 
-    private isStrongPassword(req) {
+    private isStrongPassword(req: CustomRequest): boolean {
         const password = req.body['password']
         if (password.length < 8) {
-            throw new HttpException(
-                'Password does not meet minimum requirements',
-                HttpStatus.BAD_REQUEST,
-            )
+            const message = `Password does not meet requirements. Expected password to be at least 8 characters, but received ${password.length} characters.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
+    }
+
+    private isValidEmail(req: CustomRequest): boolean {
+        const email = req.body['email']
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+        if (!emailRegex.test(email)) {
+            const message = `Invalid email address format.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
         return true
     }
 }
 
 @Injectable()
-export class LoginUserMiddleware
-    extends ValidateRequestMiddleware
-    implements NestMiddleware
-{
+export class LoginUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = ['username', 'password']
-        const fieldsType = ['string', 'string']
-        super(requiredFields, fieldsType)
+        const fields = {
+            username: { type: 'string', required: true },
+            password: { type: 'string', required: true },
+        }
+        super(fields)
     }
 
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
         return next()
     }
@@ -70,41 +70,36 @@ export class ExtendSubscriptionMiddleware
     implements NestMiddleware
 {
     constructor() {
-        const requiredFields = ['extension']
-        const fieldsType = ['number']
-        super(requiredFields, fieldsType)
+        const fields = {
+            extension: { type: 'number', required: true },
+        }
+        super(fields)
     }
 
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
         const reqExtension = req.body['extension']
         if (Number.isInteger(reqExtension)) {
             return next()
         }
-        throw new HttpException(
-            'Invalid extension format (Must be an integer)',
-            HttpStatus.BAD_REQUEST,
-        )
+        const message = `Invalid extension format. Expected an integer, but received '${typeof reqExtension}'.`
+        throw new HttpException(message, HttpStatus.BAD_REQUEST)
     }
 }
 
 @Injectable()
 export class RetrieveUsersMiddleware implements NestMiddleware {
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         const reqExpireIn = req.query['expireIn'] as string
         if (reqExpireIn) {
             if (!/^\d+$/.test(reqExpireIn)) {
-                throw new HttpException(
-                    'Invalid expireIn format (Must be a non-negative integer)',
-                    HttpStatus.BAD_REQUEST,
-                )
+                const message = `Invalid expireIn format. Expected a parsable non-negative integer, but received '${reqExpireIn}'.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
             const expireIn = parseInt(reqExpireIn)
             if (expireIn < 0) {
-                throw new HttpException(
-                    'Invalid expireIn format (Must be a non-negative integer)',
-                    HttpStatus.BAD_REQUEST,
-                )
+                const message = `Invalid expireIn format. Expected a non-negative integer, but received '${reqExpireIn}'.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
             return next()
         }

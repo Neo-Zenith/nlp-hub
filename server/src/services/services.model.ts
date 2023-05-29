@@ -1,6 +1,6 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document, Types } from 'mongoose';
-import { ServiceTrigger } from './services.trigger';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import mongoose, { Document, Types } from 'mongoose'
+import { ServiceTrigger } from './services.trigger'
 
 /**
  * Nlp(id, name, version, address, description)
@@ -11,7 +11,7 @@ import { ServiceTrigger } from './services.trigger';
 
 export enum ServiceType {
     SUD = 'SUD',
-    NER = 'NER'
+    NER = 'NER',
 }
 
 export enum HttpMethodType {
@@ -19,25 +19,25 @@ export enum HttpMethodType {
     GET = 'GET',
     PUT = 'PUT',
     DELETE = 'DELETE',
-    UPDATE = 'UPDATE'
+    UPDATE = 'UPDATE',
 }
 
 @Schema()
 export class Service extends Document {
     @Prop({ required: true, index: 'text' })
-    name: string;
+    name: string
 
     @Prop()
-    version: string;
+    version: string
 
     @Prop({ required: true, unique: true })
-    baseAddress: string;
+    baseAddress: string
 
-    @Prop()
-    description: string;
+    @Prop({ required: true })
+    description: string
 
     @Prop({ required: true, enum: ServiceType })
-    type: string;
+    type: string
 }
 
 /**
@@ -49,36 +49,28 @@ export class Service extends Document {
  */
 @Schema()
 export class ServiceEndpoint extends Document {
-    @Prop({ type: Types.ObjectId, ref: 'Nlp', required: true })
-    serviceID: string;
+    @Prop({ type: Types.ObjectId, required: true })
+    serviceID: string
 
-    @Prop({ required: true, enum: HttpMethodType })
-    method: string;
+    @Prop({ type: String, required: true, enum: HttpMethodType })
+    method: string
 
     @Prop({ type: Map, of: String })
-    options: Record<string, any>;
+    options: Record<string, any>
 
-    @Prop({ required: true })
-    endpointPath: string;
+    @Prop({ type: String, required: true })
+    endpointPath: string
 
-    @Prop({ required: true, index: 'text' })
-    task: string;
-} 
+    @Prop({ type: String, required: true, index: 'text' })
+    task: string
+}
 
-export const ServiceSchema = SchemaFactory.createForClass(Service);
-ServiceSchema.index({ type: 1, version: 1 }, { unique: true });
-ServiceTrigger();
-export const ServiceModel = mongoose.model('Service', ServiceSchema);
+export const ServiceSchema = SchemaFactory.createForClass(Service)
+ServiceSchema.index({ type: 1, version: 1 }, { unique: true })
+ServiceTrigger()
+export const ServiceModel = mongoose.model('Service', ServiceSchema)
 
-export const ServiceEndpointSchema = SchemaFactory.createForClass(ServiceEndpoint);
-ServiceEndpointSchema.index(
-    { serviceID: 1, endpointPath: 1, method: 1}, { unique: true }
-)
-ServiceEndpointSchema.index(
-    { serviceID: 1, task: 1 }, { unique: true }
-)
-export const ServiceEndpointModel = mongoose.model(
-    'ServiceEndpoint', ServiceEndpointSchema
-);
-
-
+export const ServiceEndpointSchema = SchemaFactory.createForClass(ServiceEndpoint)
+ServiceEndpointSchema.index({ serviceID: 1, endpointPath: 1, method: 1 }, { unique: true })
+ServiceEndpointSchema.index({ serviceID: 1, task: 1 }, { unique: true })
+export const ServiceEndpointModel = mongoose.model('ServiceEndpoint', ServiceEndpointSchema)

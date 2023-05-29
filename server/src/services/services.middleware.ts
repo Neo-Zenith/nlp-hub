@@ -1,43 +1,45 @@
-import {
-    Injectable,
-    NestMiddleware,
-    HttpStatus,
-    HttpException,
-} from '@nestjs/common'
+import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common'
 import { NextFunction } from 'express'
 import { ValidateRequestMiddleware } from 'src/common/common.middleware'
 import { CustomRequest } from 'src/common/request/request.model'
-import { HttpMethodType, ServiceType } from './services.model'
+import { HttpMethodType, ServiceEndpointSchema, ServiceType } from './services.model'
 
 @Injectable()
-export class RegisterServiceMiddleware
-    extends ValidateRequestMiddleware
-    implements NestMiddleware
-{
+export class RegisterServiceMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
     constructor() {
-        const requiredFields = [
-            'name',
-            'description',
-            'address',
-            'type',
-            'endpoints',
-        ]
-        const fieldsType = ['string', 'string', 'string', 'string', 'object']
-        super(requiredFields, fieldsType)
+        const fields = {
+            name: { type: 'string', required: true },
+            description: { type: 'string', required: true },
+            address: { type: 'string', required: true },
+            type: { type: 'string', required: true },
+            endpoints: { type: 'object', required: true },
+        }
+        super(fields)
     }
 
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
-        if (validateServiceField(req)) {
+        if (validateServiceFields(req)) {
             return next()
         }
     }
 }
 
 @Injectable()
-export class UpdateServiceMiddleware implements NestMiddleware {
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (validateServiceField(req)) {
+export class UpdateServiceMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+    constructor() {
+        const fields = {
+            name: { type: 'string', required: false },
+            version: { type: 'string', required: false },
+            description: { type: 'string', required: false },
+            address: { type: 'string', required: false },
+            type: { type: 'string', required: false },
+        }
+        super(fields)
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
+        if (validateServiceFields(req)) {
             return next()
         }
     }
@@ -49,94 +51,115 @@ export class RegisterEndpointMiddleware
     implements NestMiddleware
 {
     constructor() {
-        const requiredFields = ['method', 'endpointPath', 'task']
-        const fieldsType = ['string', 'string', 'string']
-        super(requiredFields, fieldsType)
+        const fields = {
+            method: { type: 'string', required: true },
+            endpointPath: { type: 'string', required: true },
+            task: { type: 'string', required: true },
+            options: { type: 'object', required: false },
+        }
+        super(fields)
     }
 
-    use(req: CustomRequest, res: Response, next: NextFunction) {
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
-        if (validateEndpointField(req)) {
+        if (validateEndpointFields(req)) {
             return next()
         }
     }
 }
 
 @Injectable()
-export class UpdateEndpointMiddleware implements NestMiddleware {
-    use(req: CustomRequest, res: Response, next: NextFunction) {
-        if (validateEndpointField(req)) {
+export class UpdateEndpointMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+    constructor() {
+        const fields = {
+            method: { type: 'string', required: false },
+            endpointPath: { type: 'string', required: false },
+            task: { type: 'string', required: false },
+            options: { type: 'object', required: false },
+        }
+        super(fields)
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction): void {
+        if (validateEndpointFields(req)) {
             return next()
         }
     }
 }
 
-function validateServiceField(req: CustomRequest) {
+function validateServiceFields(req: CustomRequest): boolean {
     if (req.body['endpoints']) {
-        try {
-            for (const endpoint of req.body['endpoints']) {
-                if (
-                    typeof endpoint !== 'object' ||
-                    !('endpointPath' in endpoint) ||
-                    !('method' in endpoint) ||
-                    !('options' in endpoint) ||
-                    !('task' in endpoint)
-                ) {
-                    throw new HttpException(
-                        'Incomplete body (endpoints)',
-                        HttpStatus.BAD_REQUEST,
-                    )
+        const endpoints = req.body['endpoints']
+        for (const endpoint of endpoints) {
+            if (
+                typeof endpoint !== 'object' ||
+                typeof endpoint.endpointPath !== 'string' ||
+                typeof endpoint.method !== 'string' ||
+                typeof endpoint.options !== 'object' ||
+                typeof endpoint.task !== 'string' ||
+                !Object.values(HttpMethodType).includes(endpoint.method as HttpMethodType)
+            ) {
+                const message =
+                    'Invalid body. Expected an endpoint to follow the pre-defined schema.'
+                const schema = ServiceEndpointSchema
+                const attributes = {}
+                for (const attribute in schema['obj']) {
+                    if (schema['obj'][attribute].type.name) {
+                        attributes[attribute] = {
+                            type: schema['obj'][attribute].type.name.toLowerCase(),
+                            required: schema['obj'][attribute].required,
+                        }
+                    }
                 }
-            }
-        } catch (err) {
-            if (err.name === 'TypeError') {
+
                 throw new HttpException(
-                    'Invalid body (endpoints)',
+                    {
+                        message: message,
+                        schema: attributes,
+                    },
                     HttpStatus.BAD_REQUEST,
                 )
             }
         }
     }
 
-    if (
-        req.body['type'] &&
-        !Object.values(ServiceType).includes(req.body['type'])
-    ) {
-        throw new HttpException('Invalid service type', HttpStatus.BAD_REQUEST)
+    if (req.body['type'] && !Object.values(ServiceType).includes(req.body['type'])) {
+        const message = `Invalid service type. Expected any of '${Object.values(ServiceType).join(
+            ', ',
+        )}', but received '${req.body['type']}'.`
+        throw new HttpException(message, HttpStatus.BAD_REQUEST)
     }
 
     if (req.body['version']) {
         const version = req.body['version']
         if (version[0] !== 'v') {
-            throw new HttpException(
-                'Invalid version format. Version must follow v{id} format.',
-                HttpStatus.BAD_REQUEST,
-            )
+            const message = 'Invalid version format. Version must follow v{id} format.'
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
         if (version.substring(1).includes('.')) {
-            throw new HttpException(
-                'Invalid version format. Version must follow v{id} format.',
-                HttpStatus.BAD_REQUEST,
-            )
+            const message = `Invalid version format. Expected a non-negative integer after 'v', but received '${version.substring(
+                1,
+            )}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
         const versionNum = parseInt(version.substring(1))
-        if (Number.isNaN(versionNum)) {
-            throw new HttpException(
-                'Invalid version format. Version must follow v{id} format.',
-                HttpStatus.BAD_REQUEST,
-            )
+        if (Number.isNaN(versionNum) || versionNum <= 0) {
+            const message = `Invalid version format. Expected a non-negative integer after 'v', but received '${version.substring(
+                1,
+            )}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
     }
 
     return true
 }
 
-function validateEndpointField(req: CustomRequest) {
-    if (
-        req.body['method'] &&
-        !Object.values(HttpMethodType).includes(req.body['method'])
-    ) {
-        throw new HttpException('Invalid method', HttpStatus.BAD_REQUEST)
+function validateEndpointFields(req: CustomRequest): boolean {
+    if (req.body['method'] && !Object.values(HttpMethodType).includes(req.body['method'])) {
+        const message = `Invalid HTTP method. Expected any of '${Object.values(HttpMethodType).join(
+            ', ',
+        )}, but received '${req.body['method']}'.`
+        throw new HttpException(message, HttpStatus.BAD_REQUEST)
     }
     return true
 }

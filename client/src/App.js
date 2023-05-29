@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 function App() {
     const [services, setServices] = useState([]);
+    const message = "&lt;script></script>"
 
     useEffect(() => {
         async function fetchData() {
@@ -17,7 +18,7 @@ function App() {
 
     return (
         <div className="App">
-            <h1>Services:</h1>
+            <h1>{message}</h1>
             <ul></ul>
         </div>
     );

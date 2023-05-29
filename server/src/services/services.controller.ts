@@ -7,63 +7,75 @@ import {
     Post,
     Put,
     Query,
+    Req,
     UseGuards,
-    UseInterceptors,
 } from '@nestjs/common'
-import { ServiceService } from './services.service'
-import { HttpMethodType, ServiceEndpoint, ServiceType } from './services.model'
-import {
-    ApiTags,
-    ApiOperation,
-    ApiBody,
-    ApiResponse,
-    ApiQuery,
-    ApiSecurity,
-    ApiParam,
-} from '@nestjs/swagger'
+import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiSecurity, ApiParam } from '@nestjs/swagger'
+
 import {
     InsertEndpointSchema,
     InsertServiceSchema,
     UpdateEndpointSchema,
     UpdateServiceSchema,
 } from './services.schema'
+
+import { ServiceService } from './services.service'
+import { HttpMethodType, ServiceEndpoint, ServiceType } from './services.model'
 import { AdminAuthGuard, UserAuthGuard } from 'src/common/common.middleware'
+import { CustomRequest } from 'src/common/request/request.model'
 
 @ApiTags('Services')
 @Controller('services')
 export class ServiceController {
     constructor(private readonly nlpService: ServiceService) {}
 
-    @ApiOperation({ summary: 'Retrieves all NLP services.' })
+    @ApiOperation({
+        summary: 'Retrieves all NLP services.',
+        description: 'Services are uniquely identified by their type and version.',
+    })
     @ApiSecurity('access-token')
     @ApiQuery({
         name: 'name',
-        description:
-            'Name of the service. Returns results with names containing the filter name.',
+        description: 'Returns services with names containing the filter name.',
+        example: 'Auto-punctuator',
         required: false,
     })
     @ApiQuery({
         name: 'type',
-        description: `Service type. Valid types are ${Object.values(ServiceType)
-            .join(', ')
-            .toString()}.`,
+        description: `Type of service. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
+        example: 'SUD',
         required: false,
     })
     @Get()
     @UseGuards(new UserAuthGuard(['GET']))
     async getServices(
+        @Req() req: CustomRequest,
         @Query('name') name?: string,
         @Query('type') type?: string,
     ) {
         const services = await this.nlpService.getServices(name, type)
+        const role = req.payload.role
+        let obscuredServices: Record<string, any>
 
-        // Drop sensitive data like API endpoints and rename id before sending to the client
-        const obscuredServices = services.map((item) => ({
-            name: item.name,
-            description: item.description,
-            type: item.type,
-            version: item.version,
-        }))
+        if (role === 'admin') {
+            obscuredServices = services.map((item) => ({
+                type: item.type,
+                version: item.version,
+                name: item.name,
+                description: item.description,
+                address: item.baseAddress,
+            }))
+        } else {
+            obscuredServices = services.map((item) => ({
+                type: item.type,
+                version: item.version,
+                name: item.name,
+                description: item.description,
+            }))
+        }
+
         return { services: obscuredServices }
     }
 
@@ -76,7 +88,7 @@ export class ServiceController {
         return { types: types }
     }
 
-    @ApiOperation({ summary: 'Retrieves all versions under a service type.' })
+    @ApiOperation({ summary: 'Retrieves all available version IDs under a service type.' })
     @ApiSecurity('access-token')
     @Get(':type/get-version')
     @UseGuards(new UserAuthGuard(['GET']))
@@ -85,38 +97,59 @@ export class ServiceController {
         return { versions: versions }
     }
 
-    @ApiOperation({ summary: 'Retrieves a service.' })
+    @ApiOperation({
+        summary: 'Retrieves a service by type and version.',
+        description:
+            'User provides the type and version. Returns the service with matching type and version.',
+    })
     @ApiSecurity('access-token')
     @ApiParam({
         name: 'type',
-        description: `Service type. Valid types are ${Object.values(ServiceType)
-            .join(', ')
-            .toString()}.`,
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
     })
     @ApiParam({
         name: 'version',
-        description: 'Version of the service for the requested type.',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
     })
     @Get(':type/:version')
     @UseGuards(new UserAuthGuard(['GET']))
     async getService(
+        @Req() req: CustomRequest,
         @Param('type') type: string,
         @Param('version') version: string,
     ) {
         const service = await this.nlpService.getService(type, version)
+        const role = req.payload.role
+        let obscuredService: Record<string, any>
 
-        // drop sensitive data like api endpoints and rename id before sending to client
-        const obscuredService = {
-            name: service.name,
-            description: service.description,
-            type: service.type,
-            version: service.version,
+        if (role === 'admin') {
+            obscuredService = {
+                type: service.type,
+                version: service.version,
+                name: service.name,
+                description: service.description,
+                address: service.baseAddress,
+            }
+        } else {
+            obscuredService = {
+                type: service.type,
+                version: service.version,
+                name: service.name,
+                description: service.description,
+            }
         }
 
         return obscuredService
     }
 
-    @ApiOperation({ summary: 'Registers an NLP service.' })
+    @ApiOperation({
+        summary: 'Registers an NLP service.',
+        description:
+            'Admin provides the required details of a service to be registered. Address is unique to a service.',
+    })
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertServiceSchema })
     @Post('')
@@ -138,8 +171,19 @@ export class ServiceController {
         return message
     }
 
-    @ApiOperation({ summary: 'Updates information of an NLP service.' })
+    @ApiOperation({ summary: 'Updates an NLP service by type and version.' })
     @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'type',
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
+    })
+    @ApiParam({
+        name: 'version',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
+    })
     @ApiBody({ type: UpdateServiceSchema })
     @Put(':type/:version')
     @UseGuards(new AdminAuthGuard(['PUT']))
@@ -164,14 +208,22 @@ export class ServiceController {
         return message
     }
 
-    @ApiOperation({ summary: 'Removes an NLP service.' })
+    @ApiOperation({ summary: 'Removes an NLP service by type and version.' })
     @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'type',
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
+    })
+    @ApiParam({
+        name: 'version',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
+    })
     @Delete(':type/:version')
     @UseGuards(new AdminAuthGuard(['DELETE']))
-    async unsubscribeService(
-        @Param('type') type: string,
-        @Param('version') version: string,
-    ) {
+    async unsubscribeService(@Param('type') type: string, @Param('version') version: string) {
         const response = await this.nlpService.removeService(type, version)
         return response
     }
@@ -180,27 +232,26 @@ export class ServiceController {
     @ApiSecurity('access-token')
     @ApiParam({
         name: 'type',
-        description: `Service type. Valid types are ${Object.values(ServiceType)
-            .join(', ')
-            .toString()}.`,
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
     })
     @ApiParam({
         name: 'version',
-        description: 'Version of the service for the requested type.',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
     })
     @ApiQuery({
         name: 'task',
         description:
-            'Task associated with the endpoint for the requested service.',
+            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
         required: false,
     })
     @ApiQuery({
         name: 'method',
-        description: `HTTP method. Valid methods are ${Object.values(
-            HttpMethodType,
-        )
-            .join(', ')
-            .toString()}.`,
+        description: `HTTP method. Available methods are '${Object.values(HttpMethodType).join(
+            ', ',
+        )}'.`,
         required: false,
     })
     @Get(':type/:version/endpoints')
@@ -212,11 +263,7 @@ export class ServiceController {
         @Query('method') method?: string,
     ) {
         const service = await this.nlpService.getService(type, version)
-        const endpoints = await this.nlpService.getEndpoints(
-            service,
-            task,
-            method,
-        )
+        const endpoints = await this.nlpService.getEndpoints(service, task, method)
         var returnData = []
 
         for (const endpoint of endpoints) {
@@ -232,22 +279,23 @@ export class ServiceController {
         return { endpoints: returnData }
     }
 
-    @ApiOperation({ summary: 'Retrieves an endpoint.' })
+    @ApiOperation({ summary: 'Retrieves an endpoint by task name.' })
     @ApiSecurity('access-token')
     @ApiParam({
         name: 'type',
-        description: `Service type. Valid types are ${Object.values(ServiceType)
-            .join(', ')
-            .toString()}.`,
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
     })
     @ApiParam({
         name: 'version',
-        description: 'Version of the service for the requested type.',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
     })
     @ApiParam({
         name: 'task',
         description:
-            'Task associated with the endpoint for the requested service.',
+            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
     })
     @Get(':type/:version/endpoints/:task')
     @UseGuards(new UserAuthGuard(['GET']))
@@ -292,8 +340,24 @@ export class ServiceController {
         return message
     }
 
-    @ApiOperation({ summary: 'Updates information of an endpoint' })
+    @ApiOperation({ summary: 'Updates an endpoint by task name.' })
     @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'type',
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
+    })
+    @ApiParam({
+        name: 'version',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
+    })
+    @ApiParam({
+        name: 'task',
+        description:
+            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
+    })
     @ApiBody({ type: UpdateEndpointSchema })
     @Put(':type/:version/endpoints/:task')
     @UseGuards(new AdminAuthGuard(['PUT']))
@@ -318,8 +382,24 @@ export class ServiceController {
         return message
     }
 
-    @ApiOperation({ summary: 'Removes an endpoint.' })
+    @ApiOperation({ summary: 'Removes an endpoint by task name.' })
     @ApiSecurity('access-token')
+    @ApiParam({
+        name: 'type',
+        description: `Service type. Available types are '${Object.values(ServiceType).join(
+            ', ',
+        )}'.`,
+    })
+    @ApiParam({
+        name: 'version',
+        description:
+            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
+    })
+    @ApiParam({
+        name: 'task',
+        description:
+            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
+    })
     @Delete(':type/:version/endpoints/:task')
     @UseGuards(new AdminAuthGuard(['DELETE']))
     async removeEndpoint(
