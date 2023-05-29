@@ -5,8 +5,8 @@ A centralized gateway for a wide range of Natural Language Processing (NLP) serv
 
 ## 📜 Table of Contents
 
-1. [Installation](#Installation)
-2. [Project Structure](#Project-Structure)
+1. [Installation](#EF%B8%8F-installation)
+2. [Project Structure](#-project-structure)
 3. [Technologies](#Technologies)
 4. [Features](#Features)
 
