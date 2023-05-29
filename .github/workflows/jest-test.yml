@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - dev 
+      - main
   pull_request:
     branches:
       - dev
+      - main
 
 jobs:
   test:
@@ -29,4 +31,12 @@ jobs:
       - name: Run Jest Tests
         working-directory: ./server
         run: npm test
-
+        
+      - name: Revert Commit on Test Failure
+        run: |
+          if [ ${{ failure() }} == 'true' ]; then
+            git reset --hard HEAD^
+            git push -f
+          else
+            echo "Tests passed. No need to revert."
+          fi
