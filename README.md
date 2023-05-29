@@ -60,7 +60,7 @@ To run this project on local host, follow these steps:
     npm install
     ```
     
-    * Running ```npm install`` will automatically install nestjs for you. 
+    * Running ```npm install``` will automatically install nestjs for you. 
 
 4. Run the server on local host:
     ```console
