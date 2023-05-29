@@ -34,4 +34,4 @@ jobs:
           git config user.email "juin.lee@outlook.com"
           git checkout main
           git merge --ff-only dev
-          git push origin main
+          git push main
