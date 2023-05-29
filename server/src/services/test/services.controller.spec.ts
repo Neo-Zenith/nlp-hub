@@ -746,4 +746,276 @@ describe('ServiceController', () => {
             )
         })
     })
+
+    describe('update endpoint', () => {
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'Test name',
+                description: 'Test description.',
+                address: 'https://test-test.com',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    removeIsFluency: 'boolean',
+                },
+            }
+
+            const secondEndpoint = {
+                task: 'Test task 2',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    auto: 'string',
+                },
+            }
+
+            await serviceController.subscribeService(
+                genesisService.name,
+                genesisService.description,
+                genesisService.address,
+                genesisService.type,
+                [genesisEndpoint, secondEndpoint],
+            )
+        })
+
+        it('should update endpoint and return success message', async () => {
+            const updatedEndpointData = {
+                task: 'Test task3',
+                endpointPath: '/test3',
+                method: 'GET',
+                options: {
+                    normalize: 'boolean',
+                },
+            }
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const validTask = 'Test task 2'
+
+            const updatedEndpoint = await serviceController.updateEndpoint(
+                validType,
+                validVersion,
+                validTask,
+                updatedEndpointData.method,
+                updatedEndpointData.endpointPath,
+                updatedEndpointData.task,
+                updatedEndpointData.options,
+            )
+
+            expect(updatedEndpoint.message).toEqual('Endpoint updated.')
+        })
+
+        it('should return 409 - CONFLICT due to duplicated task', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const validTask = 'Test task 2'
+
+            const updatedEndpointData = {
+                task: 'Test task',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.updateEndpoint(
+                    validType,
+                    validVersion,
+                    validTask,
+                    updatedEndpointData.method,
+                    updatedEndpointData.endpointPath,
+                    updatedEndpointData.task,
+                    updatedEndpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Invalid task. There is another endpoint of the same task for the specified service.',
+                    HttpStatus.CONFLICT,
+                ),
+            )
+        })
+
+        it('should return 409 - CONFLICT due to duplicated method and endpointPath', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const validTask = 'Test task 2'
+
+            const updatedEndpointData = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.updateEndpoint(
+                    validType,
+                    validVersion,
+                    validTask,
+                    updatedEndpointData.method,
+                    updatedEndpointData.endpointPath,
+                    updatedEndpointData.task,
+                    updatedEndpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Invalid method. There is another endpoint of the same method for the specified service.',
+                    HttpStatus.CONFLICT,
+                ),
+            )
+        })
+
+        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
+            const invalidType = 'SUR'
+            const invalidVersion = 'v22'
+            const validTask = 'Test task 2'
+
+            const updatedEndpointData = {
+                task: 'Test task',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.updateEndpoint(
+                    invalidType,
+                    invalidVersion,
+                    validTask,
+                    updatedEndpointData.method,
+                    updatedEndpointData.endpointPath,
+                    updatedEndpointData.task,
+                    updatedEndpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Service not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+
+        it('should return 404 - NOT FOUND due to invalid task name', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const invalidTask = 'Test task 19'
+
+            const updatedEndpointData = {
+                task: 'Test task',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    autocheck: 'boolean',
+                },
+            }
+
+            await expect(
+                serviceController.updateEndpoint(
+                    validType,
+                    validVersion,
+                    invalidTask,
+                    updatedEndpointData.method,
+                    updatedEndpointData.endpointPath,
+                    updatedEndpointData.task,
+                    updatedEndpointData.options,
+                ),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Endpoint not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
+
+    describe('remove endpoint', () => {
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'Test name',
+                description: 'Test description.',
+                address: 'https://test-test.com',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'Test task',
+                endpointPath: '/test',
+                method: 'POST',
+                options: {
+                    removeIsFluency: 'boolean',
+                },
+            }
+
+            const secondEndpoint = {
+                task: 'Test task 2',
+                endpointPath: '/test2',
+                method: 'POST',
+                options: {
+                    auto: 'string',
+                },
+            }
+
+            await serviceController.subscribeService(
+                genesisService.name,
+                genesisService.description,
+                genesisService.address,
+                genesisService.type,
+                [genesisEndpoint, secondEndpoint],
+            )
+        })
+
+        it('should remove endpoint and return success message', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const validTask = 'Test task'
+
+            const removedMessage = await serviceController.removeEndpoint(
+                validType,
+                validVersion,
+                validTask,
+            )
+
+            expect(removedMessage.message).toEqual('Endpoint deleted.')
+        })
+
+        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
+            const invalidType = 'NER'
+            const invalidVersion = 'v12'
+            const validTask = 'Test task'
+
+            await expect(
+                serviceController.removeEndpoint(invalidType, invalidVersion, validTask),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Service not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+
+        it('should return 404 - NOT FOUND due to invalid task name', async () => {
+            const validType = 'SUD'
+            const validVersion = 'v1'
+            const invalidTask = 'Test task 17'
+
+            await expect(
+                serviceController.removeEndpoint(validType, validVersion, invalidTask),
+            ).rejects.toThrow(
+                new HttpException(
+                    'Endpoint not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
 })

@@ -144,7 +144,7 @@ export class ServiceService {
             throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
         await this.serviceEndpointModel.deleteOne({ _id: endpoint.id })
-        return { message: 'Endpoint deleted' }
+        return { message: 'Endpoint deleted.' }
     }
 
     async updateEndpoint(
@@ -231,7 +231,8 @@ export class ServiceService {
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
                 if (err.message.includes('version')) {
-                    const message = 'Invalid type and version. There is another service of the same type and version.'
+                    const message =
+                        'Invalid type and version. There is another service of the same type and version.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
             }
@@ -248,11 +249,13 @@ export class ServiceService {
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('task')) {
-                    const message = 'Invalid task. There is another endpoint of the same task for the specified service.'
+                    const message =
+                        'Invalid task. There is another endpoint of the same task for the specified service.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
                 if (err.message.includes('method')) {
-                    const message = 'Invalid method. There is another endpoint of the same method for the specified service.'
+                    const message =
+                        'Invalid method. There is another endpoint of the same method for the specified service.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
             }
@@ -266,11 +269,13 @@ export class ServiceService {
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('task')) {
-                    const message = 'Invalid task. There is another endpoint of the same task for the specified service.'
+                    const message =
+                        'Invalid task. There is another endpoint of the same task for the specified service.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
                 if (err.message.includes('method')) {
-                    const message = 'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.'
+                    const message =
+                        'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.'
                     throw new HttpException(message, HttpStatus.CONFLICT)
                 }
             }
