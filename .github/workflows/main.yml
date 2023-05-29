@@ -45,6 +45,7 @@ jobs:
           branch: main
           
       - name: Build app
+        working-directory: "./server"
         run: |
             npm run build --if-present
             working-directory: "./server"
