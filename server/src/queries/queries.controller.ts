@@ -9,9 +9,21 @@ import {
     Param,
     UseGuards,
     UseInterceptors,
+    UploadedFile,
 } from '@nestjs/common'
 
-import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiSecurity, ApiParam } from '@nestjs/swagger'
+import { Express } from 'express'
+import { diskStorage } from 'multer'
+
+import {
+    ApiTags,
+    ApiOperation,
+    ApiBody,
+    ApiQuery,
+    ApiSecurity,
+    ApiParam,
+    ApiConsumes,
+} from '@nestjs/swagger'
 
 import { ServiceQuerySchema } from './queries.schema'
 import { QueryService } from './queries.service'
@@ -23,6 +35,7 @@ import {
 import { CustomRequest } from '../common/request/request.model'
 import { UserAuthGuard } from '../common/common.middleware'
 import { ServiceType } from '../services/services.model'
+import { FileInterceptor } from '@nestjs/platform-express'
 
 @ApiTags('Queries')
 @Controller('query')
@@ -54,21 +67,39 @@ export class QueryController {
             'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
         example: 'predict',
     })
+    @ApiConsumes('application/json', 'multipart/form-data')
     @ApiBody({ type: ServiceQuerySchema })
     @Post(':type/:version/:task')
     @UseGuards(new UserAuthGuard(['POST']))
-    @UseInterceptors(RegisterQueryInterceptor)
+    @UseInterceptors(
+        FileInterceptor('file', {
+            storage: diskStorage({
+                destination: './upload',
+                filename: function (req, file, cb) {
+                    cb(null, file.originalname)
+                },
+            }),
+        }),
+    )
+    //@UseInterceptors(RegisterQueryInterceptor)
     async serviceQuery(
         @Param('type') type: string,
         @Param('version') version: string,
         @Param('task') task: string,
         @Body('options') options: Record<string, any>,
         @Req() request: CustomRequest,
+        @UploadedFile() file: Express.Multer.File,
     ): Promise<Record<string, any>> {
+        let response
         const service = await this.queryService.retrieveService(type, version)
         const endpoint = await this.queryService.retrieveEndpoint(service.id, task)
         const user = await this.queryService.retrieveUser(request.payload.id, request.payload.role)
-        const response = await this.queryService.serviceQuery(user, service, endpoint, options)
+
+        if (file) {
+            response = await this.queryService.serviceImageQuery(user, service, endpoint, file)
+        } else {
+            response = await this.queryService.serviceTextQuery(user, service, endpoint, options)
+        }
         return response
     }
 }

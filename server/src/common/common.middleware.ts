@@ -50,7 +50,7 @@ export abstract class ValidateRequestMiddleware {
     }
 
     private sanitizeFields(req: CustomRequest): void {
-        for (const field of Object.keys(this.fields)) {
+        for (const field of Object.keys(req.body)) {
             const { type } = this.fields[field]
             const fieldValue = req.body[field]
 

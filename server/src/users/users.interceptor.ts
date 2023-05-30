@@ -28,7 +28,7 @@ export class ModifyUserInterceptor extends ValidateRequestMiddleware implements 
         super(fields)
     }
 
-    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>>  {
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
         const payload = req.payload
         const username = req.params.username
@@ -37,8 +37,12 @@ export class ModifyUserInterceptor extends ValidateRequestMiddleware implements 
         const role = payload['role']
 
         this.hasInvalidFields(req)
-		this.isStrongPassword(req)
-		this.isValidEmail(req)
+        if (req.body['password']) {
+            this.isStrongPassword(req)
+        }
+        if (req.body['email']) {
+            this.isValidEmail(req)
+        }
 
         if (role === 'admin') {
             return next.handle()
@@ -62,7 +66,7 @@ export class ModifyUserInterceptor extends ValidateRequestMiddleware implements 
         return user
     }
 
-	private isValidEmail(req: CustomRequest): boolean {
+    private isValidEmail(req: CustomRequest): boolean {
         const email = req.body['email']
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -73,7 +77,7 @@ export class ModifyUserInterceptor extends ValidateRequestMiddleware implements 
         return true
     }
 
-	private isStrongPassword(req: CustomRequest): boolean {
+    private isStrongPassword(req: CustomRequest): boolean {
         const password = req.body['password']
         if (password.length < 8) {
             const message = `Password does not meet requirements. Expected password to be at least 8 characters, but received ${password.length} characters.`

@@ -49,7 +49,7 @@ export class UserService {
     }
 
     async verifyUser(username: string, password: string, role: string): Promise<string> {
-        const user = await this.userModel.findOne({ username })
+        const user = await this.getUser(role, username)
         if (!user) {
             const message = 'Invalid credentials. Username and/or password not found.'
             throw new HttpException(message, HttpStatus.UNAUTHORIZED)

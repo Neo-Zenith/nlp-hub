@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import axios, { AxiosResponse } from 'axios'
+import * as fs from 'fs-extra'
+import * as FormData from 'form-data'
 
 import { Query } from './queries.model'
 import { Service, ServiceEndpoint } from '../services/services.model'
@@ -18,8 +20,8 @@ export class QueryService {
         private readonly serviceEndpointModel: Model<ServiceEndpoint>,
     ) {}
 
-    async serviceQuery(
-        user: User,
+    async serviceTextQuery(
+        user: User | Admin,
         service: Service,
         endpoint: ServiceEndpoint,
         options: Record<string, any>,
@@ -68,6 +70,51 @@ export class QueryService {
             endpointID,
             output: JSON.stringify(response.data),
             options,
+            executionTime: elapsedTime,
+            isAdminQuery,
+        })
+
+        await query.save()
+        return {
+            uuid: query.uuid,
+            executionTime: query.executionTime,
+            output: response.data,
+        }
+    }
+
+    async serviceImageQuery(
+        user: User | Admin,
+        service: Service,
+        endpoint: ServiceEndpoint,
+        image: Express.Multer.File,
+    ) {
+        let response: AxiosResponse<any, any>
+        let elapsedTime: number
+        const fullPath = service.baseAddress + endpoint.endpointPath
+
+        const form = new FormData()
+        form.append('file', fs.createReadStream(image.path), image.originalname)
+
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            data: form,
+        }
+
+        const startTime = Date.now()
+        response = await axios.post(fullPath, form, config)
+        elapsedTime = Date.now() - startTime
+
+        const serviceID = service.id
+        const endpointID = endpoint.id
+        const userID = user.id
+        const isAdminQuery = user.role === 'admin' ? true : false
+        const query = new this.queryModel({
+            userID,
+            serviceID,
+            endpointID,
+            output: JSON.stringify(response.data),
             executionTime: elapsedTime,
             isAdminQuery,
         })
@@ -227,8 +274,8 @@ export class QueryService {
         return endpoint
     }
 
-    async retrieveUser(userID: string, role: string): Promise<User> {
-        var user: User
+    async retrieveUser(userID: string, role: string): Promise<User | Admin> {
+        var user: User | Admin
         if (role === 'admin') {
             user = await this.adminModel.findById(userID)
         } else {

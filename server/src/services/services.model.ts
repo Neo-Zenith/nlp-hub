@@ -19,7 +19,6 @@ export enum HttpMethodType {
     GET = 'GET',
     PUT = 'PUT',
     DELETE = 'DELETE',
-    UPDATE = 'UPDATE',
 }
 
 @Schema()

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
+import { MulterModule } from '@nestjs/platform-express/multer'
 
 import { QuerySchema } from './queries.model'
 import { QueryService } from './queries.service'
@@ -16,6 +17,9 @@ import { AdminSchema, UserSchema } from '../users/users.model'
         MongooseModule.forFeature([{ name: 'Service', schema: ServiceSchema }]),
         MongooseModule.forFeature([{ name: 'ServiceEndpoint', schema: ServiceEndpointSchema }]),
         ServiceModule,
+        MulterModule.register({
+            dest: './upload',
+        }),
     ],
     providers: [QueryService],
     controllers: [QueryController, UsageController],
