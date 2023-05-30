@@ -61,7 +61,7 @@ export class ServiceEndpoint extends Document {
     @Prop({ type: String, required: true })
     endpointPath: string
 
-    @Prop({ type: String, required: true, index: 'text' })
+    @Prop({ type: String, required: true })
     task: string
 }
 

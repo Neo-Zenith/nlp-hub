@@ -108,6 +108,14 @@ export class ServiceService {
     }
 
     async getServiceVersions(type: string): Promise<string[]> {
+        if (!Object.keys(ServiceType).includes(type)) {
+            throw new HttpException(
+                `Invalid type. Expected any of ${Object.values(ServiceType).join(
+                    ', ',
+                )}, but received ${type}`,
+                HttpStatus.NOT_FOUND,
+            )
+        }
         const services = await this.serviceModel.find({ type })
         let returnVersion = []
         for (const service of services) {
@@ -181,7 +189,7 @@ export class ServiceService {
 
         query.serviceID = service.id
         if (task) {
-            query.$text = { $search: task }
+            query.task = task
         }
         if (method) {
             query.method = method
