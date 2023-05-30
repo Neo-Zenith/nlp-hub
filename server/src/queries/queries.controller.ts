@@ -36,6 +36,7 @@ import { CustomRequest } from '../common/request/request.model'
 import { UserAuthGuard } from '../common/common.middleware'
 import { ServiceType } from '../services/services.model'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { AxiosResponse } from 'axios'
 
 @ApiTags('Queries')
 @Controller('query')
@@ -90,7 +91,7 @@ export class QueryController {
         @Req() request: CustomRequest,
         @UploadedFile() file: Express.Multer.File,
     ): Promise<Record<string, any>> {
-        let response
+        let response: Record<string, any>
         const service = await this.queryService.retrieveService(type, version)
         const endpoint = await this.queryService.retrieveEndpoint(service.id, task)
         const user = await this.queryService.retrieveUser(request.payload.id, request.payload.role)

@@ -212,7 +212,6 @@ export class QueryService {
                 return Object.assign(updates, usage['_doc'])
             }),
         )
-
         return filteredUsages.filter(Boolean)
     }
 

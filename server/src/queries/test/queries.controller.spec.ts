@@ -141,6 +141,7 @@ describe('QueriesController', () => {
                 validTask,
                 options,
                 req,
+                undefined,
             )
 
             expect(response).toHaveProperty('uuid')
@@ -164,7 +165,14 @@ describe('QueriesController', () => {
             req.payload.id = userID
 
             await expect(
-                queryController.serviceQuery(invalidType, invalidVersion, validTask, options, req),
+                queryController.serviceQuery(
+                    invalidType,
+                    invalidVersion,
+                    validTask,
+                    options,
+                    req,
+                    undefined,
+                ),
             ).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
@@ -189,7 +197,14 @@ describe('QueriesController', () => {
             req.payload.id = userID
 
             await expect(
-                queryController.serviceQuery(validType, validVersion, invalidTask, options, req),
+                queryController.serviceQuery(
+                    validType,
+                    validVersion,
+                    invalidTask,
+                    options,
+                    req,
+                    undefined,
+                ),
             ).rejects.toThrow(
                 new HttpException(
                     'Endpoint not found. The requested resource could not be found.',
@@ -402,7 +417,7 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             const tomorrow = new Date()
-            tomorrow.setDate(new Date().getDate() + 1)
+            tomorrow.setDate(tomorrow.getDate() + 1)
             startDate = tomorrow.toDateString()
 
             returnedUsages = await usageController.getUsages(
@@ -422,7 +437,7 @@ describe('QueriesController', () => {
             req.payload.role = 'user'
 
             const tomorrow = new Date()
-            tomorrow.setDate(new Date().getDate() + 1)
+            tomorrow.setDate(tomorrow.getDate() + 1)
             endDate = tomorrow.toDateString()
 
             let returnedUsages = await usageController.getUsages(
@@ -436,7 +451,7 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             const yesterday = new Date()
-            yesterday.setDate(new Date().getDate() - 1)
+            yesterday.setDate(yesterday.getDate() - 1)
             endDate = yesterday.toDateString()
 
             returnedUsages = await usageController.getUsages(
@@ -457,11 +472,11 @@ describe('QueriesController', () => {
             req.payload.role = 'user'
 
             const tomorrow = new Date()
-            tomorrow.setDate(new Date().getDate() + 1)
+            tomorrow.setDate(tomorrow.getDate() + 1)
             endDate = tomorrow.toDateString()
 
             const yesterday = new Date()
-            yesterday.setDate(new Date().getDate() - 1)
+            yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toDateString()
 
             let returnedUsages = await usageController.getUsages(
@@ -475,7 +490,7 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             const nextWeek = new Date()
-            nextWeek.setDate(new Date().getDate() + 7)
+            nextWeek.setDate(nextWeek.getDate() + 7)
             startDate = nextWeek.toDateString()
             returnedUsages = await usageController.getUsages(
                 req,
@@ -496,13 +511,13 @@ describe('QueriesController', () => {
             req.payload.role = 'user'
 
             let tomorrow = new Date()
-            tomorrow.setTime(new Date().getTime() + timezone * 60 * 60 * 1000)
-            tomorrow.setDate(new Date().getDate() + 1)
+            tomorrow.setTime(tomorrow.getTime() + timezone * 60 * 60 * 1000)
+            tomorrow.setDate(tomorrow.getDate() + 1)
             endDate = tomorrow.toISOString()
 
             let yesterday = new Date()
-            yesterday.setTime(new Date().getTime() + timezone * 60 * 60 * 1000)
-            yesterday.setDate(new Date().getDate() - 1)
+            yesterday.setTime(yesterday.getTime() + timezone * 60 * 60 * 1000)
+            yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toISOString()
 
             let returnedUsages = await usageController.getUsages(
@@ -517,15 +532,20 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             tomorrow = new Date()
-            tomorrow.setTime(new Date().getTime() + timezone * 60 * 60 * 1000)
-            tomorrow.setDate(new Date().getDate() + 1)
+            console.log(tomorrow)
+            tomorrow.setTime(tomorrow.getTime() + timezone * 60 * 60 * 1000)
+            console.log(tomorrow)
+            tomorrow.setDate(tomorrow.getDate() + 1)
+            console.log(tomorrow)
             endDate = tomorrow.toISOString().slice(0, 10)
 
             yesterday = new Date()
-            yesterday.setTime(new Date().getTime() + timezone * 60 * 60 * 1000)
-            yesterday.setDate(new Date().getDate() - 1)
+            yesterday.setTime(yesterday.getTime() + timezone * 60 * 60 * 1000)
+            yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toISOString().slice(0, 10)
 
+            console.log(await queryModel.find().exec())
+            console.log(startDate, endDate)
             returnedUsages = await usageController.getUsages(
                 req,
                 undefined,
@@ -535,6 +555,7 @@ describe('QueriesController', () => {
                 endDate,
                 timezone.toString(),
             )
+            console.log(returnedUsages)
             expect(returnedUsages.usages.length).toEqual(1)
         })
 
