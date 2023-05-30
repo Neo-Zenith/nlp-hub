@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Service, ServiceEndpoint, ServiceType } from './services.model'
+import { isNullOrUndefined } from '@typegoose/typegoose/lib/internal/utils'
 
 @Injectable()
 export class ServiceService {
@@ -26,13 +27,26 @@ export class ServiceService {
         })
 
         for (let i = 0; i < endpoints.length; i++) {
-            const newEndpoint = new this.serviceEndpointModel({
-                serviceID: newService.id,
-                method: endpoints[i].method,
-                options: endpoints[i].options,
-                endpointPath: endpoints[i].endpointPath,
-                task: endpoints[i].task,
-            })
+            let newEndpoint: ServiceEndpoint
+            if (isNullOrUndefined(endpoints[i].textBased) || endpoints[i].textBased === true) {
+                newEndpoint = new this.serviceEndpointModel({
+                    serviceID: newService.id,
+                    method: endpoints[i].method,
+                    options: endpoints[i].options,
+                    endpointPath: endpoints[i].endpointPath,
+                    task: endpoints[i].task,
+                    textBased: endpoints[i].textBased
+                })
+            } else {
+                newEndpoint = new this.serviceEndpointModel({
+                    serviceID: newService.id,
+                    method: endpoints[i].method,
+                    endpointPath: endpoints[i].endpointPath,
+                    task: endpoints[i].task,
+                    textBased: endpoints[i].textBased
+                })
+            }
+            
             await this.saveEndpoint(newEndpoint)
         }
         const message = await this.saveService(newService)

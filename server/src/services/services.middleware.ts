@@ -55,6 +55,7 @@ export class RegisterEndpointMiddleware
             method: { type: 'string', required: true },
             endpointPath: { type: 'string', required: true },
             task: { type: 'string', required: true },
+            textBased: {type: 'boolean', required: false },
             options: { type: 'object', required: false },
         }
         super(fields)

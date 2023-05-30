@@ -271,6 +271,7 @@ export class ServiceController {
                 task: endpoint.task,
                 options: endpoint.options,
                 method: endpoint.method,
+                textBased: endpoint.textBased,
             }
 
             returnData.push(endpointData)
@@ -311,6 +312,7 @@ export class ServiceController {
             task: endpoint.task,
             options: endpoint.options,
             method: endpoint.method,
+            textBased: endpoint.textBased,
         }
 
         return endpointData

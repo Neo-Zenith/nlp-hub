@@ -82,7 +82,7 @@ export class QueryController {
             }),
         }),
     )
-    //@UseInterceptors(RegisterQueryInterceptor)
+    @UseInterceptors(RegisterQueryInterceptor)
     async serviceQuery(
         @Param('type') type: string,
         @Param('version') version: string,

@@ -62,6 +62,9 @@ export class ServiceEndpoint extends Document {
 
     @Prop({ type: String, required: true })
     task: string
+
+    @Prop({ type: Boolean, required: true, default: true })
+    textBased: boolean
 }
 
 export const ServiceSchema = SchemaFactory.createForClass(Service)
