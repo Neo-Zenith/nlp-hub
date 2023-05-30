@@ -12,7 +12,7 @@ import {
     ServiceType,
 } from '../services.model'
 import { HttpException, HttpStatus } from '@nestjs/common'
-import { mockRequestObject } from './mock/common.model'
+import { mockRequestObject } from '../../common/test/mock/common.model'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController

@@ -15,7 +15,7 @@ import { CustomRequest } from '../common/request/request.model'
 import { Service, ServiceEndpoint } from '../services/services.model'
 import { User } from '../users/users.model'
 import { Query } from './queries.model'
-import { ValidateRequestMiddleware } from 'src/common/common.middleware'
+import { ValidateRequestMiddleware } from '../common/common.middleware'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task

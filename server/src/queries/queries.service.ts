@@ -97,7 +97,7 @@ export class QueryService {
         let offset: number
 
         if (execTime) {
-            query['executionTime'] = { $lte: +execTime }
+            query['executionTime'] = { $lte: Number.parseFloat(execTime) }
         }
         if (timezone) {
             offset = Number.parseFloat(timezone)
@@ -141,7 +141,10 @@ export class QueryService {
 
                 let updates = {}
                 if (service) {
-                    if (!(service.type === type && service.version === version)) {
+                    if (type && !(service.type === type)) {
+                        return null
+                    }
+                    if (version && !(service.version === version)) {
                         return null
                     }
                 } else {

@@ -62,7 +62,7 @@ export class QueryController {
         @Param('type') type: string,
         @Param('version') version: string,
         @Param('task') task: string,
-        @Body('options') options: Record<string, string>,
+        @Body('options') options: Record<string, any>,
         @Req() request: CustomRequest,
     ): Promise<Record<string, any>> {
         const service = await this.queryService.retrieveService(type, version)
@@ -120,9 +120,10 @@ export class UsageController {
     })
     @ApiQuery({
         name: 'timezone',
-        description: 'Integer indicating the timezone of the user. If not provided, the timezone defaults to UTC+0.',
+        description:
+            'Integer indicating the timezone of the user. If not provided, the timezone defaults to UTC+0.',
         example: '4',
-        required: false
+        required: false,
     })
     @ApiQuery({
         name: 'returnDelUser',
