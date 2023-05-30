@@ -68,11 +68,13 @@ export class QueryController {
             'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
         example: 'predict',
     })
-    @ApiConsumes('application/json', 'multipart/form-data')
+    @ApiConsumes('application/json')
     @ApiBody({ type: ServiceQuerySchema })
+    @ApiConsumes('multipart/form-data')
     @Post(':type/:version/:task')
     @UseGuards(new UserAuthGuard(['POST']))
     @UseInterceptors(
+        RegisterQueryInterceptor,
         FileInterceptor('file', {
             storage: diskStorage({
                 destination: './upload',
@@ -82,7 +84,6 @@ export class QueryController {
             }),
         }),
     )
-    @UseInterceptors(RegisterQueryInterceptor)
     async serviceQuery(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -96,7 +97,7 @@ export class QueryController {
         const endpoint = await this.queryService.retrieveEndpoint(service.id, task)
         const user = await this.queryService.retrieveUser(request.payload.id, request.payload.role)
 
-        if (file) {
+        if (!endpoint.textBased) {
             response = await this.queryService.serviceImageQuery(user, service, endpoint, file)
         } else {
             response = await this.queryService.serviceTextQuery(user, service, endpoint, options)

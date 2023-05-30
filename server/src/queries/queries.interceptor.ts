@@ -16,6 +16,7 @@ import { Service, ServiceEndpoint } from '../services/services.model'
 import { User } from '../users/users.model'
 import { Query } from './queries.model'
 import { ValidateRequestMiddleware } from '../common/common.middleware'
+import { isNullOrUndefined } from '@typegoose/typegoose/lib/internal/utils'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task
@@ -38,6 +39,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
 
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
+
         const validSubscription = await this.validateSubscription(req)
         await this.hasInvalidFields(req)
         if (validSubscription) {
@@ -67,6 +69,21 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             const message =
                 'Subscription expired. Please renew subscription to continue accessing this resource.'
             throw new HttpException(message, HttpStatus.FORBIDDEN)
+        }
+
+        return true
+    }
+
+    async validateFile(endpoint: ServiceEndpoint, req: CustomRequest): Promise<boolean> {
+        if (req.file) {
+            return true
+        }
+
+        if (isNullOrUndefined(req.file) && !endpoint.textBased) {
+            throw new HttpException(
+                'Invalid request. Expected upload for non-text based service.',
+                HttpStatus.BAD_REQUEST,
+            )
         }
 
         return true
@@ -104,13 +121,13 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         }
 
         if (!endpoint.options) {
-            return true
+            return this.validateFile(endpoint, req)
         }
 
         if (req.body['options']) {
             const options = req.body['options']
-            const endpointOptions = Object.keys(endpoint.options)
             const queryOptions = Object.keys(options)
+            const endpointOptions = Object.keys(endpoint.options)
             if (
                 queryOptions.length !== endpointOptions.length ||
                 !queryOptions.every((key) => endpointOptions.includes(key))
@@ -138,8 +155,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
                 }
             }
         }
-
-        return true
+        return this.validateFile(endpoint, req)
     }
 }
 

@@ -1071,6 +1071,7 @@ describe('ServiceController', () => {
                 expect(endpoint).toHaveProperty('method')
                 expect(endpoint).toHaveProperty('task')
                 expect(endpoint).toHaveProperty('options')
+                expect(endpoint).toHaveProperty('textBased')
             })
 
             const validMethod = 'POST'
@@ -1085,6 +1086,7 @@ describe('ServiceController', () => {
                 expect(endpoint).toHaveProperty('method')
                 expect(endpoint).toHaveProperty('task')
                 expect(endpoint).toHaveProperty('options')
+                expect(endpoint).toHaveProperty('textBased')
             })
 
             const invalidTask = 'predict'
@@ -1121,6 +1123,7 @@ describe('ServiceController', () => {
                 expect(endpoint).toHaveProperty('method')
                 expect(endpoint).toHaveProperty('task')
                 expect(endpoint).toHaveProperty('options')
+                expect(endpoint).toHaveProperty('textBased')
             })
         })
 

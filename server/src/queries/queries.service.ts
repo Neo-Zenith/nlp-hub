@@ -102,9 +102,10 @@ export class QueryService {
             data: form,
         }
 
-        const startTime = Date.now()
+        const start = performance.now()
         response = await axios.post(fullPath, form, config)
-        elapsedTime = Date.now() - startTime
+        const end = performance.now()
+        elapsedTime = (end - start) / 1000
 
         const serviceID = service.id
         const endpointID = endpoint.id

@@ -532,11 +532,8 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             tomorrow = new Date()
-            console.log(tomorrow)
             tomorrow.setTime(tomorrow.getTime() + timezone * 60 * 60 * 1000)
-            console.log(tomorrow)
             tomorrow.setDate(tomorrow.getDate() + 1)
-            console.log(tomorrow)
             endDate = tomorrow.toISOString().slice(0, 10)
 
             yesterday = new Date()
@@ -544,8 +541,6 @@ describe('QueriesController', () => {
             yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toISOString().slice(0, 10)
 
-            console.log(await queryModel.find().exec())
-            console.log(startDate, endDate)
             returnedUsages = await usageController.getUsages(
                 req,
                 undefined,
@@ -555,7 +550,6 @@ describe('QueriesController', () => {
                 endDate,
                 timezone.toString(),
             )
-            console.log(returnedUsages)
             expect(returnedUsages.usages.length).toEqual(1)
         })
 
