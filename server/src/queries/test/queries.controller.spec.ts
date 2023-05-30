@@ -1,5 +1,5 @@
 import { MongoMemoryServer } from 'mongodb-memory-server'
-import { Connection, Model, connect, mongo } from 'mongoose'
+import { Connection, Model, connect } from 'mongoose'
 import { Query, QuerySchema } from '../queries.model'
 import { Test, TestingModule } from '@nestjs/testing'
 import { QueryController, UsageController } from '../queries.controller'
@@ -16,11 +16,14 @@ import { Admin, AdminSchema, User, UserModel, UserSchema } from '../../users/use
 import { ServiceService } from '../../services/services.service'
 import { mockRequestObject } from '../../common/test/mock/common.model'
 import { HttpException, HttpStatus } from '@nestjs/common'
+import { UserController } from '../../users/users.controller'
+import { UserService } from '../../users/users.service'
 
 describe('QueriesController', () => {
     let queryController: QueryController
     let serviceController: ServiceController
     let usageController: UsageController
+    let userController: UserController
     let mongod: MongoMemoryServer
     let mongoConnection: Connection
     let queryModel: Model<Query>
@@ -40,10 +43,11 @@ describe('QueriesController', () => {
         adminModel = mongoConnection.model(Admin.name, AdminSchema)
 
         const app: TestingModule = await Test.createTestingModule({
-            controllers: [QueryController, ServiceController, UsageController],
+            controllers: [QueryController, ServiceController, UsageController, UserController],
             providers: [
                 QueryService,
                 ServiceService,
+                UserService,
                 { provide: getModelToken(Query.name), useValue: queryModel },
                 { provide: getModelToken(Service.name), useValue: serviceModel },
                 { provide: getModelToken(ServiceEndpoint.name), useValue: serviceEndpointModel },
@@ -54,6 +58,7 @@ describe('QueriesController', () => {
         queryController = app.get<QueryController>(QueryController)
         serviceController = app.get<ServiceController>(ServiceController)
         usageController = app.get<UsageController>(UsageController)
+        userController = app.get<UserController>(UserController)
     })
 
     afterAll(async () => {
@@ -325,7 +330,7 @@ describe('QueriesController', () => {
             })
         })
 
-        it('should retrieve only queries with execution time less than 2 seconds', async () => {
+        it('should retrieve only queries with execution time less than specified seconds', async () => {
             const execTime = '2'
             const req = mockRequestObject()
             req.payload.id = userID[0]
@@ -531,6 +536,50 @@ describe('QueriesController', () => {
                 timezone.toString(),
             )
             expect(returnedUsages.usages.length).toEqual(1)
+        })
+
+        it('should include deleted user query if returnDelUser is true', async () => {
+            const returnDelUser = true
+            const req = mockRequestObject()
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+            await userController.removeUser('User01')
+            const returnedUsages = await usageController.getUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelUser,
+                undefined,
+            )
+            expect(returnedUsages.usages.length).toEqual(2)
+            expect(returnedUsages.usages[0]).toHaveProperty('userDeleted')
+        })
+
+        it('should include queries made on deleted service if returnDelService is true', async () => {
+            const returnDelService = true
+            const req = mockRequestObject()
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+            await serviceController.unsubscribeService('SUD', 'v1')
+            const returnedUsages = await usageController.getUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelService,
+            )
+            expect(returnedUsages.usages.length).toEqual(2)
+            returnedUsages.usages.every((usage: Record<string, any>) => {
+                expect(usage).toHaveProperty('serviceDeleted')
+            })
         })
     })
 

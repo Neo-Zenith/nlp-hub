@@ -175,7 +175,7 @@ export class UsageController {
                 output: usage.output,
                 options: usage.options,
                 dateTime: usage.dateTime,
-                serviceDeleteed: usage.serviceDeleted,
+                serviceDeleted: usage.serviceDeleted,
                 userDeleted: usage.userDeleted,
             }
             obscuredUsages.push(modifiedUsage)
@@ -205,7 +205,7 @@ export class UsageController {
             options: usage.options,
             executionTime: usage.executionTime,
             dateTime: usage.dateTime,
-            serviceDeleteed: usage.serviceDeleted,
+            serviceDeleted: usage.serviceDeleted,
             userDeleted: usage.userDeleted,
         }
         return obscuredUsage

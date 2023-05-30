@@ -12,7 +12,7 @@ import { InjectModel } from '@nestjs/mongoose'
 
 import { CustomRequest } from '../common/request/request.model'
 import { User } from './users.model'
-import { ValidateRequestMiddleware } from 'src/common/common.middleware'
+import { ValidateRequestMiddleware } from '../common/common.middleware'
 import { Observable } from 'rxjs'
 
 @Injectable()

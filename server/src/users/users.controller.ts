@@ -21,7 +21,7 @@ import {
     UpdateUserSchema,
 } from './users.schema'
 
-import { AdminAuthGuard, UserAuthGuard } from 'src/common/common.middleware'
+import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
 import { ModifyUserInterceptor } from './users.interceptor'
 import { User } from './users.model'
 
