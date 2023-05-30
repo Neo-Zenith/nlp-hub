@@ -95,7 +95,7 @@ function validateServiceFields(req: CustomRequest): boolean {
                 typeof endpoint !== 'object' ||
                 typeof endpoint.endpointPath !== 'string' ||
                 typeof endpoint.method !== 'string' ||
-                typeof endpoint.options !== 'object' ||
+                (endpoint.options && typeof endpoint.options !== 'object') ||
                 typeof endpoint.task !== 'string' ||
                 !Object.values(HttpMethodType).includes(endpoint.method as HttpMethodType)
             ) {

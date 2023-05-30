@@ -93,13 +93,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
 
-        const options = req.body['options']
-        const endpointOptions = Object.keys(endpoint.options)
-        const queryOptions = Object.keys(options)
-        if (
-            queryOptions.length !== endpointOptions.length ||
-            !queryOptions.every((key) => endpointOptions.includes(key))
-        ) {
+        if (!req.body['options'] && endpoint.options) {
             throw new HttpException(
                 {
                     message: 'Options do not match pre-defined schema.',
@@ -109,17 +103,39 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             )
         }
 
-        for (const key of queryOptions) {
-            const expectedType = endpoint.options[key]
-            const valueType = typeof options[key]
-            if (valueType !== expectedType) {
+        if (!endpoint.options) {
+            return true
+        }
+
+        if (req.body['options']) {
+            const options = req.body['options']
+            const endpointOptions = Object.keys(endpoint.options)
+            const queryOptions = Object.keys(options)
+            if (
+                queryOptions.length !== endpointOptions.length ||
+                !queryOptions.every((key) => endpointOptions.includes(key))
+            ) {
                 throw new HttpException(
                     {
-                        message: `Invalid value type for option '${key}'. Expected '${expectedType}', but received '${valueType}'.`,
+                        message: 'Options do not match pre-defined schema.',
                         expectedOptions: endpoint.options,
                     },
                     HttpStatus.BAD_REQUEST,
                 )
+            }
+
+            for (const key of queryOptions) {
+                const expectedType = endpoint.options[key]
+                const valueType = typeof options[key]
+                if (valueType !== expectedType) {
+                    throw new HttpException(
+                        {
+                            message: `Invalid value type for option '${key}'. Expected '${expectedType}', but received '${valueType}'.`,
+                            expectedOptions: endpoint.options,
+                        },
+                        HttpStatus.BAD_REQUEST,
+                    )
+                }
             }
         }
 
