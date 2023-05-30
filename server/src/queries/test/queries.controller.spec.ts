@@ -533,4 +533,188 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
         })
     })
+
+    describe('retrieve a usage', () => {
+        let uuid: string
+        let userID: string
+        let adminID: string
+
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'SUD Auto-punctuator',
+                description: 'This service helps to auto-punctuate English sentences.',
+                baseAddress: 'https://sud.speechlab.sg',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'predict',
+                endpointPath: '/backend_predict',
+                method: 'POST',
+                options: {
+                    message: 'string',
+                    removedisfluency: 'boolean',
+                    normalizeacronym: 'boolean',
+                },
+            }
+
+            const genesisUser = {
+                username: 'User01',
+                name: 'John Doe',
+                email: 'test@example.com',
+                password: 'password123',
+                department: 'SCSE',
+            }
+
+            const genesisAdmin = {
+                username: 'Admin01',
+                name: 'Jane Doe',
+                email: 'admin@example.com',
+                password: 'admin123',
+                department: 'SCSE',
+            }
+
+            const service = new serviceModel({ ...genesisService })
+            const endpoint = new serviceEndpointModel({ serviceID: service.id, ...genesisEndpoint })
+            const user = await new userModel({ ...genesisUser })
+            const admin = new adminModel({ ...genesisAdmin })
+
+            await service.save()
+            await endpoint.save()
+            await user.save()
+            await admin.save()
+
+            const options = {
+                message:
+                    'this is a test message or is it i dont really know but i know it is meant to test this auto punctuation service check the output',
+                removedisfluency: false,
+                normalizeacronym: true,
+            }
+
+            const query = new queryModel({
+                serviceID: service.id,
+                endpointID: endpoint.id,
+                userID: user.id,
+                options,
+                output: 'Mock output.',
+                executionTime: 1.5,
+            })
+
+            await query.save()
+
+            uuid = query.uuid
+            userID = user.id
+            adminID = admin.id
+        })
+
+        it('should retrieve a usage', async () => {
+            const returnedUsage = await usageController.getUsage(uuid)
+            expect(returnedUsage).toBeDefined()
+            expect(returnedUsage).toHaveProperty('executionTime')
+            expect(returnedUsage).toHaveProperty('dateTime')
+            expect(returnedUsage).toHaveProperty('output')
+            expect(returnedUsage).toHaveProperty('options')
+        })
+
+        it('should return 404 - NOT FOUND due to invalid uuid', async () => {
+            const invalidUUID = 'testUUID'
+            await expect(usageController.getUsage(invalidUUID)).rejects.toThrow(
+                new HttpException(
+                    'Usage not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
+
+    describe('remove a usage', () => {
+        let uuid: string
+        let userID: string
+        let adminID: string
+
+        beforeEach(async () => {
+            const genesisService = {
+                name: 'SUD Auto-punctuator',
+                description: 'This service helps to auto-punctuate English sentences.',
+                baseAddress: 'https://sud.speechlab.sg',
+                type: 'SUD',
+            }
+
+            const genesisEndpoint = {
+                task: 'predict',
+                endpointPath: '/backend_predict',
+                method: 'POST',
+                options: {
+                    message: 'string',
+                    removedisfluency: 'boolean',
+                    normalizeacronym: 'boolean',
+                },
+            }
+
+            const genesisUser = {
+                username: 'User01',
+                name: 'John Doe',
+                email: 'test@example.com',
+                password: 'password123',
+                department: 'SCSE',
+            }
+
+            const genesisAdmin = {
+                username: 'Admin01',
+                name: 'Jane Doe',
+                email: 'admin@example.com',
+                password: 'admin123',
+                department: 'SCSE',
+            }
+
+            const service = new serviceModel({ ...genesisService })
+            const endpoint = new serviceEndpointModel({ serviceID: service.id, ...genesisEndpoint })
+            const user = await new userModel({ ...genesisUser })
+            const admin = new adminModel({ ...genesisAdmin })
+
+            await service.save()
+            await endpoint.save()
+            await user.save()
+            await admin.save()
+
+            const options = {
+                message:
+                    'this is a test message or is it i dont really know but i know it is meant to test this auto punctuation service check the output',
+                removedisfluency: false,
+                normalizeacronym: true,
+            }
+
+            const query = new queryModel({
+                serviceID: service.id,
+                endpointID: endpoint.id,
+                userID: user.id,
+                options,
+                output: 'Mock output.',
+                executionTime: 1.5,
+            })
+
+            await query.save()
+
+            uuid = query.uuid
+            userID = user.id
+            adminID = admin.id
+        })
+
+        it('should remove the usage successfully', async () => {
+            const returnedMessage = await usageController.removeUsage(uuid)
+            expect(returnedMessage.message).toEqual('Usage deleted.')
+            const query = queryModel.findOne({ uuid }).exec()
+            expect(query).not.toBeNull()
+        })
+
+        it('should return 404 - NOT FOUND due to invalid uuid', async () => {
+            const invalidUUID = 'uuid123'
+            await expect(usageController.removeUsage(invalidUUID)).rejects.toThrow(
+                new HttpException(
+                    'Usage not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
+        })
+    })
 })

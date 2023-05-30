@@ -203,6 +203,7 @@ export class UsageController {
         const obscuredUsage = {
             output: usage.output,
             options: usage.options,
+            executionTime: usage.executionTime,
             dateTime: usage.dateTime,
             serviceDeleteed: usage.serviceDeleted,
             userDeleted: usage.userDeleted,
