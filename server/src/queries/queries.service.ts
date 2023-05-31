@@ -103,7 +103,7 @@ export class QueryService {
         const fullPath = service.baseAddress + endpoint.endpointPath
 
         const form = new FormData()
-        form.append('file', fs.createReadStream(uploadable.path), uploadable.originalname)
+        form.append('file', fs.createReadStream(uploadable.path), uploadable.filename)
 
         const config = {
             headers: {

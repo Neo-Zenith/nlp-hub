@@ -10,14 +10,13 @@ import {
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Observable } from 'rxjs'
+import * as fs from 'fs-extra'
 
 import { CustomRequest } from '../common/request/request.model'
 import { Service, ServiceEndpoint } from '../services/services.model'
 import { User } from '../users/users.model'
 import { Query } from './queries.model'
 import { ValidateRequestMiddleware } from '../common/common.middleware'
-import { isNullOrUndefined } from '@typegoose/typegoose/lib/internal/utils'
-import multer from 'multer'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task
@@ -79,7 +78,26 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
     }
 
     async validateFile(req: CustomRequest): Promise<boolean> {
+        // limit in KB
+        const uploadLimit = {
+            image: 500,
+            audio: 10000,
+            video: 2,
+            pdf: 200,
+        }
+
         if (req.file) {
+            const fileType = req.file.mimetype
+            const matchedType = Object.keys(uploadLimit).find((type) => fileType.includes(type))
+            const fileSizeLimit = uploadLimit[matchedType]
+
+            if (fileSizeLimit && req.file.size > fileSizeLimit * 1024) {
+                await fs.unlink(req.file.path)
+                throw new HttpException(
+                    `Invalid request. The file size exceeds the limit of ${fileSizeLimit} KB.`,
+                    HttpStatus.BAD_REQUEST,
+                )
+            }
             return true
         } else {
             throw new HttpException(

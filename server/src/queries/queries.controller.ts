@@ -9,7 +9,6 @@ import {
     Param,
     UseGuards,
     UseInterceptors,
-    UploadedFile,
 } from '@nestjs/common'
 import {
     ApiTags,
@@ -26,10 +25,6 @@ import {
     ApiForbiddenResponse,
     ApiCreatedResponse,
 } from '@nestjs/swagger'
-import { FileInterceptor } from '@nestjs/platform-express'
-
-import { Express } from 'express'
-import { diskStorage } from 'multer'
 
 import {
     EndDateSchema,
