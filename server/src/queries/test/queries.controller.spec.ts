@@ -135,7 +135,7 @@ describe('QueriesController', () => {
             req.payload.role = 'user'
             req.payload.id = userID
 
-            const response = await queryController.serviceQuery(
+            const response = await queryController.handleServiceEndpointRequest(
                 validType,
                 validVersion,
                 validTask,
@@ -165,7 +165,7 @@ describe('QueriesController', () => {
             req.payload.id = userID
 
             await expect(
-                queryController.serviceQuery(
+                queryController.handleServiceEndpointRequest(
                     invalidType,
                     invalidVersion,
                     validTask,
@@ -197,7 +197,7 @@ describe('QueriesController', () => {
             req.payload.id = userID
 
             await expect(
-                queryController.serviceQuery(
+                queryController.handleServiceEndpointRequest(
                     validType,
                     validVersion,
                     invalidTask,
