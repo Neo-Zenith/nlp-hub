@@ -117,6 +117,8 @@ export class QueryService {
         const end = performance.now()
         const elapsedTime = (end - start) / 1000
 
+        await this.removeFile(uploadable)
+
         const { data } = response
         const serviceID = service.id
         const endpointID = endpoint.id
@@ -369,6 +371,10 @@ export class QueryService {
             throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
         return endpoint
+    }
+
+    async removeFile(file: Express.Multer.File) {
+        await fs.unlink(file.path)
     }
 
     /**

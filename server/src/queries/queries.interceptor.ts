@@ -17,6 +17,7 @@ import { User } from '../users/users.model'
 import { Query } from './queries.model'
 import { ValidateRequestMiddleware } from '../common/common.middleware'
 import { isNullOrUndefined } from '@typegoose/typegoose/lib/internal/utils'
+import multer from 'multer'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task
@@ -39,9 +40,12 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
 
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-
         const validSubscription = await this.validateSubscription(req)
-        await this.hasInvalidFields(req)
+
+        if (req.headers['content-type'] === 'application/json') {
+            this.hasInvalidFields(req)
+        }
+
         if (validSubscription) {
             const validFields = await this.validateFields(req)
             if (validFields) {
@@ -74,19 +78,15 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         return true
     }
 
-    async validateFile(endpoint: ServiceEndpoint, req: CustomRequest): Promise<boolean> {
+    async validateFile(req: CustomRequest): Promise<boolean> {
         if (req.file) {
             return true
-        }
-
-        if (isNullOrUndefined(req.file) && !endpoint.textBased) {
+        } else {
             throw new HttpException(
                 'Invalid request. Expected upload for non-text based service.',
                 HttpStatus.BAD_REQUEST,
             )
         }
-
-        return true
     }
 
     async validateFields(req: CustomRequest): Promise<boolean> {
@@ -121,7 +121,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         }
 
         if (!endpoint.options) {
-            return this.validateFile(endpoint, req)
+            return endpoint.textBased ? true : this.validateFile(req)
         }
 
         if (req.body['options']) {
@@ -155,7 +155,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
                 }
             }
         }
-        return this.validateFile(endpoint, req)
+        return endpoint.textBased ? true : this.validateFile(req)
     }
 }
 

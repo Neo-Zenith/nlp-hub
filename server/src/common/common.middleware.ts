@@ -50,11 +50,11 @@ export abstract class ValidateRequestMiddleware {
     }
 
     private sanitizeFields(req: CustomRequest): void {
-        for (const field of Object.keys(req.body)) {
-            const { type } = this.fields[field]
+        for (const field of Object.keys(this.fields)) {
+            const { type, required } = this.fields[field]
             const fieldValue = req.body[field]
 
-            if (typeof fieldValue !== type) {
+            if (required && typeof fieldValue !== type) {
                 const message = `Invalid type for ${field}. Expected ${type}, but received ${typeof fieldValue}.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }

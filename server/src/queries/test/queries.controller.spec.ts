@@ -141,7 +141,6 @@ describe('QueriesController', () => {
                 validTask,
                 options,
                 req,
-                undefined,
             )
 
             expect(response).toHaveProperty('uuid')
@@ -171,7 +170,6 @@ describe('QueriesController', () => {
                     validTask,
                     options,
                     req,
-                    undefined,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -203,7 +201,6 @@ describe('QueriesController', () => {
                     invalidTask,
                     options,
                     req,
-                    undefined,
                 ),
             ).rejects.toThrow(
                 new HttpException(

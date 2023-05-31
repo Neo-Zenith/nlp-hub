@@ -83,25 +83,15 @@ export class QueryController {
     @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Post(':type/:version/:task')
     @UseGuards(new UserAuthGuard(['POST']))
-    @UseInterceptors(
-        RegisterQueryInterceptor,
-        FileInterceptor('file', {
-            storage: diskStorage({
-                destination: './upload',
-                filename: function (req, file, cb) {
-                    cb(null, file.originalname)
-                },
-            }),
-        }),
-    )
+    @UseInterceptors(RegisterQueryInterceptor)
     async handleServiceEndpointRequest(
         @Param('type') type: string,
         @Param('version') version: string,
         @Param('task') task: string,
         @Body('options') options: Record<string, any>,
         @Req() request: CustomRequest,
-        @UploadedFile() file: Express.Multer.File,
     ): Promise<Record<string, any>> {
+        const file = request.file
         const service = await this.queryService.retrieveServiceFromDB(type, version)
         const endpoint = await this.queryService.retrieveEndpointFromDB(service.id, task)
         const user = await this.queryService.retrieveUserFromDB(

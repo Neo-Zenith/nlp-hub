@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { MulterModule } from '@nestjs/platform-express/multer'
 
@@ -8,6 +8,7 @@ import { QueryController, UsageController } from './queries.controller'
 import { ServiceModule } from '../services/services.module'
 import { ServiceEndpointSchema, ServiceSchema } from '../services/services.model'
 import { AdminSchema, UserSchema } from '../users/users.model'
+import { MulterMiddleware } from './queries.middleware'
 
 @Module({
     imports: [
@@ -24,4 +25,11 @@ import { AdminSchema, UserSchema } from '../users/users.model'
     providers: [QueryService],
     controllers: [QueryController, UsageController],
 })
-export class QueryModule {}
+export class QueryModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(MulterMiddleware).forRoutes({
+            path: '/query/:type/:version/:task',
+            method: RequestMethod.POST,
+        })
+    }
+}
