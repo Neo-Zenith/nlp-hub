@@ -79,7 +79,7 @@ export class UserService {
     }
 
     async removeUser(username: string): Promise<Record<string, string>> {
-        const user = await this.getUser('user', username)
+        const user = await this.getUser(username)
         await this.userModel.deleteOne({ _id: user.id })
         return { message: 'User deleted.' }
     }

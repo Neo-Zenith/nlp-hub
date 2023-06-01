@@ -209,7 +209,7 @@ export class QueryService {
                 query.dateTime = { $lte: endDateTime }
             }
         }
-        console.log(query)
+
         // users can only retrieve queries made by themselves
         if (role !== 'admin') {
             query.userID = userID
@@ -235,11 +235,11 @@ export class QueryService {
                     if (version && service.version !== version) {
                         return null
                     }
-                    console.log(version, service.version)
+  
                 } else if (!returnDelService) {
                     return null // service not found, and user did not indicate to return deleted services
                 }
-
+                
                 // user not found, and user did not indicate to return deleted user
                 if (!user && !returnDelUser) {
                     return null

@@ -152,7 +152,6 @@ export class UsageController {
             returnDelUser,
             returnDelService,
         )
-
         return { usages: usages }
     }
 

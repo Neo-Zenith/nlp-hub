@@ -52,7 +52,7 @@ import {
     ForbiddenSchema,
     ServerMessageSchema,
     UnauthorizedSchema,
-} from 'src/common/common.schema'
+} from '../common/common.schema'
 
 @ApiTags('Users')
 @Controller('users')
