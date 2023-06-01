@@ -113,8 +113,8 @@ export class UsageController {
 
     @ApiOperation({ summary: 'Retrieves usages.' })
     @ApiSecurity('access-token')
-    @ApiParam(TypeSchema)
-    @ApiParam(VersionSchema)
+    @ApiQuery(Object.assign({ required: false }, TypeSchema))
+    @ApiQuery(Object.assign({ required: false }, VersionSchema))
     @ApiQuery(ExecutionTimeSchema)
     @ApiQuery(StartDateSchema)
     @ApiQuery(EndDateSchema)

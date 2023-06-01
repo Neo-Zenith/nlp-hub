@@ -1,12 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import mongoose, { Document } from 'mongoose'
 
-/**
- * DefaultUser(id, username, name, email, department, password)
- * PK: id
- * NOT NULL: username, name, email, password, department
- * UNIQUE: username, email
- */
 class DefaultUser extends Document {
     @Prop({ required: true, unique: true, type: String })
     username: string
@@ -24,12 +18,6 @@ class DefaultUser extends Document {
     department: string
 }
 
-/**
- * User(id, username, name, email, password, department, role, subscriptionExpiryDate)
- * PK: id
- * NOT NULL: username, name, email, password, department, role, subscriptionExpiryDate
- * UNIQUE: username, email
- */
 @Schema()
 export class User extends DefaultUser {
     @Prop({ default: 'user', required: true, type: String })
@@ -45,12 +33,6 @@ export class User extends DefaultUser {
     subscriptionExpiryDate: Date
 }
 
-/**
- * Admin(id, username, name, email, password, department, role)
- * PK: id
- * NOT NULL: username, name, email, password, department, role
- * UNIQUE: email, username
- */
 @Schema()
 export class Admin extends DefaultUser {
     @Prop({ default: 'admin', required: true, type: String })

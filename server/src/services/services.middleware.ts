@@ -2,7 +2,7 @@ import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/c
 import { NextFunction } from 'express'
 import { ValidateRequestMiddleware } from 'src/common/common.middleware'
 import { CustomRequest } from 'src/common/request/request.model'
-import { HttpMethodType, ServiceEndpointSchema, ServiceType } from './services.model'
+import { HttpMethodType, ServiceEndpointSchema, ServiceType, UploadFormat } from './services.model'
 
 @Injectable()
 export class RegisterServiceMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
@@ -55,8 +55,9 @@ export class RegisterEndpointMiddleware
             method: { type: 'string', required: true },
             endpointPath: { type: 'string', required: true },
             task: { type: 'string', required: true },
-            textBased: {type: 'boolean', required: false },
+            textBased: { type: 'boolean', required: false },
             options: { type: 'object', required: false },
+            supportedFormats: { type: 'object', required: false },
         }
         super(fields)
     }
@@ -121,6 +122,26 @@ function validateServiceFields(req: CustomRequest): boolean {
                     HttpStatus.BAD_REQUEST,
                 )
             }
+
+            if (
+                endpoint.supportedFormats &&
+                (typeof endpoint.supportedFormats !== 'object' ||
+                    !endpoint.supportedFormats.every((format) =>
+                        Object.values(UploadFormat).includes(format),
+                    ))
+            ) {
+                const message = `Expected supported format to be an array consisting any of '${Object.values(
+                    UploadFormat,
+                ).join(', ')}', but received '${Object.values(endpoint.supportedFormats).join(
+                    ', ',
+                )}'.`
+                throw new HttpException(
+                    {
+                        message: message,
+                    },
+                    HttpStatus.BAD_REQUEST,
+                )
+            }
         }
     }
 
@@ -161,6 +182,22 @@ function validateEndpointFields(req: CustomRequest): boolean {
             ', ',
         )}, but received '${req.body['method']}'.`
         throw new HttpException(message, HttpStatus.BAD_REQUEST)
+    }
+
+    if (
+        req.body['supportedFormats'] &&
+        typeof req.body['supportedFormats'] !== 'object' &&
+        req.body['supportedFormats'].every((format) => Object.values(UploadFormat).includes(format))
+    ) {
+        const message = `Expected supported format to be an array consisting any of '${Object.values(
+            UploadFormat,
+        ).join(', ')}', but received '${Object.values(req.body['supportedFormats'].join(', '))}'.`
+        throw new HttpException(
+            {
+                message: message,
+            },
+            HttpStatus.BAD_REQUEST,
+        )
     }
     return true
 }

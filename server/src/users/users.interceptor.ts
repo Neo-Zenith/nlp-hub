@@ -7,41 +7,55 @@ import {
     HttpException,
 } from '@nestjs/common'
 
-import { Model } from 'mongoose'
-import { InjectModel } from '@nestjs/mongoose'
-
 import { CustomRequest } from '../common/request/request.model'
-import { User } from './users.model'
-import { ValidateRequestMiddleware } from '../common/common.middleware'
+import { Admin, User, UserModel } from './users.model'
 import { Observable } from 'rxjs'
 
-@Injectable()
-export class ModifyUserInterceptor extends ValidateRequestMiddleware implements NestInterceptor {
-    constructor(@InjectModel('User') private readonly userModel: Model<User>) {
-        const fields = {
-            username: { type: 'string', required: false },
-            password: { type: 'string', required: false },
-            name: { type: 'string', required: false },
-            email: { type: 'string', required: false },
-            department: { type: 'string', required: false },
+class CredentialsCheck {
+    public static isValidEmail(req: CustomRequest): boolean {
+        const email = req.body.email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+        if (!emailRegex.test(email)) {
+            const message = `Invalid email address format.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
-        super(fields)
+        return true
     }
 
+    public static isStrongPassword(req: CustomRequest): boolean {
+        const password = req.body.password
+        if (password.length < 8) {
+            const message = `Password does not meet requirements. Expected password to be at least 8 characters, but received ${password.length} characters.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
+    }
+}
+
+@Injectable()
+export class CreateUserInterceptor implements NestInterceptor {
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-        const payload = req.payload
+        CredentialsCheck.isValidEmail(req)
+        CredentialsCheck.isStrongPassword(req)
+        return next.handle()
+    }
+}
+
+@Injectable()
+export class UpdateUserInterceptor implements NestInterceptor {
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+        const req = context.switchToHttp().getRequest<CustomRequest>()
+        const userID = req.payload.id
+        const role = req.payload.role
         const username = req.params.username
 
-        const userID = payload['id']
-        const role = payload['role']
-
-        this.hasInvalidFields(req)
-        if (req.body['password']) {
-            this.isStrongPassword(req)
+        if (req.body.emai) {
+            CredentialsCheck.isValidEmail(req)
         }
-        if (req.body['email']) {
-            this.isValidEmail(req)
+        if (req.body.password) {
+            CredentialsCheck.isStrongPassword(req)
         }
 
         if (role === 'admin') {
@@ -58,31 +72,38 @@ export class ModifyUserInterceptor extends ValidateRequestMiddleware implements 
     }
 
     private async retrieveUser(username: string): Promise<User> {
-        const user = await this.userModel.findOne({ username })
+        const user = await UserModel.findOne({ username })
         if (!user) {
             const message = 'Access denied. User is not authorized to access this resource.'
             throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
         return user
     }
+}
 
-    private isValidEmail(req: CustomRequest): boolean {
-        const email = req.body['email']
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+@Injectable()
+export class RetrieveUserInterceptor implements NestInterceptor {
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+        const request = context.switchToHttp().getRequest()
+        const userID = request.payload.id
+        const role = request.payload.role
+        const targetUsername = request.params.username
 
-        if (!emailRegex.test(email)) {
-            const message = `Invalid email address format.`
-            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        let user: User | Admin
+        if (role === 'admin') {
+            return next.handle()
+        } else {
+            user = await UserModel.findById(userID)
         }
-        return true
-    }
 
-    private isStrongPassword(req: CustomRequest): boolean {
-        const password = req.body['password']
-        if (password.length < 8) {
-            const message = `Password does not meet requirements. Expected password to be at least 8 characters, but received ${password.length} characters.`
-            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        if (user.username !== targetUsername) {
+            const message = 'Access denied. User is not authorized to access this resource.'
+            throw new HttpException(
+                message,
+                HttpStatus.FORBIDDEN,
+            )
         }
-        return true
+
+        return next.handle()
     }
 }

@@ -733,6 +733,7 @@ describe('ServiceController', () => {
                 options: {
                     autocheck: 'boolean',
                 },
+                textBased: true
             }
 
             await expect(
@@ -743,6 +744,7 @@ describe('ServiceController', () => {
                     endpointData.endpointPath,
                     endpointData.task,
                     endpointData.options,
+                    endpointData.textBased
                 ),
             ).rejects.toThrow(
                 new HttpException(

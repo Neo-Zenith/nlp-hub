@@ -192,6 +192,7 @@ export class QueryService {
         // convert range of datetime into UTC
         if (startDate) {
             const startDateTime = new Date(startDate)
+            console.log(startDateTime)
             startDateTime.setHours(startDateTime.getHours() - Math.floor(offset))
             startDateTime.setMinutes(startDateTime.getMinutes() - (offset % 1) * 60)
             query.dateTime = { $gte: startDateTime }
@@ -208,7 +209,7 @@ export class QueryService {
                 query.dateTime = { $lte: endDateTime }
             }
         }
-
+        console.log(query)
         // users can only retrieve queries made by themselves
         if (role !== 'admin') {
             query.userID = userID
@@ -234,6 +235,7 @@ export class QueryService {
                     if (version && service.version !== version) {
                         return null
                     }
+                    console.log(version, service.version)
                 } else if (!returnDelService) {
                     return null // service not found, and user did not indicate to return deleted services
                 }
@@ -253,8 +255,8 @@ export class QueryService {
             output: usage.output,
             options: usage.options,
             dateTime: usage.dateTime,
-            serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : null,
-            userDeleted: usage.userDeleted === true ? usage.serviceDeleted : null,
+            serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : undefined,
+            userDeleted: usage.userDeleted === true ? usage.serviceDeleted : undefined,
         }))
 
         return returnedUsages

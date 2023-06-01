@@ -1,4 +1,3 @@
-// Import necessary modules and classes
 import { HttpException, HttpStatus, Injectable, NestMiddleware } from '@nestjs/common'
 import { Response, NextFunction } from 'express'
 import * as multer from 'multer'

@@ -13,7 +13,7 @@ import { Observable } from 'rxjs'
 import * as fs from 'fs-extra'
 
 import { CustomRequest } from '../common/request/request.model'
-import { Service, ServiceEndpoint } from '../services/services.model'
+import { Service, ServiceEndpoint, UploadFormat } from '../services/services.model'
 import { User } from '../users/users.model'
 import { Query } from './queries.model'
 import { ValidateRequestMiddleware } from '../common/common.middleware'
@@ -77,7 +77,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         return true
     }
 
-    async validateFile(req: CustomRequest): Promise<boolean> {
+    async validateFile(req: CustomRequest, endpoint: ServiceEndpoint): Promise<boolean> {
         // limit in KB
         const uploadLimit = {
             image: 500,
@@ -90,6 +90,19 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             const fileType = req.file.mimetype
             const matchedType = Object.keys(uploadLimit).find((type) => fileType.includes(type))
             const fileSizeLimit = uploadLimit[matchedType]
+            const supportedFormats = endpoint.supportedFormats
+
+            const isValidType = supportedFormats.find((type) =>
+                fileType.toUpperCase().includes(type),
+            )
+
+            if (!isValidType) {
+                await fs.unlink(req.file.path)
+                const message = `Invalid request. Expected file to be interpretable in any of '${Object.values(
+                    UploadFormat,
+                ).join(', ')}', but received '${fileType}'.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
+            }
 
             if (fileSizeLimit && req.file.size > fileSizeLimit * 1024) {
                 await fs.unlink(req.file.path)
@@ -123,6 +136,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
                 task: req.params['task'],
             })
             .exec()
+
         if (!endpoint) {
             const message = 'Endpoint not found. The requested resource could not be found.'
             throw new HttpException(message, HttpStatus.NOT_FOUND)
@@ -139,13 +153,13 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         }
 
         if (!endpoint.options) {
-            return endpoint.textBased ? true : this.validateFile(req)
+            return endpoint.textBased ? true : await this.validateFile(req, endpoint)
         }
 
         if (req.body['options']) {
             const options = req.body['options']
             const queryOptions = Object.keys(options)
-            const endpointOptions = Object.keys(endpoint.options)
+            const endpointOptions = Object.keys(endpoint.toJSON().options)
             if (
                 queryOptions.length !== endpointOptions.length ||
                 !queryOptions.every((key) => endpointOptions.includes(key))
@@ -160,7 +174,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             }
 
             for (const key of queryOptions) {
-                const expectedType = endpoint.options[key]
+                const expectedType = endpoint.toJSON().options[key]
                 const valueType = typeof options[key]
                 if (valueType !== expectedType) {
                     throw new HttpException(
@@ -173,7 +187,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
                 }
             }
         }
-        return endpoint.textBased ? true : this.validateFile(req)
+        return endpoint.textBased ? true : await this.validateFile(req, endpoint)
     }
 }
 
@@ -208,7 +222,9 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
             }
 
             if (!startDate.includes('T')) {
-                startDate += 'T00:00:00'
+                queries['startDate'] += 'T00:00:00Z'
+            } else {
+                queries['startDate'] += 'Z'
             }
 
             if (Number.isNaN(new Date(startDate).getTime())) {
@@ -226,7 +242,9 @@ export class RetrieveUsagesInterceptor implements NestInterceptor {
             }
 
             if (!endDate.includes('T')) {
-                endDate += 'T23:59:59'
+                queries['endDate'] += 'T23:59:59Z'
+            } else {
+                queries['endDate'] += 'Z'
             }
 
             if (Number.isNaN(new Date(endDate).getTime())) {

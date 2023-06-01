@@ -21,45 +21,60 @@ export class UserService {
         email: string,
         password: string,
         department: string,
-        role: string,
+    ): Promise<void> {
+        const hashedPassword = await this.hashPassword(password)
+        const newUser = new this.userModel({
+            username,
+            name,
+            email,
+            password: hashedPassword,
+            department,
+        })
+        await this.saveUserDB(newUser)
+    }
+
+    async addAdmin(
+        username: string,
+        name: string,
+        email: string,
+        password: string,
+        department: string,
     ): Promise<Record<string, string>> {
         const hashedPassword = await this.hashPassword(password)
+        const newAdmin = new this.adminModel({
+            username,
+            name,
+            email,
+            password: hashedPassword,
+            department,
+        })
+        const message = await this.saveUserDB(newAdmin)
+        return message
+    }
 
-        if (role === 'user') {
-            const newUser = new this.userModel({
-                username,
-                name,
-                email,
-                password: hashedPassword,
-                department,
-            })
-            const message = await this.saveUser(newUser)
-            return message
+    async verifyUser(username: string, password: string): Promise<string> {
+        const message = 'Invalid credentials. Invalid username and/or password.'
+        const throwable = new HttpException(message, HttpStatus.UNAUTHORIZED)
+        const user = await this.getUser(username, undefined, undefined, throwable)
+
+        const passwordMatches = await bcrypt.compare(password, user.password)
+        if (passwordMatches) {
+            return this.generateAccessToken(user.id, 'user')
         } else {
-            const newAdmin = new this.adminModel({
-                username,
-                name,
-                email,
-                password: hashedPassword,
-                department,
-            })
-            const message = await this.saveUser(newAdmin)
-            return message
+            throw throwable
         }
     }
 
-    async verifyUser(username: string, password: string, role: string): Promise<string> {
-        const user = await this.getUser(role, username)
-        if (!user) {
-            const message = 'Invalid credentials. Username and/or password not found.'
-            throw new HttpException(message, HttpStatus.UNAUTHORIZED)
-        }
-        const passwordMatches = await bcrypt.compare(password, user.password)
+    async verifyAdmin(username: string, password: string) {
+        const message = 'Invalid credentials. Invalid username and/or password.'
+        const throwable = new HttpException(message, HttpStatus.UNAUTHORIZED)
+        const admin = await this.getAdmin(username, undefined, undefined, throwable)
+
+        const passwordMatches = await bcrypt.compare(password, admin.password)
         if (passwordMatches) {
-            return this.generateAccessToken(user.id, role)
+            return this.generateAccessToken(admin.id, 'admin')
         } else {
-            const message = 'Invalid credentials. Username and/or password not found.'
-            throw new HttpException(message, HttpStatus.UNAUTHORIZED)
+            throw throwable
         }
     }
 
@@ -76,7 +91,6 @@ export class UserService {
         email?: string,
         password?: string,
         department?: string,
-        extension?: string,
     ): Promise<Record<string, string>> {
         var updates = {}
 
@@ -96,52 +110,58 @@ export class UserService {
             updates['department'] = department
         }
 
-        if (extension) {
-            const newExpiryDate = new Date(user.subscriptionExpiryDate)
-            newExpiryDate.setDate(newExpiryDate.getDate() + parseInt(extension))
-            updates['subscriptionExpiryDate'] = newExpiryDate
-        }
-
         const message = await this.updateUserDB(user, updates)
         return message
     }
 
+    async extendUserSubscription(user: User, extension?: string) {
+        if (extension) {
+            const newExpiryDate = new Date(user.subscriptionExpiryDate)
+            newExpiryDate.setDate(newExpiryDate.getDate() + parseInt(extension))
+            const updates = { subscriptionExpiryDate: newExpiryDate }
+            const message = await this.updateUserDB(user, updates)
+            return message
+        }
+    }
+
     async getUser(
-        role: string,
         username?: string,
         email?: string,
         userID?: string,
-    ): Promise<User | Admin> {
-        var user: User | Admin
-        if (role === 'admin') {
-            if (username) {
-                user = await this.adminModel.findOne({ username })
-            } else if (email) {
-                user = await this.adminModel.findOne({ email })
-            } else if (userID) {
-                user = await this.adminModel.findById(userID)
-            }
+        throwable?: HttpException,
+    ): Promise<User> {
+        const message = 'User not found. The requested resource could not be found.'
+        throwable = throwable ? throwable : new HttpException(message, HttpStatus.NOT_FOUND)
 
-            if (!user) {
-                const message = 'User not found. The requested resource could not be found.'
-                throw new HttpException(message, HttpStatus.NOT_FOUND)
-            }
-        } else {
-            if (username) {
-                user = await this.userModel.findOne({ username })
-            } else if (email) {
-                user = await this.userModel.findOne({ email })
-            } else if (userID) {
-                user = await this.userModel.findById(userID)
-            }
-
-            if (!user) {
-                const message = 'Access denied. User is not authorized to access this resource.'
-                throw new HttpException(message, HttpStatus.FORBIDDEN)
-            }
+        const user = await this.userModel.findOne({
+            ...(username && { username }),
+            ...(email && { email }),
+            ...(userID && { userID }),
+        })
+        if (!user) {
+            throw throwable
         }
-
         return user
+    }
+
+    async getAdmin(
+        username?: string,
+        email?: string,
+        userID?: string,
+        throwable?: HttpException,
+    ): Promise<Admin> {
+        const message = 'User not found. The requested resource could not be found.'
+        throwable = throwable ? throwable : new HttpException(message, HttpStatus.NOT_FOUND)
+
+        const admin = await this.adminModel.findOne({
+            ...(username && { username }),
+            ...(email && { email }),
+            ...(userID && { userID }),
+        })
+        if (!admin) {
+            throw throwable
+        }
+        return admin
     }
 
     async getUsers(expireIn?: string, name?: string, department?: string): Promise<User[]> {
@@ -186,7 +206,7 @@ export class UserService {
         return iv.toString('hex') + encrypted
     }
 
-    private async saveUser(user: User | Admin): Promise<Record<string, string>> {
+    private async saveUserDB(user: User | Admin): Promise<Record<string, string>> {
         try {
             await user.save()
             return { message: 'User registered.' }

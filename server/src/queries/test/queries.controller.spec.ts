@@ -555,7 +555,7 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.role = 'admin'
             req.payload.id = adminID
-            await userController.removeUser('User01')
+            await userController.deleteUser('User01')
             const returnedUsages = await usageController.getUsages(
                 req,
                 undefined,

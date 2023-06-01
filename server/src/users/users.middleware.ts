@@ -8,7 +8,7 @@ import { ValidateRequestMiddleware } from '../common/common.middleware'
 dotenv.config()
 
 @Injectable()
-export class RegisterUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class CreateUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
     constructor() {
         const fields = {
             username: { type: 'string', required: true },
@@ -22,29 +22,7 @@ export class RegisterUserMiddleware extends ValidateRequestMiddleware implements
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
         this.hasInvalidFields(req)
-        this.isStrongPassword(req)
-        this.isValidEmail(req)
         return next()
-    }
-
-    private isStrongPassword(req: CustomRequest): boolean {
-        const password = req.body['password']
-        if (password.length < 8) {
-            const message = `Password does not meet requirements. Expected password to be at least 8 characters, but received ${password.length} characters.`
-            throw new HttpException(message, HttpStatus.BAD_REQUEST)
-        }
-        return true
-    }
-
-    private isValidEmail(req: CustomRequest): boolean {
-        const email = req.body['email']
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-        if (!emailRegex.test(email)) {
-            const message = `Invalid email address format.`
-            throw new HttpException(message, HttpStatus.BAD_REQUEST)
-        }
-        return true
     }
 }
 
@@ -84,6 +62,25 @@ export class ExtendSubscriptionMiddleware
         }
         const message = `Invalid extension format. Expected an integer, but received '${typeof reqExtension}'.`
         throw new HttpException(message, HttpStatus.BAD_REQUEST)
+    }
+}
+
+@Injectable()
+export class UpdateUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+    constructor() {
+        const fields = {
+            username: { type: 'string', required: false },
+            password: { type: 'string', required: false },
+            name: { type: 'string', required: false },
+            email: { type: 'string', required: false },
+            department: { type: 'string', required: false },
+        }
+        super(fields)
+    }
+
+    use(req: CustomRequest, res: Response, next: NextFunction) {
+        this.hasInvalidFields(req)
+        return next()
     }
 }
 

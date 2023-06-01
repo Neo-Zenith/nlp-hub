@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 
-export class InsertUserSchema {
+export class CreateUserSchema {
     @ApiProperty({
         description: 'Username for the user. Usernames are unique for each user.',
         example: 'User01',
@@ -46,6 +46,14 @@ export class LoginUserSchema {
     password: string
 }
 
+export class LoginUserResponseSchema {
+    @ApiProperty({
+        description: 'Access token to be included in request headers for future authentication.',
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXRhIF0IjDU2MTA5NjF9.J0Xk82s2lD...',
+    })
+    accessToken: string
+}
+
 export class UpdateUserSchema {
     @ApiPropertyOptional({
         description: 'New username for the user. Case sensitive.',
@@ -85,4 +93,81 @@ export class ExtendSubscriptionSchema {
         example: '30',
     })
     extension: string
+}
+
+export const RetrieveUserSchema = {
+    username: {
+        name: 'username',
+        description: 'Username of the user. Username is case-sensitive.',
+    },
+}
+
+export class RetreiveUserResponse {
+    @ApiProperty({
+        description: 'Username of the user.',
+        example: 'User001',
+    })
+    username: string
+
+    @ApiProperty({
+        description: 'Email of the user.',
+        example: 'test@example.com',
+    })
+    email: string
+
+    @ApiProperty({
+        description: 'Department of the user.',
+        example: 'SCSE',
+    })
+    department: string
+
+    @ApiProperty({
+        description: 'Indicates when will the user subscription expires in UTC.',
+        example: '2023-12-31T08:30:00:000Z',
+    })
+    subscriptionExpiryDate: string
+}
+
+export const RetrieveUsersSchema = {
+    department: {
+        name: 'department',
+        required: false,
+        description:
+            'Returns all users matching the department provided. Department is case-sensitive and only full-string match results are returned.',
+    },
+    name: {
+        name: 'name',
+        required: false,
+        description:
+            'Returns all users matching the name provided. Name is case-sensitive and only full-string match results are returned.',
+    },
+    expireIn: {
+        name: 'expireIn',
+        required: false,
+        description:
+            'Returns all users with subscription expiring no later than current date + expireIn. Must be a positive integer.',
+    },
+}
+
+export class RetrieveUsersResponseSchema {
+    @ApiProperty({
+        description: 'Array of users matching the filters.',
+        example: [
+            {
+                username: 'User01',
+                name: 'John Smith',
+                email: 'john@email.com',
+                department: 'SCSE',
+                subscriptionExpiryDate: '2023-12-31T08:30:00:000Z',
+            },
+            {
+                username: 'User02',
+                name: 'John Doe',
+                email: 'john2@email.com',
+                department: 'MAE',
+                subscriptionExpiryDate: '2023-05-31T08:30:00:000Z',
+            },
+        ],
+    })
+    users: RetreiveUserResponse[]
 }

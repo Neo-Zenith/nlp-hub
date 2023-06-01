@@ -153,7 +153,7 @@ export class ServiceController {
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertServiceSchema })
     @Post('')
-    @UseGuards(new AdminAuthGuard(['POST']))
+    //@UseGuards(new AdminAuthGuard(['POST']))
     async subscribeService(
         @Body('name') name: string,
         @Body('description') description: string,
@@ -272,6 +272,7 @@ export class ServiceController {
                 options: endpoint.options,
                 method: endpoint.method,
                 textBased: endpoint.textBased,
+                supportedFormats: endpoint.supportedFormats,
             }
 
             returnData.push(endpointData)
@@ -313,6 +314,7 @@ export class ServiceController {
             options: endpoint.options,
             method: endpoint.method,
             textBased: endpoint.textBased,
+            supportedFormats: endpoint.supportedFormats
         }
 
         return endpointData
@@ -329,7 +331,9 @@ export class ServiceController {
         @Body('method') method: string,
         @Body('endpointPath') endpointPath: string,
         @Body('task') task: string,
-        @Body('options') options: Record<string, string>,
+        @Body('options') options?: Record<string, string>,
+        @Body('textBased') textBased?: boolean,
+        @Body('supportedFormats') supportedFormats?: string[],
     ) {
         const service = await this.nlpService.getService(type, version)
         const message = await this.nlpService.addEndpoint(
@@ -338,6 +342,8 @@ export class ServiceController {
             method,
             task,
             options,
+            textBased,
+            supportedFormats,
         )
         return message
     }
@@ -371,6 +377,7 @@ export class ServiceController {
         @Body('endpointPath') endpointPath?: string,
         @Body('task') newTask?: string,
         @Body('options') options?: Record<string, string>,
+        @Body('supportedFormats') supportedFormats?: string[],
     ) {
         const service = await this.nlpService.getService(type, version)
         const endpoint = await this.nlpService.getEndpoint(service.id, oldTask)
@@ -380,6 +387,7 @@ export class ServiceController {
             newTask,
             options,
             method,
+            endpoint.textBased ? undefined : supportedFormats,
         )
         return message
     }

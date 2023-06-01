@@ -16,15 +16,10 @@ import * as crypto from 'crypto'
 import * as sanitize from 'mongo-sanitize'
 
 import { CustomRequest } from './request/request.model'
+import { AdminModel, UserModel } from '../users/users.model'
 
 dotenv.config()
 
-/**
- * * Validates the request body by:
- * * 1. Check if all required fields are present.
- * * 2. Check if each field has the correct value type (to prevents malicious SQL injections).
- * ? All POST/PUT request middlewares with a request body must extend this middleware.
- */
 export abstract class ValidateRequestMiddleware {
     protected fields: { [field: string]: { type: string; required: boolean } }
 
@@ -33,6 +28,7 @@ export abstract class ValidateRequestMiddleware {
     }
 
     public hasInvalidFields(req: CustomRequest): boolean {
+        this.sanitizeFields(req)
         const missingFields = Object.keys(this.fields).filter((field) => {
             if (this.fields[field].required) {
                 return !req.body[field]
@@ -45,7 +41,6 @@ export abstract class ValidateRequestMiddleware {
             throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
 
-        this.sanitizeFields(req)
         return false
     }
 
@@ -54,7 +49,7 @@ export abstract class ValidateRequestMiddleware {
             const { type, required } = this.fields[field]
             const fieldValue = req.body[field]
 
-            if (required && typeof fieldValue !== type) {
+            if (typeof fieldValue !== type) {
                 const message = `Invalid type for ${field}. Expected ${type}, but received ${typeof fieldValue}.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
@@ -64,12 +59,6 @@ export abstract class ValidateRequestMiddleware {
     }
 }
 
-/**
- * * Provides custom access control based on:
- * * 1. User roles (implementation logic found in matchRoles, role to be provided by inheriting Guard class).
- * * 2. HTTP method (implementation done by providing allowedMethods during class construction. Methods are not case-sensitive).
- * ? Admin guard and User guard must extend this class and provide the implementation for the abstract method allowAccess which will utilise the matchRole method.
- */
 abstract class AuthGuard implements CanActivate {
     constructor(private readonly allowedMethods: string[]) {}
 
@@ -118,21 +107,39 @@ abstract class AuthGuard implements CanActivate {
             }
         }
 
-        if (req.payload['role'] === role || req.payload['role'] === 'admin') {
-            return true
+        const userExist = await this.checkUserExist(req)
+        if (userExist) {
+            if (req.payload['role'] === role || req.payload['role'] === 'admin') {
+                return true
+            }
+            const message = 'Access denied. User is not authorized to access this resource.'
+            throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
-        const message = 'Access denied. User is not authorized to access this resource.'
-        throw new HttpException(message, HttpStatus.FORBIDDEN)
+    }
+
+    private async checkUserExist(req: CustomRequest): Promise<boolean> {
+        if (req.payload['role'] === 'admin') {
+            const user = await AdminModel.findById(req.payload['id'])
+            if (!user) {
+                const message =
+                    'Invalid token. User could not be verified. Please re-authenticate to ontain a new access token.'
+                throw new HttpException(message, HttpStatus.UNAUTHORIZED)
+            }
+        } else {
+            const user = await UserModel.findById(req.payload['id'])
+            if (!user) {
+                const message =
+                    'Invalid token. User could not be verified. Please re-authenticate to ontain a new access token.'
+                throw new HttpException(message, HttpStatus.UNAUTHORIZED)
+            }
+        }
+        return true
     }
 
     abstract allowAccess(req: CustomRequest): Promise<boolean>
 }
 
-/**
- * * Guards user-level routes. Only users who are authenticated can access.
- * * If user is not authenticated, the guard will prohibit access to the route requested.
- * ? Must be implemented by all routes except restricted routes & public routes. Restricted routes will be handled by Admin guard.
- */
+
 @Injectable()
 export class UserAuthGuard extends AuthGuard {
     constructor(allowedMethods: string[]) {

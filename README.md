@@ -91,3 +91,10 @@ To run this project on local host, follow these steps:
     <img src="https://img.shields.io/badge/Postman-FC8019?style=for-the-badge&logo=Postman&logoColor=white" />
     <img src="https://img.shields.io/badge/SwaggerUI-7aa225?style=for-the-badge&logo=swagger&logoColor=white" />
 </p>
+
+
+
+CHANGES:
+1. dateTime display in user's local time
+2. Displaying file (image, text), discard the rest
+3. Filename just use Date.now() + username

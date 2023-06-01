@@ -6,8 +6,9 @@ import { AdminSchema, UserSchema } from './users.model'
 import {
     ExtendSubscriptionMiddleware,
     LoginUserMiddleware,
-    RegisterUserMiddleware,
+    CreateUserMiddleware,
     RetrieveUsersMiddleware,
+    UpdateUserMiddleware,
 } from './users.middleware'
 
 @Module({
@@ -21,7 +22,7 @@ import {
 export class UserModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
-            .apply(RegisterUserMiddleware)
+            .apply(CreateUserMiddleware)
             .forRoutes(
                 { path: '/users/register', method: RequestMethod.POST },
                 { path: '/admins/register', method: RequestMethod.POST },
@@ -42,6 +43,11 @@ export class UserModule {
         consumer.apply(ExtendSubscriptionMiddleware).forRoutes({
             path: '/users/:username/extend-subscription',
             method: RequestMethod.PUT,
+        })
+
+        consumer.apply(UpdateUserMiddleware).forRoutes({
+            path: '/users/:username',
+            method: RequestMethod.PUT
         })
     }
 }

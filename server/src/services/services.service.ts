@@ -35,7 +35,7 @@ export class ServiceService {
                     options: endpoints[i].options,
                     endpointPath: endpoints[i].endpointPath,
                     task: endpoints[i].task,
-                    textBased: endpoints[i].textBased
+                    textBased: endpoints[i].textBased,
                 })
             } else {
                 newEndpoint = new this.serviceEndpointModel({
@@ -43,10 +43,12 @@ export class ServiceService {
                     method: endpoints[i].method,
                     endpointPath: endpoints[i].endpointPath,
                     task: endpoints[i].task,
-                    textBased: endpoints[i].textBased
+                    textBased: endpoints[i].textBased,
+                    supportedFormats: endpoints[i].supportedFormats,
                 })
+                console.log(newEndpoint.supportedFormats)
             }
-            
+
             await this.saveEndpoint(newEndpoint)
         }
         const message = await this.saveService(newService)
@@ -144,14 +146,19 @@ export class ServiceService {
         method: string,
         task: string,
         options: Record<string, string>,
+        textBased: boolean,
+        supportedFormats: string[],
     ): Promise<Record<string, string>> {
         const newEndpoint = await new this.serviceEndpointModel({
             serviceID: service.id,
             endpointPath,
             method,
             task,
-            options,
+            options: textBased ? options : undefined,
+            textBased,
+            supportedFormats: textBased ? undefined : supportedFormats,
         })
+
         const message = await this.saveEndpoint(newEndpoint)
         return message
     }
@@ -175,6 +182,7 @@ export class ServiceService {
         newTask?: string,
         newOptions?: Record<string, any>,
         newMethod?: string,
+        newSupportedFormats?: string[],
     ): Promise<Record<string, string>> {
         let updates = {}
         if (newEndpointPath) {
@@ -189,7 +197,11 @@ export class ServiceService {
         if (newMethod) {
             updates['method'] = newMethod
         }
+        if (newSupportedFormats) {
+            updates['supportedFormats'] = newSupportedFormats
+        }
 
+        console.log(updates)
         const message = await this.updateEndpointDB(endpoint, updates)
         return message
     }

@@ -21,6 +21,13 @@ export enum HttpMethodType {
     DELETE = 'DELETE',
 }
 
+export enum UploadFormat {
+    IMAGE = 'IMAGE',
+    AUDIO = 'AUDIO',
+    VIDEO = 'VIDEO',
+    PDF = 'PDF',
+}
+
 @Schema()
 export class Service extends Document {
     @Prop({ required: true, index: 'text' })
@@ -65,6 +72,9 @@ export class ServiceEndpoint extends Document {
 
     @Prop({ type: Boolean, required: true, default: true })
     textBased: boolean
+
+    @Prop({ type: [String], enum: UploadFormat, default: void 0 })
+    supportedFormats: string[]
 }
 
 export const ServiceSchema = SchemaFactory.createForClass(Service)

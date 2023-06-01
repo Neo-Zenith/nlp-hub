@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { HttpMethodType, ServiceType } from './services.model'
+import { HttpMethodType, ServiceType, UploadFormat } from './services.model'
 
 export class InsertEndpointSchema {
     @ApiProperty({
@@ -39,6 +39,14 @@ export class InsertEndpointSchema {
         },
     })
     options: Record<string, string>
+
+    @ApiPropertyOptional({
+        description: `Uploadable formats supported by the endpoint. Valid supported formats are: ${Object.values(
+            UploadFormat,
+        ).join(', ')}.`,
+        example: ['IMAGE', 'AUDIO'],
+    })
+    supportedFormats: string[]
 }
 
 export class InsertServiceSchema {
@@ -141,4 +149,12 @@ export class UpdateEndpointSchema {
         },
     })
     options: Record<string, string>
+
+    @ApiPropertyOptional({
+        description: `Uploadable formats supported by the endpoint. Valid supported formats are: ${Object.values(
+            UploadFormat,
+        ).join(', ')}.`,
+        example: ['IMAGE', 'AUDIO'],
+    })
+    supportedFormats: string[]
 }
