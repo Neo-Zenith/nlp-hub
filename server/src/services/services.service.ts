@@ -12,13 +12,13 @@ export class ServiceService {
         private readonly serviceEndpointModel: Model<ServiceEndpoint>,
     ) {}
 
-    async addService(
+    async createService(
         name: string,
         description: string,
         address: string,
         type: string,
         endpoints: Record<string, any>[],
-    ): Promise<Record<string, string>> {
+    ): Promise<void> {
         const newService = new this.serviceModel({
             name,
             description,
@@ -28,37 +28,32 @@ export class ServiceService {
 
         for (let i = 0; i < endpoints.length; i++) {
             let newEndpoint: ServiceEndpoint
-            if (isNullOrUndefined(endpoints[i].textBased) || endpoints[i].textBased === true) {
-                newEndpoint = new this.serviceEndpointModel({
-                    serviceID: newService.id,
-                    method: endpoints[i].method,
-                    options: endpoints[i].options,
-                    endpointPath: endpoints[i].endpointPath,
-                    task: endpoints[i].task,
-                    textBased: endpoints[i].textBased,
-                })
-            } else {
-                newEndpoint = new this.serviceEndpointModel({
-                    serviceID: newService.id,
-                    method: endpoints[i].method,
-                    endpointPath: endpoints[i].endpointPath,
-                    task: endpoints[i].task,
-                    textBased: endpoints[i].textBased,
-                    supportedFormats: endpoints[i].supportedFormats,
-                })
-                console.log(newEndpoint.supportedFormats)
-            }
+            newEndpoint = new this.serviceEndpointModel({
+                serviceID: newService.id,
+                method: endpoints[i].method,
+                options:
+                    isNullOrUndefined(endpoints[i].textBased) || endpoints[i].textBased
+                        ? endpoints[i].options
+                        : undefined,
+                endpointPath: endpoints[i].endpointPath,
+                task: endpoints[i].task,
+                textBased: isNullOrUndefined(endpoints[i].textBased)
+                    ? true
+                    : endpoints[i].textBased,
+                supportedFormats:
+                    isNullOrUndefined(endpoints[i].textBased) || endpoints[i].textBased
+                        ? undefined
+                        : endpoints[i].supportedFormats,
+            })
 
-            await this.saveEndpoint(newEndpoint)
+            await this.saveEndpointDB(newEndpoint)
         }
-        const message = await this.saveService(newService)
-        return message
+        await this.saveServiceDB(newService)
     }
 
-    async removeService(type: string, version: string): Promise<Record<string, string>> {
+    async removeService(type: string, version: string): Promise<void> {
         const service = await this.getService(type, version)
         await this.serviceModel.deleteOne({ _id: service.id })
-        return { message: 'Service unsubscribed.' }
     }
 
     async updateService(
@@ -68,43 +63,23 @@ export class ServiceService {
         baseAddress?: string,
         description?: string,
         type?: string,
-    ): Promise<Record<string, string>> {
-        let updates = {}
-
-        if (version) {
-            updates['version'] = version
-        } else {
-            updates['version'] = service.version
-        }
-        if (type) {
-            updates['type'] = type
-        } else {
-            updates['type'] = service.type
-        }
-        if (name) {
-            updates['name'] = name
-        }
-        if (baseAddress) {
-            updates['baseAddress'] = baseAddress
-        }
-        if (description) {
-            updates['description'] = description
+    ): Promise<void> {
+        let updates = {
+            ...(version && { version }),
+            ...(type && { type }),
+            ...(name && { name }),
+            ...(baseAddress && { baseAddress }),
+            ...(description && { description }),
         }
 
-        const message = await this.updateServiceDB(service, updates)
-        return message
+        await this.updateServiceDB(service, updates)
     }
 
     async getServices(name?: string, type?: string): Promise<Service[]> {
-        let query: any = {}
-
-        if (name) {
-            query.$text = { $search: name }
+        const query = {
+            ...(name && { $text: { $search: name } }),
+            ...(type && { type }),
         }
-        if (type) {
-            query.type = type
-        }
-
         const services = await this.serviceModel.find(query).exec()
         return services
     }
@@ -132,7 +107,7 @@ export class ServiceService {
                 HttpStatus.NOT_FOUND,
             )
         }
-        const services = await this.serviceModel.find({ type })
+        const services = await this.getServices(undefined, type)
         let returnVersion = []
         for (const service of services) {
             returnVersion.push(service.version)
@@ -140,40 +115,32 @@ export class ServiceService {
         return returnVersion
     }
 
-    async addEndpoint(
+    async createEndpoint(
         service: Service,
         endpointPath: string,
         method: string,
         task: string,
-        options: Record<string, string>,
+        options: Record<string, any>,
         textBased: boolean,
         supportedFormats: string[],
-    ): Promise<Record<string, string>> {
+    ): Promise<void> {
         const newEndpoint = await new this.serviceEndpointModel({
             serviceID: service.id,
             endpointPath,
             method,
             task,
-            options: textBased ? options : undefined,
+            options: isNullOrUndefined(textBased) || textBased ? options : undefined,
             textBased,
-            supportedFormats: textBased ? undefined : supportedFormats,
+            supportedFormats:
+                isNullOrUndefined(textBased) || textBased ? undefined : supportedFormats,
         })
 
-        const message = await this.saveEndpoint(newEndpoint)
-        return message
+        await this.saveEndpointDB(newEndpoint)
     }
 
-    async removeEndpoint(service: Service, task: string): Promise<Record<string, string>> {
-        const endpoint = await this.serviceEndpointModel.findOne({
-            task,
-            serviceID: service.id,
-        })
-        if (!endpoint) {
-            const message = 'Endpoint not found. The requested resource could not be found.'
-            throw new HttpException(message, HttpStatus.NOT_FOUND)
-        }
+    async removeEndpoint(service: Service, task: string): Promise<void> {
+        const endpoint = await this.getEndpoint(service.id, task)
         await this.serviceEndpointModel.deleteOne({ _id: endpoint.id })
-        return { message: 'Endpoint deleted.' }
     }
 
     async updateEndpoint(
@@ -183,27 +150,15 @@ export class ServiceService {
         newOptions?: Record<string, any>,
         newMethod?: string,
         newSupportedFormats?: string[],
-    ): Promise<Record<string, string>> {
-        let updates = {}
-        if (newEndpointPath) {
-            updates['endpointPath'] = newEndpointPath
+    ): Promise<void> {
+        let updates = {
+            ...(newEndpointPath && { endpointPath: newEndpointPath }),
+            ...(newTask && { task: newTask }),
+            ...(newOptions && { options: newOptions }),
+            ...(newMethod && { method: newMethod }),
+            ...(newSupportedFormats && { supportedFormats: newSupportedFormats }),
         }
-        if (newTask) {
-            updates['task'] = newTask
-        }
-        if (newOptions) {
-            updates['options'] = newOptions
-        }
-        if (newMethod) {
-            updates['method'] = newMethod
-        }
-        if (newSupportedFormats) {
-            updates['supportedFormats'] = newSupportedFormats
-        }
-
-        console.log(updates)
-        const message = await this.updateEndpointDB(endpoint, updates)
-        return message
+        await this.updateEndpointDB(endpoint, updates)
     }
 
     async getEndpoints(
@@ -211,14 +166,10 @@ export class ServiceService {
         task?: string,
         method?: string,
     ): Promise<ServiceEndpoint[]> {
-        let query: any = {}
-
-        query.serviceID = service.id
-        if (task) {
-            query.task = task
-        }
-        if (method) {
-            query.method = method
+        const query = {
+            serviceID: service.id,
+            ...(task && { task }),
+            ...(method && { method }),
         }
 
         const endpoints = await this.serviceEndpointModel.find(query).exec()
@@ -237,10 +188,9 @@ export class ServiceService {
         return endpoint
     }
 
-    private async saveService(service: Service): Promise<Record<string, string>> {
+    private async saveServiceDB(service: Service): Promise<void> {
         try {
             await service.save()
-            return { message: 'Service registered.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('baseAddress')) {
@@ -254,10 +204,9 @@ export class ServiceService {
     private async updateServiceDB(
         service: Service,
         updates: Record<string, any>,
-    ): Promise<Record<string, string>> {
+    ): Promise<void> {
         try {
             await this.serviceModel.updateOne({ _id: service.id }, { $set: updates })
-            return { message: 'Service updated.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('baseAddress')) {
@@ -276,10 +225,9 @@ export class ServiceService {
     private async updateEndpointDB(
         endpoint: ServiceEndpoint,
         updates: Record<string, any>,
-    ): Promise<Record<string, string>> {
+    ): Promise<void> {
         try {
             await this.serviceEndpointModel.updateOne({ _id: endpoint.id }, { $set: updates })
-            return { message: 'Endpoint updated.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('task')) {
@@ -296,10 +244,9 @@ export class ServiceService {
         }
     }
 
-    private async saveEndpoint(endpoint: ServiceEndpoint): Promise<Record<string, string>> {
+    private async saveEndpointDB(endpoint: ServiceEndpoint): Promise<void> {
         try {
             await endpoint.save()
-            return { message: 'Endpoint registered.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('task')) {

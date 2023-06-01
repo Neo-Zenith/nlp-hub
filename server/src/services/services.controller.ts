@@ -9,6 +9,7 @@ import {
     Query,
     Req,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiSecurity, ApiParam } from '@nestjs/swagger'
 
@@ -20,9 +21,15 @@ import {
 } from './services.schema'
 
 import { ServiceService } from './services.service'
-import { HttpMethodType, ServiceEndpoint, ServiceType } from './services.model'
+import { HttpMethodType, ServiceType } from './services.model'
 import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
 import { CustomRequest } from '../common/request/request.model'
+import {
+    CreateEndpointInterceptor,
+    CreateServiceInterceptor,
+    UpdateEndpointInterceptor,
+    UpdateServiceInterceptor,
+} from './services.interceptor'
 
 @ApiTags('Services')
 @Controller('services')
@@ -153,7 +160,8 @@ export class ServiceController {
     @ApiSecurity('access-token')
     @ApiBody({ type: InsertServiceSchema })
     @Post('')
-    //@UseGuards(new AdminAuthGuard(['POST']))
+    @UseGuards(new AdminAuthGuard(['POST']))
+    @UseInterceptors(CreateServiceInterceptor)
     async subscribeService(
         @Body('name') name: string,
         @Body('description') description: string,
@@ -161,14 +169,9 @@ export class ServiceController {
         @Body('type') type: string,
         @Body('endpoints') endpoints: Record<string, any>[],
     ) {
-        const message = await this.nlpService.addService(
-            name,
-            description,
-            address,
-            type,
-            endpoints,
-        )
-        return message
+        await this.nlpService.createService(name, description, address, type, endpoints)
+        const response = { message: 'Service registered.' }
+        return response
     }
 
     @ApiOperation({ summary: 'Updates an NLP service by type and version.' })
@@ -187,6 +190,7 @@ export class ServiceController {
     @ApiBody({ type: UpdateServiceSchema })
     @Put(':type/:version')
     @UseGuards(new AdminAuthGuard(['PUT']))
+    @UseInterceptors(UpdateServiceInterceptor)
     async updateService(
         @Param('type') oldType: string,
         @Param('version') oldVersion: string,
@@ -197,7 +201,7 @@ export class ServiceController {
         @Body('type') newType?: string,
     ) {
         const service = await this.nlpService.getService(oldType, oldVersion)
-        const message = await this.nlpService.updateService(
+        await this.nlpService.updateService(
             service,
             name,
             newVersion,
@@ -205,7 +209,8 @@ export class ServiceController {
             description,
             newType,
         )
-        return message
+        const response = { message: 'Service updated.' }
+        return response
     }
 
     @ApiOperation({ summary: 'Removes an NLP service by type and version.' })
@@ -224,7 +229,8 @@ export class ServiceController {
     @Delete(':type/:version')
     @UseGuards(new AdminAuthGuard(['DELETE']))
     async unsubscribeService(@Param('type') type: string, @Param('version') version: string) {
-        const response = await this.nlpService.removeService(type, version)
+        await this.nlpService.removeService(type, version)
+        const response = { message: 'Service unsubscribed.' }
         return response
     }
 
@@ -314,7 +320,7 @@ export class ServiceController {
             options: endpoint.options,
             method: endpoint.method,
             textBased: endpoint.textBased,
-            supportedFormats: endpoint.supportedFormats
+            supportedFormats: endpoint.supportedFormats,
         }
 
         return endpointData
@@ -325,6 +331,7 @@ export class ServiceController {
     @ApiBody({ type: InsertEndpointSchema })
     @Post(':type/:version/endpoints')
     @UseGuards(new AdminAuthGuard(['POST']))
+    @UseInterceptors(CreateEndpointInterceptor)
     async addEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -336,7 +343,7 @@ export class ServiceController {
         @Body('supportedFormats') supportedFormats?: string[],
     ) {
         const service = await this.nlpService.getService(type, version)
-        const message = await this.nlpService.addEndpoint(
+        await this.nlpService.createEndpoint(
             service,
             endpointPath,
             method,
@@ -345,7 +352,8 @@ export class ServiceController {
             textBased,
             supportedFormats,
         )
-        return message
+        const response = { message: 'Endpoint registered.' }
+        return response
     }
 
     @ApiOperation({ summary: 'Updates an endpoint by task name.' })
@@ -369,6 +377,7 @@ export class ServiceController {
     @ApiBody({ type: UpdateEndpointSchema })
     @Put(':type/:version/endpoints/:task')
     @UseGuards(new AdminAuthGuard(['PUT']))
+    @UseInterceptors(UpdateEndpointInterceptor)
     async updateEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -381,15 +390,16 @@ export class ServiceController {
     ) {
         const service = await this.nlpService.getService(type, version)
         const endpoint = await this.nlpService.getEndpoint(service.id, oldTask)
-        const message = await this.nlpService.updateEndpoint(
+        await this.nlpService.updateEndpoint(
             endpoint,
             endpointPath,
             newTask,
-            options,
+            endpoint.textBased ? options : undefined,
             method,
             endpoint.textBased ? undefined : supportedFormats,
         )
-        return message
+        const response = { message: 'Endpoint updated.' }
+        return response
     }
 
     @ApiOperation({ summary: 'Removes an endpoint by task name.' })
@@ -418,7 +428,8 @@ export class ServiceController {
         @Param('task') task: string,
     ) {
         const service = await this.nlpService.getService(type, version)
-        const message = await this.nlpService.removeEndpoint(service, task)
-        return message
+        await this.nlpService.removeEndpoint(service, task)
+        const response = { message: 'Endpoint deleted.' }
+        return response
     }
 }
