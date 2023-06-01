@@ -46,7 +46,7 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
         }
 
         if (validSubscription) {
-            const validFields = await this.validateFields(req)
+            const validFields = await this.hasInvalidFields(req)
             if (validFields) {
                 return next.handle()
             }

@@ -51,7 +51,7 @@ export class UpdateUserInterceptor implements NestInterceptor {
         const role = req.payload.role
         const username = req.params.username
 
-        if (req.body.emai) {
+        if (req.body.email) {
             CredentialsCheck.isValidEmail(req)
         }
         if (req.body.password) {

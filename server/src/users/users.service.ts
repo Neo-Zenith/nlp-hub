@@ -39,7 +39,7 @@ export class UserService {
         email: string,
         password: string,
         department: string,
-    ): Promise<Record<string, string>> {
+    ): Promise<void> {
         const hashedPassword = await this.hashPassword(password)
         const newAdmin = new this.adminModel({
             username,
@@ -48,8 +48,7 @@ export class UserService {
             password: hashedPassword,
             department,
         })
-        const message = await this.saveUserDB(newAdmin)
-        return message
+        await this.saveUserDB(newAdmin)
     }
 
     async verifyUser(username: string, password: string): Promise<string> {
@@ -78,10 +77,9 @@ export class UserService {
         }
     }
 
-    async removeUser(username: string): Promise<Record<string, string>> {
+    async removeUser(username: string): Promise<void> {
         const user = await this.getUser(username)
         await this.userModel.deleteOne({ _id: user.id })
-        return { message: 'User deleted.' }
     }
 
     async updateUser(
@@ -91,27 +89,16 @@ export class UserService {
         email?: string,
         password?: string,
         department?: string,
-    ): Promise<Record<string, string>> {
-        var updates = {}
-
-        if (username) {
-            updates['username'] = username
-        }
-        if (name) {
-            updates['name'] = name
-        }
-        if (email) {
-            updates['email'] = email
-        }
-        if (password) {
-            updates['password'] = await this.hashPassword(password)
-        }
-        if (department) {
-            updates['department'] = department
+    ): Promise<void> {
+        const updates = {
+            ...(username && { username }),
+            ...(name && { name }),
+            ...(email && { email }),
+            ...(password && { password: await this.hashPassword(password) }),
+            ...(department && { department }),
         }
 
-        const message = await this.updateUserDB(user, updates)
-        return message
+        await this.updateUserDB(user, updates)
     }
 
     async extendUserSubscription(user: User, extension?: string) {
@@ -206,10 +193,9 @@ export class UserService {
         return iv.toString('hex') + encrypted
     }
 
-    private async saveUserDB(user: User | Admin): Promise<Record<string, string>> {
+    private async saveUserDB(user: User | Admin): Promise<void> {
         try {
             await user.save()
-            return { message: 'User registered.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('username')) {
@@ -224,13 +210,9 @@ export class UserService {
         }
     }
 
-    private async updateUserDB(
-        user: User,
-        updates: Record<string, any>,
-    ): Promise<Record<string, string>> {
+    private async updateUserDB(user: User, updates: Record<string, any>): Promise<void> {
         try {
             await this.userModel.updateOne({ _id: user.id }, { $set: updates })
-            return { message: 'User updated.' }
         } catch (err) {
             if (err.message.includes('duplicate key')) {
                 if (err.message.includes('username')) {

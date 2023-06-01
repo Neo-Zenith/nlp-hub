@@ -139,7 +139,6 @@ abstract class AuthGuard implements CanActivate {
     abstract allowAccess(req: CustomRequest): Promise<boolean>
 }
 
-
 @Injectable()
 export class UserAuthGuard extends AuthGuard {
     constructor(allowedMethods: string[]) {

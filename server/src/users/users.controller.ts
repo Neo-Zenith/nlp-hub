@@ -26,7 +26,7 @@ import {
     ApiForbiddenResponse,
 } from '@nestjs/swagger'
 
-import { UserService } from './users.service'
+import { User } from './users.model'
 import {
     ExtendSubscriptionSchema,
     CreateUserSchema,
@@ -38,14 +38,15 @@ import {
     RetrieveUsersResponseSchema,
     RetreiveUserResponse,
 } from './users.schema'
-
-import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
+import { UserService } from './users.service'
 import {
     UpdateUserInterceptor,
     RetrieveUserInterceptor,
     CreateUserInterceptor,
 } from './users.interceptor'
-import { User } from './users.model'
+
+import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
+
 import {
     BadRequestSchema,
     ConflictSchema,
@@ -106,14 +107,14 @@ export class UserController {
         const users = await this.userService.getUsers(expireIn, name, department)
         let returnedUsers = []
         for (const user of users) {
-            const obscuredUser = {
+            const userDetails = {
                 username: user.username,
                 email: user.email,
                 name: user.name,
                 department: user.department,
                 subscriptionExpiryDate: user.subscriptionExpiryDate,
             }
-            returnedUsers.push(obscuredUser)
+            returnedUsers.push(userDetails)
         }
 
         return { users: returnedUsers }
@@ -130,15 +131,15 @@ export class UserController {
     @UseGuards(new UserAuthGuard(['GET']))
     @UseInterceptors(RetrieveUserInterceptor)
     async retrieveUser(@Param('username') username: string) {
-        const user = (await this.userService.getUser('user', username)) as User
-        const obscuredUser = {
+        const user = await this.userService.getUser('user', username)
+        const userDetails = {
             username: user.username,
             name: user.name,
             email: user.email,
             department: user.department,
             subscriptionExpiryDate: user.subscriptionExpiryDate,
         }
-        return obscuredUser
+        return userDetails
     }
 
     @ApiOperation({ summary: 'Updates a user by username.' })
