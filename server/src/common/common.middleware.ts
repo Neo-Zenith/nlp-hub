@@ -20,14 +20,14 @@ import { AdminModel, UserModel } from '../users/users.model'
 
 dotenv.config()
 
-export abstract class ValidateRequestMiddleware {
+export abstract class ValidateRequestBodyMiddleware {
     protected fields: { [field: string]: { type: string; required: boolean } }
 
     constructor(fields: { [field: string]: { type: string; required: boolean } }) {
         this.fields = fields
     }
 
-    public hasInvalidFields(req: CustomRequest): boolean {
+    public checkFields(req: CustomRequest): void {
         this.sanitizeFields(req)
         const missingFields = Object.keys(this.fields).filter((field) => {
             if (this.fields[field].required) {
@@ -40,8 +40,6 @@ export abstract class ValidateRequestMiddleware {
             const message = `Incomplete body. Expected ${missingFields.join(', ')}.`
             throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
-
-        return false
     }
 
     private sanitizeFields(req: CustomRequest): void {

@@ -123,7 +123,7 @@ export class UserService {
         const user = await this.userModel.findOne({
             ...(username && { username }),
             ...(email && { email }),
-            ...(userID && { userID }),
+            ...(userID && { _id: userID }),
         })
         if (!user) {
             throw throwable
@@ -143,8 +143,9 @@ export class UserService {
         const admin = await this.adminModel.findOne({
             ...(username && { username }),
             ...(email && { email }),
-            ...(userID && { userID }),
+            ...(userID && { _id: userID }),
         })
+
         if (!admin) {
             throw throwable
         }

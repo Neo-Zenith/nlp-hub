@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { ServiceType } from '../services/services.model'
 
-export class HandleServiceEndpointRequestSchema {
+export class HandleEndpointReqSchema {
     @ApiPropertyOptional({
         description:
             'Options required by the endpoint. Option fields must match the pre-defined schema provided by the endpoint.',
@@ -15,7 +15,7 @@ export class HandleServiceEndpointRequestSchema {
     options: Record<string, string>
 }
 
-export class HandleServiceEndpointRequestResponseSchema {
+export class HandleEndpointReqResponseSchema {
     @ApiProperty({
         description: 'Uniquely identifies a query made.',
         example: '0ba81115-4f52-23b8-bc07-11e77a932e4f',

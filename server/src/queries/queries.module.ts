@@ -8,7 +8,14 @@ import { QueryController, UsageController } from './queries.controller'
 import { ServiceModule } from '../services/services.module'
 import { ServiceEndpointSchema, ServiceSchema } from '../services/services.model'
 import { AdminSchema, UserSchema } from '../users/users.model'
-import { MulterMiddleware } from './queries.middleware'
+import {
+    CreateQueryMiddleware,
+    MulterMiddleware,
+    RetrieveUsageMiddleware,
+    RetrieveUsagesMiddleware,
+} from './queries.middleware'
+import { UserService } from 'src/users/users.service'
+import { ServiceService } from 'src/services/services.service'
 
 @Module({
     imports: [
@@ -22,7 +29,7 @@ import { MulterMiddleware } from './queries.middleware'
             dest: './upload',
         }),
     ],
-    providers: [QueryService],
+    providers: [QueryService, UserService, ServiceService],
     controllers: [QueryController, UsageController],
 })
 export class QueryModule {
@@ -30,6 +37,21 @@ export class QueryModule {
         consumer.apply(MulterMiddleware).forRoutes({
             path: '/query/:type/:version/:task',
             method: RequestMethod.POST,
+        })
+
+        consumer.apply(CreateQueryMiddleware).forRoutes({
+            path: '/query/:type/:version/:task',
+            method: RequestMethod.POST,
+        })
+
+        consumer.apply(RetrieveUsagesMiddleware).forRoutes({
+            path: '/usages',
+            method: RequestMethod.GET,
+        })
+
+        consumer.apply(RetrieveUsageMiddleware).forRoutes({
+            path: '/usages/:uuid',
+            method: RequestMethod.GET,
         })
     }
 }

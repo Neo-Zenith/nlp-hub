@@ -31,8 +31,8 @@ import {
     ExecutionTimeSchema,
     GetUsageResponseSchema,
     GetUsagesResponseSchema,
-    HandleServiceEndpointRequestResponseSchema as HandleEndpointReqResponseSchema,
-    HandleServiceEndpointRequestSchema as HandleEndpointReqSchema,
+    HandleEndpointReqResponseSchema,
+    HandleEndpointReqSchema,
     ReturnDelServiceSchema,
     ReturnDelUserSchema,
     StartDateSchema,
@@ -44,7 +44,7 @@ import {
 } from './queries.schema'
 import { QueryService } from './queries.service'
 import {
-    RegisterQueryInterceptor,
+    CreateQueryInterceptor,
     RetrieveUsageInterceptor,
     RetrieveUsagesInterceptor,
 } from './queries.interceptor'
@@ -58,11 +58,17 @@ import {
     ServerMessageSchema,
     UnauthorizedSchema,
 } from '../common/common.schema'
+import { UserService } from '../users/users.service'
+import { ServiceService } from '../services/services.service'
 
 @ApiTags('Queries')
 @Controller('query')
 export class QueryController {
-    constructor(private readonly queryService: QueryService) {}
+    constructor(
+        private readonly queryService: QueryService,
+        private readonly userService: UserService,
+        private readonly serviceService: ServiceService,
+    ) {}
 
     @ApiOperation({ summary: 'Queries an NLP service.' })
     @ApiConsumes('application/json', 'multipart/form-data')
@@ -78,7 +84,7 @@ export class QueryController {
     @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Post(':type/:version/:task')
     @UseGuards(new UserAuthGuard(['POST']))
-    @UseInterceptors(RegisterQueryInterceptor)
+    @UseInterceptors(CreateQueryInterceptor)
     async handleServiceEndpointRequest(
         @Param('type') type: string,
         @Param('version') version: string,
@@ -87,12 +93,14 @@ export class QueryController {
         @Req() request: CustomRequest,
     ): Promise<Record<string, any>> {
         const file = request.file
-        const service = await this.queryService.retrieveServiceFromDB(type, version)
-        const endpoint = await this.queryService.retrieveEndpointFromDB(service.id, task)
-        const user = await this.queryService.retrieveUserFromDB(
-            request.payload.id,
-            request.payload.role,
-        )
+        const role = request.payload.role
+        const userID = request.payload.id
+        const service = await this.serviceService.getService(type, version)
+        const endpoint = await this.serviceService.getEndpoint(service.id, task)
+        const user =
+            role === 'admin'
+                ? await this.userService.getAdmin(undefined, undefined, userID)
+                : await this.userService.getUser(undefined, undefined, userID)
 
         let response: Record<string, any>
 
@@ -152,7 +160,22 @@ export class UsageController {
             returnDelUser,
             returnDelService,
         )
-        return { usages: usages }
+
+        let returnedUsages = []
+
+        for (const usage of usages) {
+            const usageDetails = {
+                uuid: usage.uuid,
+                executionTime: usage.executionTime,
+                output: usage.output,
+                options: usage.options,
+                dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
+                userDeleted: usage.userDeleted === true ? usage.userDeleted : undefined,
+                serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : undefined,
+            }
+            returnedUsages.push(usageDetails)
+        }
+        return { usages: returnedUsages }
     }
 
     @ApiOperation({ summary: 'Retrieves a query by UUID.' })
@@ -164,9 +187,18 @@ export class UsageController {
     @Get(':uuid')
     @UseGuards(new UserAuthGuard(['GET']))
     @UseInterceptors(RetrieveUsageInterceptor)
-    async getUsage(@Param('uuid') uuid: string) {
+    async getUsage(@Param('uuid') uuid: string, @Query('timezone') timezone?: string) {
         const usage = await this.queryService.getUsage(uuid)
-        return usage
+        const usageDetails = {
+            uuid: usage.uuid,
+            executionTime: usage.executionTime,
+            output: usage.output,
+            options: usage.options,
+            dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
+            userDeleted: usage.userDeleted === true ? usage.userDeleted : undefined,
+            serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : undefined,
+        }
+        return usageDetails
     }
 
     @ApiOperation({ summary: 'Removes a usage by UUID.' })
@@ -179,7 +211,8 @@ export class UsageController {
     @UseGuards(new UserAuthGuard(['DELETE']))
     @UseInterceptors(RetrieveUsageInterceptor)
     async removeUsage(@Param('uuid') uuid: string) {
-        const message = await this.queryService.deleteUsage(uuid)
-        return message
+        await this.queryService.deleteUsage(uuid)
+        const response = { message: 'Usage deleted.' }
+        return response
     }
 }

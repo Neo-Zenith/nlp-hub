@@ -13,10 +13,16 @@ import { Observable } from 'rxjs'
 import * as fs from 'fs-extra'
 
 import { CustomRequest } from '../common/request/request.model'
-import { Service, ServiceEndpoint, UploadFormat } from '../services/services.model'
-import { User } from '../users/users.model'
-import { Query } from './queries.model'
-import { ValidateRequestMiddleware } from '../common/common.middleware'
+import {
+    Service,
+    ServiceEndpoint,
+    ServiceEndpointModel,
+    ServiceModel,
+    UploadFormat,
+} from '../services/services.model'
+import { User, UserModel } from '../users/users.model'
+import { Query, QueryModel } from './queries.model'
+import { ValidateRequestBodyMiddleware } from '../common/common.middleware'
 
 /**
  * * Validates the request body for POST /query/:type/:version/:task
@@ -24,48 +30,23 @@ import { ValidateRequestMiddleware } from '../common/common.middleware'
  * * 2. Verify that the user's subscription is still valid before allowing user to access the service.
  */
 @Injectable()
-export class RegisterQueryInterceptor extends ValidateRequestMiddleware implements NestInterceptor {
-    constructor(
-        @InjectModel('User') private readonly userModel: Model<User>,
-        @InjectModel('Service') private readonly serviceModel: Model<Service>,
-        @InjectModel('ServiceEndpoint')
-        private readonly serviceEndpointModel: Model<ServiceEndpoint>,
-    ) {
-        const fields = {
-            options: { type: 'object', required: false },
-        }
-        super(fields)
-    }
-
+export class CreateQueryInterceptor implements NestInterceptor {
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-        const validSubscription = await this.validateSubscription(req)
-
-        if (req.headers['content-type'] === 'application/json') {
-            this.hasInvalidFields(req)
-        }
-
-        if (validSubscription) {
-            const validFields = await this.hasInvalidFields(req)
-            if (validFields) {
-                return next.handle()
-            }
-        }
+        await this.validateSubscription(req)
+        await this.validateFields(req)
+        return next.handle()
     }
 
-    async validateSubscription(req: CustomRequest): Promise<boolean> {
+    async validateSubscription(req: CustomRequest): Promise<void> {
         const role = req.payload.role
-        if (role === 'admin') {
-            return true
-        }
-
         const userID = req.payload.id
-        const user = await this.userModel.findById(userID)
-        if (!user) {
-            const message = 'User not found. The requested resource could not be found.'
-            throw new HttpException(message, HttpStatus.NOT_FOUND)
+
+        if (role === 'admin') {
+            return
         }
 
+        const user = await UserModel.findById(userID)
         const expiryDate = user.subscriptionExpiryDate
         const currentDate = new Date()
         if (currentDate > expiryDate) {
@@ -74,112 +55,92 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
             throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
 
-        return true
+        return
     }
 
-    async validateFile(req: CustomRequest, endpoint: ServiceEndpoint): Promise<boolean> {
-        // limit in KB
-        const uploadLimit = {
-            image: 500,
-            audio: 10000,
-            video: 2,
-            pdf: 200,
+    async validateUploadable(req: CustomRequest, endpoint: ServiceEndpoint): Promise<void> {
+        if (!req.file) {
+            const message = 'Invalid request. Expected an uploadable for non-text based services.'
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
 
-        if (req.file) {
-            const fileType = req.file.mimetype
-            const matchedType = Object.keys(uploadLimit).find((type) => fileType.includes(type))
-            const fileSizeLimit = uploadLimit[matchedType]
-            const supportedFormats = endpoint.supportedFormats
+        const fileType = req.file.mimetype.toUpperCase()
+        const supportedFormats = endpoint.supportedFormats
 
-            const isValidType = supportedFormats.find((type) =>
-                fileType.toUpperCase().includes(type),
-            )
+        const matchedType = supportedFormats.find((type) => fileType.includes(type))
 
-            if (!isValidType) {
-                await fs.unlink(req.file.path)
-                const message = `Invalid request. Expected file to be interpretable in any of '${Object.values(
-                    UploadFormat,
-                ).join(', ')}', but received '${fileType}'.`
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            }
-
-            if (fileSizeLimit && req.file.size > fileSizeLimit * 1024) {
-                await fs.unlink(req.file.path)
-                throw new HttpException(
-                    `Invalid request. The file size exceeds the limit of ${fileSizeLimit} KB.`,
-                    HttpStatus.BAD_REQUEST,
-                )
-            }
-            return true
-        } else {
-            throw new HttpException(
-                'Invalid request. Expected upload for non-text based service.',
-                HttpStatus.BAD_REQUEST,
-            )
+        if (!matchedType) {
+            await fs.unlink(req.file.path)
+            const validFormats = Object.values(supportedFormats).join(', ')
+            const message = `Invalid request. Expected file to be interpretable in any of '${validFormats}', but received '${fileType}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
         }
+
+        const uploadLimit: { [key in UploadFormat]: number } = {
+            [UploadFormat.IMAGE]: 200,
+            [UploadFormat.AUDIO]: 500,
+            [UploadFormat.PDF]: 1000,
+            [UploadFormat.VIDEO]: 10000,
+        }
+
+        const fileSizeLimit = uploadLimit[matchedType]
+
+        if (fileSizeLimit && req.file.size > fileSizeLimit * 1024) {
+            await fs.unlink(req.file.path)
+            const message = `Invalid request. The file size exceeds the limit of ${fileSizeLimit} KB.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+
+        return
     }
 
-    async validateFields(req: CustomRequest): Promise<boolean> {
-        const service = await this.serviceModel.findOne({
-            type: req.params['type'],
-            version: req.params['version'],
-        })
+    async validateFields(req: CustomRequest): Promise<void> {
+        const { type, version, task } = req.params
+        const { options } = req.body
+
+        const service = await ServiceModel.findOne({ type, version }).exec()
         if (!service) {
             const message = 'Service not found. The requested resource could not be found.'
             throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
 
-        const endpoint = await this.serviceEndpointModel
-            .findOne({
-                serviceID: service.id,
-                task: req.params['task'],
-            })
-            .exec()
-
+        const serviceID = service.id
+        const endpoint = await ServiceEndpointModel.findOne({ serviceID, task }).exec()
         if (!endpoint) {
             const message = 'Endpoint not found. The requested resource could not be found.'
             throw new HttpException(message, HttpStatus.NOT_FOUND)
         }
 
-        if (!req.body['options'] && endpoint.options) {
+        if (!options && endpoint.options) {
+            const message = 'Options do not match pre-defined schema.'
             throw new HttpException(
-                {
-                    message: 'Options do not match pre-defined schema.',
-                    expectedOptions: endpoint.options,
-                },
+                { message, expectedOptions: endpoint.options },
                 HttpStatus.BAD_REQUEST,
             )
-        }
-
-        if (!endpoint.options) {
-            return endpoint.textBased ? true : await this.validateFile(req, endpoint)
-        }
-
-        if (req.body['options']) {
-            const options = req.body['options']
-            const queryOptions = Object.keys(options)
-            const endpointOptions = Object.keys(endpoint.toJSON().options)
+        } else if (!endpoint.options) {
+            return endpoint.textBased ? null : await this.validateUploadable(req, endpoint)
+        } else {
+            const queryOptionsFields = Object.keys(options)
+            const endpointOptionsFields = Object.keys(endpoint.options)
             if (
-                queryOptions.length !== endpointOptions.length ||
-                !queryOptions.every((key) => endpointOptions.includes(key))
+                queryOptionsFields.length !== endpointOptionsFields.length ||
+                !queryOptionsFields.every((key) => endpointOptionsFields.includes(key))
             ) {
+                const message = 'Options do not match pre-defined schema.'
                 throw new HttpException(
-                    {
-                        message: 'Options do not match pre-defined schema.',
-                        expectedOptions: endpoint.options,
-                    },
+                    { message, expectedOptions: endpoint.options },
                     HttpStatus.BAD_REQUEST,
                 )
             }
 
-            for (const key of queryOptions) {
-                const expectedType = endpoint.toJSON().options[key]
-                const valueType = typeof options[key]
-                if (valueType !== expectedType) {
+            for (const key of queryOptionsFields) {
+                const expectedType = endpoint.options[key]
+                const receivedType = typeof options[key]
+                if (receivedType !== expectedType) {
+                    const message = `Invalid value type for option '${key}'. Expected '${expectedType}', but received '${receivedType}'.`
                     throw new HttpException(
                         {
-                            message: `Invalid value type for option '${key}'. Expected '${expectedType}', but received '${valueType}'.`,
+                            message,
                             expectedOptions: endpoint.options,
                         },
                         HttpStatus.BAD_REQUEST,
@@ -187,132 +148,79 @@ export class RegisterQueryInterceptor extends ValidateRequestMiddleware implemen
                 }
             }
         }
-        return endpoint.textBased ? true : await this.validateFile(req, endpoint)
     }
 }
 
-/**
- * * Performs query input validation for GET /usages
- * * 1. executionTime needs to be parsable to a number
- * * 2. startDate & endDateneeds to be parsable to a Date object
- * * 3. returnDelUser & returnDelService needs to be parsable to boolean values
- */
 @Injectable()
 export class RetrieveUsagesInterceptor implements NestInterceptor {
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-        const queries = req.query
-
-        if (queries['executionTime']) {
-            const execTime = +queries['executionTime']
-            if (Number.isNaN(execTime)) {
-                throw new HttpException(
-                    `Invalid execution time format. Expected a parsable integer, but received '${typeof execTime}'.`,
-                    HttpStatus.BAD_REQUEST,
-                )
-            }
+        if (req.query.timezone) {
+            this.isValidTimezone(req)
         }
-
-        if (queries['startDate']) {
-            let startDate = queries['startDate'] as string
-            if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(startDate)) {
-                const message =
-                    'Invalid startDate format. Start date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            }
-
-            if (!startDate.includes('T')) {
-                queries['startDate'] += 'T00:00:00Z'
-            } else {
-                queries['startDate'] += 'Z'
-            }
-
-            if (Number.isNaN(new Date(startDate).getTime())) {
-                const message = 'Invalid start date or time.'
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            }
-        }
-
-        if (queries['endDate']) {
-            let endDate = queries['endDate'] as string
-            if (!/^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})?$/.test(endDate)) {
-                const message =
-                    'Invalid startDate format. End date must be in YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.'
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            }
-
-            if (!endDate.includes('T')) {
-                queries['endDate'] += 'T23:59:59Z'
-            } else {
-                queries['endDate'] += 'Z'
-            }
-
-            if (Number.isNaN(new Date(endDate).getTime())) {
-                throw new HttpException('Invalid end date or time.', HttpStatus.BAD_REQUEST)
-            }
-        }
-
-        if (queries['timezone']) {
-            const timezone = parseFloat(queries['timezone'] as string)
-            if (isNaN(timezone)) {
-                const message = 'Invalid timezone. Timezone must be a valid integer.'
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            }
-        }
-
-        const booleanValues = ['true', 'false']
-        if (queries['returnDelUser']) {
-            const returnDelUser = queries['returnDelUser'] as string
-            if (!booleanValues.includes(returnDelUser.toLowerCase())) {
-                const message = `Invalid type for returnDelUser. Expected any of '${Object.values(
-                    booleanValues,
-                ).join(', ')}', but received '${returnDelUser}'.`
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            } else {
-                req.query['returnDelUser'] = JSON.parse(returnDelUser.toLowerCase())
-            }
-        }
-
-        if (queries['returnDelService']) {
-            const returnDelService = queries['returnDelService'] as string
-            if (!booleanValues.includes(returnDelService.toLowerCase())) {
-                const message = `Invalid type for returnDelService. Expected any of '${Object.values(
-                    booleanValues,
-                ).join(', ')}', but received '${returnDelService}'.`
-                throw new HttpException(message, HttpStatus.BAD_REQUEST)
-            } else {
-                req.query['returnDelService'] = JSON.parse(returnDelService.toLowerCase())
-            }
+        if (req.query.executionTime) {
+            this.isValidExecTime(req)
         }
 
         return next.handle()
     }
+
+    private isValidTimezone(req: CustomRequest): boolean {
+        const { timezone } = req.query
+        const tz = parseFloat(timezone as string)
+
+        if (tz < -12 || tz > 14) {
+            const message = `Invalid timezone. Expected timezone to be between -12 and 14, but received '${tz}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
+    }
+
+    private isValidExecTime(req: CustomRequest): boolean {
+        const { executionTime } = req.query
+        const execTime = +executionTime
+
+        if (execTime <= 0) {
+            const message = `Invalid execution time. Expected a positive value but received '${execTime}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
+    }
 }
 
-/**
- * * Performs parameter validation for GET /usage/:uuid
- * * 1. User is forbidden to query a usage of other user if user is not admin
- */
 @Injectable()
 export class RetrieveUsageInterceptor implements NestInterceptor {
-    constructor(@InjectModel('Query') private readonly queryModel: Model<Query>) {}
-
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-        const userID = req.payload['id']
-        const role = req.payload['role']
-        const uuid = req.params['uuid']
-        const usage = await this.queryModel.findOne({ uuid: uuid })
+        const userID = req.payload.id
+        const role = req.payload.role
+        const uuid = req.params.uuid
+        const query = await QueryModel.findOne({ uuid: uuid })
 
         if (role === 'admin') {
             return next.handle()
         }
 
-        if (!usage || usage.userID !== userID) {
+        if (!query || query.userID !== userID) {
             const message = 'Access denied. User is not authorized to access this resource.'
             throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
 
+        if (req.query.timezone) {
+            this.isValidTimezone(req)
+        }
+
         return next.handle()
+    }
+
+    private isValidTimezone(req: CustomRequest): boolean {
+        const { timezone } = req.query
+        const tz = parseFloat(timezone as string)
+
+        if (tz < -12 || tz > 14) {
+            const message = `Invalid timezone. Expected timezone to be between -12 and 14, but received '${tz}'.`
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
     }
 }

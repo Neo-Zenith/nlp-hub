@@ -1,11 +1,14 @@
 import { Injectable, NestMiddleware, HttpStatus, HttpException } from '@nestjs/common'
 import { NextFunction } from 'express'
-import { ValidateRequestMiddleware } from 'src/common/common.middleware'
+import { ValidateRequestBodyMiddleware } from 'src/common/common.middleware'
 import { CustomRequest } from 'src/common/request/request.model'
 import { HttpMethodType, ServiceEndpointSchema, ServiceType, UploadFormat } from './services.model'
 
 @Injectable()
-export class RegisterServiceMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class RegisterServiceMiddleware
+    extends ValidateRequestBodyMiddleware
+    implements NestMiddleware
+{
     constructor() {
         const fields = {
             name: { type: 'string', required: true },
@@ -18,7 +21,7 @@ export class RegisterServiceMiddleware extends ValidateRequestMiddleware impleme
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         if (validateServiceFields(req)) {
             return next()
         }
@@ -26,7 +29,10 @@ export class RegisterServiceMiddleware extends ValidateRequestMiddleware impleme
 }
 
 @Injectable()
-export class UpdateServiceMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class UpdateServiceMiddleware
+    extends ValidateRequestBodyMiddleware
+    implements NestMiddleware
+{
     constructor() {
         const fields = {
             name: { type: 'string', required: false },
@@ -47,7 +53,7 @@ export class UpdateServiceMiddleware extends ValidateRequestMiddleware implement
 
 @Injectable()
 export class RegisterEndpointMiddleware
-    extends ValidateRequestMiddleware
+    extends ValidateRequestBodyMiddleware
     implements NestMiddleware
 {
     constructor() {
@@ -63,7 +69,7 @@ export class RegisterEndpointMiddleware
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         if (validateEndpointFields(req)) {
             return next()
         }
@@ -71,7 +77,10 @@ export class RegisterEndpointMiddleware
 }
 
 @Injectable()
-export class UpdateEndpointMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class UpdateEndpointMiddleware
+    extends ValidateRequestBodyMiddleware
+    implements NestMiddleware
+{
     constructor() {
         const fields = {
             method: { type: 'string', required: false },

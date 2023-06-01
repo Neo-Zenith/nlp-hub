@@ -3,12 +3,12 @@ import { Response, NextFunction } from 'express'
 import * as dotenv from 'dotenv'
 
 import { CustomRequest } from '../common/request/request.model'
-import { ValidateRequestMiddleware } from '../common/common.middleware'
+import { ValidateRequestBodyMiddleware } from '../common/common.middleware'
 
 dotenv.config()
 
 @Injectable()
-export class CreateUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class CreateUserMiddleware extends ValidateRequestBodyMiddleware implements NestMiddleware {
     constructor() {
         const fields = {
             username: { type: 'string', required: true },
@@ -21,13 +21,13 @@ export class CreateUserMiddleware extends ValidateRequestMiddleware implements N
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         return next()
     }
 }
 
 @Injectable()
-export class LoginUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class LoginUserMiddleware extends ValidateRequestBodyMiddleware implements NestMiddleware {
     constructor() {
         const fields = {
             username: { type: 'string', required: true },
@@ -37,14 +37,14 @@ export class LoginUserMiddleware extends ValidateRequestMiddleware implements Ne
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         return next()
     }
 }
 
 @Injectable()
 export class ExtendSubscriptionMiddleware
-    extends ValidateRequestMiddleware
+    extends ValidateRequestBodyMiddleware
     implements NestMiddleware
 {
     constructor() {
@@ -55,7 +55,7 @@ export class ExtendSubscriptionMiddleware
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction): void {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         const reqExtension = req.body['extension']
         if (Number.isInteger(reqExtension)) {
             return next()
@@ -66,7 +66,7 @@ export class ExtendSubscriptionMiddleware
 }
 
 @Injectable()
-export class UpdateUserMiddleware extends ValidateRequestMiddleware implements NestMiddleware {
+export class UpdateUserMiddleware extends ValidateRequestBodyMiddleware implements NestMiddleware {
     constructor() {
         const fields = {
             username: { type: 'string', required: false },
@@ -79,7 +79,7 @@ export class UpdateUserMiddleware extends ValidateRequestMiddleware implements N
     }
 
     use(req: CustomRequest, res: Response, next: NextFunction) {
-        this.hasInvalidFields(req)
+        this.checkFields(req)
         return next()
     }
 }
