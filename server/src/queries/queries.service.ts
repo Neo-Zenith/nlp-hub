@@ -61,7 +61,7 @@ export class QueryService {
             isAdminQuery,
         })
 
-        await query.save()
+        await this.saveQueryDB(query)
 
         return {
             uuid: query.uuid,
@@ -110,7 +110,7 @@ export class QueryService {
             isAdminQuery,
         })
 
-        await query.save()
+        await this.saveQueryDB(query)
 
         return {
             uuid: query.uuid,
@@ -248,5 +248,9 @@ export class QueryService {
 
     private async removeFile(file: Express.Multer.File) {
         await fs.unlink(file.path)
+    }
+
+    private async saveQueryDB(query: Query) {
+        await query.save()
     }
 }

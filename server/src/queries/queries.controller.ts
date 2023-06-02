@@ -180,7 +180,7 @@ export class UsageController {
     @Get(':uuid')
     @UseGuards(new UserAuthGuard(['GET']))
     @UseInterceptors(RetrieveUsageInterceptor)
-    async getUsage(@Param('uuid') uuid: string, @Query('timezone') timezone?: string) {
+    async retrieveUsage(@Param('uuid') uuid: string, @Query('timezone') timezone?: string) {
         const usage = await this.queryService.getUsage(uuid)
         const usageDetails = {
             uuid: usage.uuid,
