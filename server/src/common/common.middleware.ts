@@ -17,6 +17,7 @@ import * as sanitize from 'mongo-sanitize'
 
 import { CustomRequest } from './request/request.model'
 import { AdminModel, UserModel } from '../users/users.model'
+import { isNullOrUndefined } from '@typegoose/typegoose/lib/internal/utils'
 
 dotenv.config()
 
@@ -44,11 +45,16 @@ export abstract class ValidateRequestBodyMiddleware {
 
     private sanitizeFields(req: CustomRequest): void {
         for (const field of Object.keys(this.fields)) {
-            const { type, required } = this.fields[field]
+            const { type } = this.fields[field]
             const fieldValue = req.body[field]
 
-            if (typeof fieldValue !== type) {
+            if (!isNullOrUndefined(fieldValue) && typeof fieldValue !== type) {
                 const message = `Invalid type for ${field}. Expected ${type}, but received ${typeof fieldValue}.`
+                throw new HttpException(message, HttpStatus.BAD_REQUEST)
+            }
+
+            if (typeof fieldValue === 'string') {
+                const message = `Invalid value for ${field}. String cannot be empty.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
 

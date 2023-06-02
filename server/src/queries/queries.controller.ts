@@ -27,20 +27,12 @@ import {
 } from '@nestjs/swagger'
 
 import {
-    EndDateSchema,
-    ExecutionTimeSchema,
-    GetUsageResponseSchema,
-    GetUsagesResponseSchema,
+    RetrieveUsageResponseSchema,
+    RetrieveUsagesResponseSchema,
     HandleEndpointReqResponseSchema,
     HandleEndpointReqSchema,
-    ReturnDelServiceSchema,
-    ReturnDelUserSchema,
-    StartDateSchema,
-    TaskSchema,
-    TimezoneSchema,
-    TypeSchema,
-    UUIDSchema,
-    VersionSchema,
+    RetrieveUsageSchema,
+    RetrieveUsagesSchema,
 } from './queries.schema'
 import { QueryService } from './queries.service'
 import {
@@ -60,6 +52,7 @@ import {
 } from '../common/common.schema'
 import { UserService } from '../users/users.service'
 import { ServiceService } from '../services/services.service'
+import { RetrieveEndpointSchema, RetrieveServiceSchema } from '../services/services.schema'
 
 @ApiTags('Queries')
 @Controller('query')
@@ -73,9 +66,9 @@ export class QueryController {
     @ApiOperation({ summary: 'Queries an NLP service.' })
     @ApiConsumes('application/json', 'multipart/form-data')
     @ApiSecurity('access-token')
-    @ApiParam(TypeSchema)
-    @ApiParam(VersionSchema)
-    @ApiParam(TaskSchema)
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiParam(RetrieveEndpointSchema.task)
     @ApiBody({ type: HandleEndpointReqSchema })
     @ApiCreatedResponse({ type: HandleEndpointReqResponseSchema })
     @ApiNotFoundResponse({ type: NotFoundSchema })
@@ -121,21 +114,21 @@ export class UsageController {
 
     @ApiOperation({ summary: 'Retrieves usages.' })
     @ApiSecurity('access-token')
-    @ApiQuery(Object.assign({ required: false }, TypeSchema))
-    @ApiQuery(Object.assign({ required: false }, VersionSchema))
-    @ApiQuery(ExecutionTimeSchema)
-    @ApiQuery(StartDateSchema)
-    @ApiQuery(EndDateSchema)
-    @ApiQuery(TimezoneSchema)
-    @ApiQuery(ReturnDelUserSchema)
-    @ApiQuery(ReturnDelServiceSchema)
-    @ApiOkResponse({ type: GetUsagesResponseSchema })
+    @ApiQuery(RetrieveUsagesSchema.type)
+    @ApiQuery(RetrieveUsagesSchema.version)
+    @ApiQuery(RetrieveUsagesSchema.timezone)
+    @ApiQuery(RetrieveUsagesSchema.startDate)
+    @ApiQuery(RetrieveUsagesSchema.endDate)
+    @ApiQuery(RetrieveUsagesSchema.executionTime)
+    @ApiQuery(RetrieveUsagesSchema.returnDelService)
+    @ApiQuery(RetrieveUsagesSchema.returnDelUser)
+    @ApiOkResponse({ type: RetrieveUsagesResponseSchema })
     @ApiBadRequestResponse({ type: BadRequestSchema })
     @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get('')
     @UseGuards(new UserAuthGuard(['GET']))
     @UseInterceptors(RetrieveUsagesInterceptor)
-    async getUsages(
+    async retrieveUsages(
         @Req() request: CustomRequest,
         @Query('type') type?: string,
         @Query('version') version?: string,
@@ -170,8 +163,8 @@ export class UsageController {
                 output: usage.output,
                 options: usage.options,
                 dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
-                userDeleted: usage.userDeleted === true ? usage.userDeleted : undefined,
-                serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : undefined,
+                ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
+                ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
             }
             returnedUsages.push(usageDetails)
         }
@@ -180,8 +173,8 @@ export class UsageController {
 
     @ApiOperation({ summary: 'Retrieves a query by UUID.' })
     @ApiSecurity('access-token')
-    @ApiParam(UUIDSchema)
-    @ApiOkResponse({ type: GetUsageResponseSchema })
+    @ApiParam(RetrieveUsageSchema.uuid)
+    @ApiOkResponse({ type: RetrieveUsageResponseSchema })
     @ApiForbiddenResponse({ type: ForbiddenSchema })
     @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get(':uuid')
@@ -195,15 +188,15 @@ export class UsageController {
             output: usage.output,
             options: usage.options,
             dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
-            userDeleted: usage.userDeleted === true ? usage.userDeleted : undefined,
-            serviceDeleted: usage.serviceDeleted === true ? usage.serviceDeleted : undefined,
+            ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
+            ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
         }
         return usageDetails
     }
 
     @ApiOperation({ summary: 'Removes a usage by UUID.' })
     @ApiSecurity('access-token')
-    @ApiParam(UUIDSchema)
+    @ApiParam(RetrieveUsageSchema.uuid)
     @Delete(':uuid')
     @ApiOkResponse({ type: ServerMessageSchema })
     @ApiForbiddenResponse({ type: ForbiddenSchema })

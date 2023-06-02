@@ -11,7 +11,7 @@ import { CustomRequest } from '../common/request/request.model'
 import { Admin, User, UserModel } from './users.model'
 import { Observable } from 'rxjs'
 
-class CredentialsCheck {
+class CredentialsValidator {
     public static isValidEmail(req: CustomRequest): boolean {
         const email = req.body.email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -31,14 +31,26 @@ class CredentialsCheck {
         }
         return true
     }
+
+    public static isValidUsername(req: CustomRequest): boolean {
+        const username = req.body.username
+        const pattern = /^[a-zA-Z0-9]{5,}$/
+        if (pattern.test(username)) {
+            const message =
+                'Invalid username. Expected username to be at least 5 characters and must only contain alphanumerics.'
+            throw new HttpException(message, HttpStatus.BAD_REQUEST)
+        }
+        return true
+    }
 }
 
 @Injectable()
 export class CreateUserInterceptor implements NestInterceptor {
     async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
         const req = context.switchToHttp().getRequest<CustomRequest>()
-        CredentialsCheck.isValidEmail(req)
-        CredentialsCheck.isStrongPassword(req)
+        CredentialsValidator.isValidUsername(req)
+        CredentialsValidator.isValidEmail(req)
+        CredentialsValidator.isStrongPassword(req)
         return next.handle()
     }
 }
@@ -51,11 +63,14 @@ export class UpdateUserInterceptor implements NestInterceptor {
         const role = req.payload.role
         const username = req.params.username
 
+        if (req.body.username) {
+            CredentialsValidator.isValidUsername(req)
+        }
         if (req.body.email) {
-            CredentialsCheck.isValidEmail(req)
+            CredentialsValidator.isValidEmail(req)
         }
         if (req.body.password) {
-            CredentialsCheck.isStrongPassword(req)
+            CredentialsValidator.isStrongPassword(req)
         }
 
         if (role === 'admin') {
@@ -98,10 +113,7 @@ export class RetrieveUserInterceptor implements NestInterceptor {
 
         if (user.username !== targetUsername) {
             const message = 'Access denied. User is not authorized to access this resource.'
-            throw new HttpException(
-                message,
-                HttpStatus.FORBIDDEN,
-            )
+            throw new HttpException(message, HttpStatus.FORBIDDEN)
         }
 
         return next.handle()

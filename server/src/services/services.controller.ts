@@ -11,17 +11,41 @@ import {
     UseGuards,
     UseInterceptors,
 } from '@nestjs/common'
-import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiSecurity, ApiParam } from '@nestjs/swagger'
+import {
+    ApiTags,
+    ApiOperation,
+    ApiBody,
+    ApiQuery,
+    ApiSecurity,
+    ApiParam,
+    ApiOkResponse,
+    ApiForbiddenResponse,
+    ApiNotFoundResponse,
+    ApiUnauthorizedResponse,
+    ApiCreatedResponse,
+    ApiBadRequestResponse,
+    ApiConflictResponse,
+} from '@nestjs/swagger'
 
 import {
-    InsertEndpointSchema,
-    InsertServiceSchema,
+    CreateEndpointSchema,
+    CreateServiceSchema,
+    RetrieveEndpointResponseSchema,
+    RetrieveEndpointSchema,
+    RetrieveEndpointsResponseSchema,
+    RetrieveEndpointsSchema,
+    RetrieveServiceResponseSchema,
+    RetrieveServiceSchema,
+    RetrieveServiceTypesResponseSchema,
+    RetrieveServiceVersionResponseSchema,
+    RetrieveServiceVersionSchema,
+    RetrieveServicesResponseSchema,
+    RetrieveServicesSchema,
     UpdateEndpointSchema,
     UpdateServiceSchema,
 } from './services.schema'
 
 import { ServiceService } from './services.service'
-import { HttpMethodType, ServiceType } from './services.model'
 import { AdminAuthGuard, UserAuthGuard } from '../common/common.middleware'
 import { CustomRequest } from '../common/request/request.model'
 import {
@@ -30,97 +54,78 @@ import {
     UpdateEndpointInterceptor,
     UpdateServiceInterceptor,
 } from './services.interceptor'
+import {
+    BadRequestSchema,
+    ConflictSchema,
+    ForbiddenSchema,
+    NotFoundSchema,
+    ServerMessageSchema,
+    UnauthorizedSchema,
+} from '../common/common.schema'
 
 @ApiTags('Services')
 @Controller('services')
 export class ServiceController {
-    constructor(private readonly nlpService: ServiceService) {}
+    constructor(private readonly serviceService: ServiceService) {}
 
-    @ApiOperation({
-        summary: 'Retrieves all NLP services.',
-        description: 'Services are uniquely identified by their type and version.',
-    })
+    @ApiOperation({ summary: 'Retrieves all NLP services.' })
     @ApiSecurity('access-token')
-    @ApiQuery({
-        name: 'name',
-        description: 'Returns services with names containing the filter name.',
-        example: 'Auto-punctuator',
-        required: false,
-    })
-    @ApiQuery({
-        name: 'type',
-        description: `Type of service. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-        example: 'SUD',
-        required: false,
-    })
+    @ApiQuery(RetrieveServicesSchema.name)
+    @ApiQuery(RetrieveServicesSchema.type)
+    @ApiOkResponse({ type: RetrieveServicesResponseSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get()
     @UseGuards(new UserAuthGuard(['GET']))
-    async getServices(
+    async retrieveServices(
         @Req() req: CustomRequest,
         @Query('name') name?: string,
         @Query('type') type?: string,
     ) {
-        const services = await this.nlpService.getServices(name, type)
+        const services = await this.serviceService.getServices(name, type)
         const role = req.payload.role
-        let obscuredServices: Record<string, any>
+        const servicesDetails = services.map((item) => ({
+            type: item.type,
+            version: item.version,
+            name: item.name,
+            description: item.description,
+            ...(role === 'admin' && { address: item.baseAddress }),
+        }))
 
-        if (role === 'admin') {
-            obscuredServices = services.map((item) => ({
-                type: item.type,
-                version: item.version,
-                name: item.name,
-                description: item.description,
-                address: item.baseAddress,
-            }))
-        } else {
-            obscuredServices = services.map((item) => ({
-                type: item.type,
-                version: item.version,
-                name: item.name,
-                description: item.description,
-            }))
-        }
-
-        return { services: obscuredServices }
+        return { services: servicesDetails }
     }
 
-    @ApiOperation({ summary: 'Retrieves all service types available.' })
+    @ApiOperation({ summary: 'Retrieves all service types.' })
     @ApiSecurity('access-token')
+    @ApiOkResponse({ type: RetrieveServiceTypesResponseSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get('get-types')
     @UseGuards(new UserAuthGuard(['GET']))
-    getServiceTypes() {
-        const types = this.nlpService.getServiceTypes()
+    retrieveServiceTypes() {
+        const types = this.serviceService.getServiceTypes()
         return { types: types }
     }
 
-    @ApiOperation({ summary: 'Retrieves all available version IDs under a service type.' })
+    @ApiOperation({ summary: 'Retrieves all version IDs for a service type.' })
     @ApiSecurity('access-token')
+    @ApiParam(RetrieveServiceVersionSchema.type)
+    @ApiOkResponse({ type: RetrieveServiceVersionResponseSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get(':type/get-version')
     @UseGuards(new UserAuthGuard(['GET']))
-    async getServiceVersion(@Param('type') type: string) {
-        const versions = await this.nlpService.getServiceVersions(type)
+    async retrieveServiceVersion(@Param('type') type: string) {
+        const versions = await this.serviceService.getServiceVersions(type)
         return { versions: versions }
     }
 
-    @ApiOperation({
-        summary: 'Retrieves a service by type and version.',
-        description:
-            'User provides the type and version. Returns the service with matching type and version.',
-    })
+    @ApiOperation({ summary: 'Retrieves a service by type and version.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiOkResponse({ type: RetrieveServiceResponseSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get(':type/:version')
     @UseGuards(new UserAuthGuard(['GET']))
     async getService(
@@ -128,66 +133,54 @@ export class ServiceController {
         @Param('type') type: string,
         @Param('version') version: string,
     ) {
-        const service = await this.nlpService.getService(type, version)
+        const service = await this.serviceService.getService(type, version)
         const role = req.payload.role
-        let obscuredService: Record<string, any>
 
-        if (role === 'admin') {
-            obscuredService = {
-                type: service.type,
-                version: service.version,
-                name: service.name,
-                description: service.description,
-                address: service.baseAddress,
-            }
-        } else {
-            obscuredService = {
-                type: service.type,
-                version: service.version,
-                name: service.name,
-                description: service.description,
-            }
+        const serviceDetails = {
+            type: service.type,
+            version: service.version,
+            name: service.name,
+            description: service.description,
+            ...(role === 'admin' && { address: service.baseAddress }),
         }
 
-        return obscuredService
+        return serviceDetails
     }
 
-    @ApiOperation({
-        summary: 'Registers an NLP service.',
-        description:
-            'Admin provides the required details of a service to be registered. Address is unique to a service.',
-    })
+    @ApiOperation({ summary: 'Registers an NLP service.' })
     @ApiSecurity('access-token')
-    @ApiBody({ type: InsertServiceSchema })
+    @ApiBody({ type: CreateServiceSchema })
+    @ApiCreatedResponse({ type: ServerMessageSchema })
+    @ApiConflictResponse({ type: ConflictSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiBadRequestResponse({ type: BadRequestSchema })
     @Post('')
     @UseGuards(new AdminAuthGuard(['POST']))
     @UseInterceptors(CreateServiceInterceptor)
-    async subscribeService(
+    async createService(
         @Body('name') name: string,
         @Body('description') description: string,
         @Body('address') address: string,
         @Body('type') type: string,
         @Body('endpoints') endpoints: Record<string, any>[],
     ) {
-        await this.nlpService.createService(name, description, address, type, endpoints)
+        await this.serviceService.createService(name, description, address, type, endpoints)
         const response = { message: 'Service registered.' }
         return response
     }
 
     @ApiOperation({ summary: 'Updates an NLP service by type and version.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
     @ApiBody({ type: UpdateServiceSchema })
+    @ApiOkResponse({ type: ServerMessageSchema })
+    @ApiConflictResponse({ type: ConflictSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiBadRequestResponse({ type: BadRequestSchema })
     @Put(':type/:version')
     @UseGuards(new AdminAuthGuard(['PUT']))
     @UseInterceptors(UpdateServiceInterceptor)
@@ -200,8 +193,8 @@ export class ServiceController {
         @Body('address') address?: string,
         @Body('type') newType?: string,
     ) {
-        const service = await this.nlpService.getService(oldType, oldVersion)
-        await this.nlpService.updateService(
+        const service = await this.serviceService.getService(oldType, oldVersion)
+        await this.serviceService.updateService(
             service,
             name,
             newVersion,
@@ -215,51 +208,29 @@ export class ServiceController {
 
     @ApiOperation({ summary: 'Removes an NLP service by type and version.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiOkResponse({ type: ServerMessageSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
     @Delete(':type/:version')
     @UseGuards(new AdminAuthGuard(['DELETE']))
-    async unsubscribeService(@Param('type') type: string, @Param('version') version: string) {
-        await this.nlpService.removeService(type, version)
+    async deleteService(@Param('type') type: string, @Param('version') version: string) {
+        await this.serviceService.removeService(type, version)
         const response = { message: 'Service unsubscribed.' }
         return response
     }
 
     @ApiOperation({ summary: 'Retrieves all endpoints of a service.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
-    @ApiQuery({
-        name: 'task',
-        description:
-            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
-        required: false,
-    })
-    @ApiQuery({
-        name: 'method',
-        description: `HTTP method. Available methods are '${Object.values(HttpMethodType).join(
-            ', ',
-        )}'.`,
-        required: false,
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiQuery(RetrieveEndpointsSchema.method)
+    @ApiQuery(RetrieveEndpointsSchema.task)
+    @ApiOkResponse({ type: RetrieveEndpointsResponseSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
     @Get(':type/:version/endpoints')
     @UseGuards(new UserAuthGuard(['GET']))
     async getEndpoints(
@@ -268,17 +239,17 @@ export class ServiceController {
         @Query('task') task?: string,
         @Query('method') method?: string,
     ) {
-        const service = await this.nlpService.getService(type, version)
-        const endpoints = await this.nlpService.getEndpoints(service, task, method)
+        const service = await this.serviceService.getService(type, version)
+        const endpoints = await this.serviceService.getEndpoints(service, task, method)
         var returnData = []
 
         for (const endpoint of endpoints) {
             const endpointData = {
                 task: endpoint.task,
-                options: endpoint.options,
+                ...(endpoint.textBased && { options: endpoint.options }),
                 method: endpoint.method,
                 textBased: endpoint.textBased,
-                supportedFormats: endpoint.supportedFormats,
+                ...(endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
             }
 
             returnData.push(endpointData)
@@ -289,50 +260,48 @@ export class ServiceController {
 
     @ApiOperation({ summary: 'Retrieves an endpoint by task name.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
-    @ApiParam({
-        name: 'task',
-        description:
-            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiParam(RetrieveEndpointSchema.task)
+    @ApiOkResponse({ type: RetrieveEndpointResponseSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get(':type/:version/endpoints/:task')
     @UseGuards(new UserAuthGuard(['GET']))
-    async getEndpoint(
+    async retrieveEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
         @Param('task') task: string,
     ) {
-        const service = await this.nlpService.getService(type, version)
-        const endpoint = await this.nlpService.getEndpoint(service.id, task)
+        const service = await this.serviceService.getService(type, version)
+        const endpoint = await this.serviceService.getEndpoint(service.id, task)
 
         const endpointData = {
             task: endpoint.task,
-            options: endpoint.options,
+            ...(endpoint.textBased && { options: endpoint.options }),
             method: endpoint.method,
             textBased: endpoint.textBased,
-            supportedFormats: endpoint.supportedFormats,
+            ...(endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
         }
 
         return endpointData
     }
 
-    @ApiOperation({ summary: 'Adds an endpoint.' })
+    @ApiOperation({ summary: 'Registers an endpoint.' })
     @ApiSecurity('access-token')
-    @ApiBody({ type: InsertEndpointSchema })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiBody({ type: CreateEndpointSchema })
+    @ApiCreatedResponse({ type: ServerMessageSchema })
+    @ApiConflictResponse({ type: ConflictSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiBadRequestResponse({ type: BadRequestSchema })
     @Post(':type/:version/endpoints')
     @UseGuards(new AdminAuthGuard(['POST']))
     @UseInterceptors(CreateEndpointInterceptor)
-    async addEndpoint(
+    async createEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
         @Body('method') method: string,
@@ -342,8 +311,8 @@ export class ServiceController {
         @Body('textBased') textBased?: boolean,
         @Body('supportedFormats') supportedFormats?: string[],
     ) {
-        const service = await this.nlpService.getService(type, version)
-        await this.nlpService.createEndpoint(
+        const service = await this.serviceService.getService(type, version)
+        await this.serviceService.createEndpoint(
             service,
             endpointPath,
             method,
@@ -358,23 +327,16 @@ export class ServiceController {
 
     @ApiOperation({ summary: 'Updates an endpoint by task name.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
-    @ApiParam({
-        name: 'task',
-        description:
-            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiParam(RetrieveEndpointSchema.task)
     @ApiBody({ type: UpdateEndpointSchema })
+    @ApiOkResponse({ type: ServerMessageSchema })
+    @ApiConflictResponse({ type: ConflictSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
+    @ApiBadRequestResponse({ type: BadRequestSchema })
     @Put(':type/:version/endpoints/:task')
     @UseGuards(new AdminAuthGuard(['PUT']))
     @UseInterceptors(UpdateEndpointInterceptor)
@@ -388,9 +350,9 @@ export class ServiceController {
         @Body('options') options?: Record<string, string>,
         @Body('supportedFormats') supportedFormats?: string[],
     ) {
-        const service = await this.nlpService.getService(type, version)
-        const endpoint = await this.nlpService.getEndpoint(service.id, oldTask)
-        await this.nlpService.updateEndpoint(
+        const service = await this.serviceService.getService(type, version)
+        const endpoint = await this.serviceService.getEndpoint(service.id, oldTask)
+        await this.serviceService.updateEndpoint(
             endpoint,
             endpointPath,
             newTask,
@@ -404,31 +366,22 @@ export class ServiceController {
 
     @ApiOperation({ summary: 'Removes an endpoint by task name.' })
     @ApiSecurity('access-token')
-    @ApiParam({
-        name: 'type',
-        description: `Service type. Available types are '${Object.values(ServiceType).join(
-            ', ',
-        )}'.`,
-    })
-    @ApiParam({
-        name: 'version',
-        description:
-            'Version ID under a type that uniquely identifies the service. Version must follow v{id} format.',
-    })
-    @ApiParam({
-        name: 'task',
-        description:
-            'Task name that uniquely identifies the endpoint under the specified service. Task name is case-sensitive.',
-    })
+    @ApiParam(RetrieveServiceSchema.type)
+    @ApiParam(RetrieveServiceSchema.version)
+    @ApiParam(RetrieveEndpointSchema.task)
+    @ApiOkResponse({ type: ServerMessageSchema })
+    @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
+    @ApiForbiddenResponse({ type: ForbiddenSchema })
+    @ApiNotFoundResponse({ type: NotFoundSchema })
     @Delete(':type/:version/endpoints/:task')
     @UseGuards(new AdminAuthGuard(['DELETE']))
-    async removeEndpoint(
+    async deleteEndpoint(
         @Param('type') type: string,
         @Param('version') version: string,
         @Param('task') task: string,
     ) {
-        const service = await this.nlpService.getService(type, version)
-        await this.nlpService.removeEndpoint(service, task)
+        const service = await this.serviceService.getService(type, version)
+        await this.serviceService.removeEndpoint(service, task)
         const response = { message: 'Endpoint deleted.' }
         return response
     }

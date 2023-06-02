@@ -62,7 +62,7 @@ export class ServiceEndpoint extends Document {
     method: string
 
     @Prop({ type: Map, of: String })
-    options: Record<string, any>
+    options: Record<string, string>
 
     @Prop({ type: String, required: true })
     endpointPath: string

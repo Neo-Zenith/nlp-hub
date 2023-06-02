@@ -71,7 +71,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -98,7 +98,7 @@ describe('ServiceController', () => {
             }
 
             const expectedOutput = 'Service registered.'
-            const createdMessage = await serviceController.subscribeService(
+            const createdMessage = await serviceController.createService(
                 serviceData.name,
                 serviceData.description,
                 serviceData.address,
@@ -127,7 +127,7 @@ describe('ServiceController', () => {
             }
 
             await expect(
-                serviceController.subscribeService(
+                serviceController.createService(
                     serviceData.name,
                     serviceData.description,
                     serviceData.address,
@@ -170,7 +170,7 @@ describe('ServiceController', () => {
             }
 
             await expect(
-                serviceController.subscribeService(
+                serviceController.createService(
                     serviceData.name,
                     serviceData.description,
                     serviceData.address,
@@ -213,7 +213,7 @@ describe('ServiceController', () => {
             }
 
             await expect(
-                serviceController.subscribeService(
+                serviceController.createService(
                     serviceData.name,
                     serviceData.description,
                     serviceData.address,
@@ -254,7 +254,7 @@ describe('ServiceController', () => {
                 type: 'SUD',
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -262,7 +262,7 @@ describe('ServiceController', () => {
                 [genesisEndpoint],
             )
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 secondService.name,
                 secondService.description,
                 secondService.address,
@@ -435,7 +435,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -447,10 +447,7 @@ describe('ServiceController', () => {
         it('should remove service and return success message', async () => {
             const validType = 'SUD'
             const validVersion = 'v1'
-            const removedMessage = await serviceController.unsubscribeService(
-                validType,
-                validVersion,
-            )
+            const removedMessage = await serviceController.deleteService(validType, validVersion)
 
             expect(removedMessage.message).toEqual('Service unsubscribed.')
         })
@@ -459,7 +456,7 @@ describe('ServiceController', () => {
             const validVersion = 'v1'
             const invalidType = 'SUR'
 
-            expect(serviceController.unsubscribeService(invalidType, validVersion)).rejects.toThrow(
+            expect(serviceController.deleteService(invalidType, validVersion)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -471,7 +468,7 @@ describe('ServiceController', () => {
             const validType = 'SUD'
             const invalidVersion = 'v19'
 
-            expect(serviceController.unsubscribeService(validType, invalidVersion)).rejects.toThrow(
+            expect(serviceController.deleteService(validType, invalidVersion)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -505,7 +502,7 @@ describe('ServiceController', () => {
                 type: 'SUD',
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -513,7 +510,7 @@ describe('ServiceController', () => {
                 [genesisEndpoint],
             )
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 secondService.name,
                 secondService.description,
                 secondService.address,
@@ -525,14 +522,14 @@ describe('ServiceController', () => {
         it('should retrieve all services', async () => {
             const req = mockRequestObject()
             req.payload.role = 'admin'
-            const returnedServicesAdmin = await serviceController.getServices(req)
-            returnedServicesAdmin.services.every((service: Service) =>
+            const returnedServicesAdmin = await serviceController.retrieveServices(req)
+            returnedServicesAdmin.services.every((service) =>
                 expect(service).toHaveProperty('address'),
             )
 
             req.payload.role = 'user'
-            const returnedServicesUser = await serviceController.getServices(req)
-            returnedServicesUser.services.every((service: Service) =>
+            const returnedServicesUser = await serviceController.retrieveServices(req)
+            returnedServicesUser.services.every((service) =>
                 expect(service).not.toHaveProperty('address'),
             )
         })
@@ -540,26 +537,26 @@ describe('ServiceController', () => {
         it('should retrieve service with specified type', async () => {
             const req = mockRequestObject()
             let type = 'NER'
-            let returnedServices = await serviceController.getServices(req, undefined, type)
+            let returnedServices = await serviceController.retrieveServices(req, undefined, type)
             expect(returnedServices.services.length).toEqual(0)
 
             type = 'SUD'
-            returnedServices = await serviceController.getServices(req, undefined, type)
+            returnedServices = await serviceController.retrieveServices(req, undefined, type)
             expect(returnedServices.services.length).toEqual(2)
         })
 
         it('should retrieve service with names matching the specified name', async () => {
             const req = mockRequestObject()
             let name = '2'
-            let returnedServices = await serviceController.getServices(req, name)
+            let returnedServices = await serviceController.retrieveServices(req, name)
             expect(returnedServices.services.length).toEqual(1)
 
             name = 'Test'
-            returnedServices = await serviceController.getServices(req, name)
+            returnedServices = await serviceController.retrieveServices(req, name)
             expect(returnedServices.services.length).toEqual(2)
 
             name = 'test'
-            returnedServices = await serviceController.getServices(req, name)
+            returnedServices = await serviceController.retrieveServices(req, name)
             expect(returnedServices.services.length).toEqual(2)
         })
     })
@@ -582,7 +579,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -658,7 +655,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -680,7 +677,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            const returnedMessage = await serviceController.addEndpoint(
+            const returnedMessage = await serviceController.createEndpoint(
                 validType,
                 validVersion,
                 endpointData.method,
@@ -706,7 +703,7 @@ describe('ServiceController', () => {
             }
 
             await expect(
-                serviceController.addEndpoint(
+                serviceController.createEndpoint(
                     validType,
                     validVersion,
                     endpointData.method,
@@ -733,18 +730,18 @@ describe('ServiceController', () => {
                 options: {
                     autocheck: 'boolean',
                 },
-                textBased: true
+                textBased: true,
             }
 
             await expect(
-                serviceController.addEndpoint(
+                serviceController.createEndpoint(
                     validType,
                     validVersion,
                     endpointData.method,
                     endpointData.endpointPath,
                     endpointData.task,
                     endpointData.options,
-                    endpointData.textBased
+                    endpointData.textBased,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -782,7 +779,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -973,7 +970,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -987,7 +984,7 @@ describe('ServiceController', () => {
             const validVersion = 'v1'
             const validTask = 'Test task'
 
-            const removedMessage = await serviceController.removeEndpoint(
+            const removedMessage = await serviceController.deleteEndpoint(
                 validType,
                 validVersion,
                 validTask,
@@ -1002,7 +999,7 @@ describe('ServiceController', () => {
             const validTask = 'Test task'
 
             await expect(
-                serviceController.removeEndpoint(invalidType, invalidVersion, validTask),
+                serviceController.deleteEndpoint(invalidType, invalidVersion, validTask),
             ).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
@@ -1017,7 +1014,7 @@ describe('ServiceController', () => {
             const invalidTask = 'Test task 17'
 
             await expect(
-                serviceController.removeEndpoint(validType, validVersion, invalidTask),
+                serviceController.deleteEndpoint(validType, validVersion, invalidTask),
             ).rejects.toThrow(
                 new HttpException(
                     'Endpoint not found. The requested resource could not be found.',
@@ -1054,7 +1051,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -1171,7 +1168,7 @@ describe('ServiceController', () => {
                 },
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -1185,7 +1182,7 @@ describe('ServiceController', () => {
             const validType = 'SUD'
             const validVersion = 'v1'
 
-            const returnedEndpoint = await serviceController.getEndpoint(
+            const returnedEndpoint = await serviceController.retrieveEndpoint(
                 validType,
                 validVersion,
                 validTask,
@@ -1202,7 +1199,7 @@ describe('ServiceController', () => {
             const validTask = 'Test task 2'
 
             await expect(
-                serviceController.getEndpoint(invalidType, invalidVersion, validTask),
+                serviceController.retrieveEndpoint(invalidType, invalidVersion, validTask),
             ).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
@@ -1217,7 +1214,7 @@ describe('ServiceController', () => {
             const invalidTask = 'Test task 21'
 
             await expect(
-                serviceController.getEndpoint(validType, validVersion, invalidTask),
+                serviceController.retrieveEndpoint(validType, validVersion, invalidTask),
             ).rejects.toThrow(
                 new HttpException(
                     'Endpoint not found. The requested resource could not be found.',
@@ -1252,7 +1249,7 @@ describe('ServiceController', () => {
                 type: 'NER',
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -1260,7 +1257,7 @@ describe('ServiceController', () => {
                 [genesisEndpoint],
             )
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 secondService.name,
                 secondService.description,
                 secondService.address,
@@ -1270,7 +1267,7 @@ describe('ServiceController', () => {
         })
 
         it('should return all service types', async () => {
-            const returnedServiceTypes = await serviceController.getServiceTypes()
+            const returnedServiceTypes = await serviceController.retrieveServiceTypes()
             expect(returnedServiceTypes.types).toEqual(Object.values(ServiceType))
         })
     })
@@ -1300,7 +1297,7 @@ describe('ServiceController', () => {
                 type: 'NER',
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -1308,7 +1305,7 @@ describe('ServiceController', () => {
                 [genesisEndpoint],
             )
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 secondService.name,
                 secondService.description,
                 secondService.address,
@@ -1319,13 +1316,13 @@ describe('ServiceController', () => {
 
         it('should return all versions of a service type', async () => {
             const validType = 'SUD'
-            const returnedServiceTypes = await serviceController.getServiceVersion(validType)
+            const returnedServiceTypes = await serviceController.retrieveServiceVersion(validType)
             expect(returnedServiceTypes.versions.length).toEqual(1)
         })
 
         it('should return 404 - NOT FOUND due to invalid service type', async () => {
             const invalidType = 'SUR'
-            await expect(serviceController.getServiceVersion(invalidType)).rejects.toThrow(
+            await expect(serviceController.retrieveServiceVersion(invalidType)).rejects.toThrow(
                 new HttpException(
                     `Invalid type. Expected any of ${Object.values(ServiceType).join(
                         ', ',

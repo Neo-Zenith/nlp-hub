@@ -105,7 +105,7 @@ describe('QueriesController', () => {
                 department: 'SCSE',
             }
 
-            await serviceController.subscribeService(
+            await serviceController.createService(
                 genesisService.name,
                 genesisService.description,
                 genesisService.address,
@@ -319,7 +319,7 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.id = userID[0]
             req.payload.role = 'user'
-            let returnedUsages = await usageController.getUsages(req)
+            let returnedUsages = await usageController.retrieveUsages(req)
             expect(returnedUsages.usages.length).toEqual(1)
             returnedUsages.usages.every((usage: Query) => {
                 expect(usage).toHaveProperty('uuid')
@@ -331,7 +331,7 @@ describe('QueriesController', () => {
 
             req.payload.id = adminID
             req.payload.role = 'admin'
-            returnedUsages = await usageController.getUsages(req)
+            returnedUsages = await usageController.retrieveUsages(req)
             expect(returnedUsages.usages.length).toEqual(2)
             returnedUsages.usages.every((usage: Query) => {
                 expect(usage).toHaveProperty('uuid')
@@ -347,7 +347,7 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.id = userID[0]
             req.payload.role = 'user'
-            let returnedUsages = await usageController.getUsages(
+            let returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -357,12 +357,22 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             req.payload.id = userID[1]
-            returnedUsages = await usageController.getUsages(req, undefined, undefined, execTime)
+            returnedUsages = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                execTime,
+            )
             expect(returnedUsages.usages.length).toEqual(0)
 
             req.payload.id = adminID
             req.payload.role = 'admin'
-            returnedUsages = await usageController.getUsages(req, undefined, undefined, execTime)
+            returnedUsages = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                execTime,
+            )
             expect(returnedUsages.usages.length).toEqual(1)
         })
 
@@ -373,19 +383,19 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.id = userID[0]
             req.payload.role = 'user'
-            let returnedUsages = await usageController.getUsages(req, validType, validVersion)
+            let returnedUsages = await usageController.retrieveUsages(req, validType, validVersion)
             expect(returnedUsages.usages.length).toEqual(1)
 
             validType = 'NER'
             validVersion = 'v1'
-            returnedUsages = await usageController.getUsages(req, validType, validVersion)
+            returnedUsages = await usageController.retrieveUsages(req, validType, validVersion)
             expect(returnedUsages.usages.length).toEqual(0)
 
             validType = 'SUD'
             validVersion = 'v1'
             req.payload.id = adminID
             req.payload.role = 'admin'
-            returnedUsages = await usageController.getUsages(req, validType, validVersion)
+            returnedUsages = await usageController.retrieveUsages(req, validType, validVersion)
             expect(returnedUsages.usages.length).toEqual(2)
         })
 
@@ -394,7 +404,7 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.id = userID[0]
             req.payload.role = 'user'
-            let returnedUsages = await usageController.getUsages(
+            let returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -404,7 +414,7 @@ describe('QueriesController', () => {
             expect(returnedUsages.usages.length).toEqual(1)
 
             startDate = new Date().toDateString()
-            returnedUsages = await usageController.getUsages(
+            returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -417,7 +427,7 @@ describe('QueriesController', () => {
             tomorrow.setDate(tomorrow.getDate() + 1)
             startDate = tomorrow.toDateString()
 
-            returnedUsages = await usageController.getUsages(
+            returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -437,7 +447,7 @@ describe('QueriesController', () => {
             tomorrow.setDate(tomorrow.getDate() + 1)
             endDate = tomorrow.toDateString()
 
-            let returnedUsages = await usageController.getUsages(
+            let returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -451,7 +461,7 @@ describe('QueriesController', () => {
             yesterday.setDate(yesterday.getDate() - 1)
             endDate = yesterday.toDateString()
 
-            returnedUsages = await usageController.getUsages(
+            returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -476,7 +486,7 @@ describe('QueriesController', () => {
             yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toDateString()
 
-            let returnedUsages = await usageController.getUsages(
+            let returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -489,7 +499,7 @@ describe('QueriesController', () => {
             const nextWeek = new Date()
             nextWeek.setDate(nextWeek.getDate() + 7)
             startDate = nextWeek.toDateString()
-            returnedUsages = await usageController.getUsages(
+            returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -517,7 +527,7 @@ describe('QueriesController', () => {
             yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toISOString()
 
-            let returnedUsages = await usageController.getUsages(
+            let returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -538,7 +548,7 @@ describe('QueriesController', () => {
             yesterday.setDate(yesterday.getDate() - 1)
             startDate = yesterday.toISOString().slice(0, 10)
 
-            returnedUsages = await usageController.getUsages(
+            returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -556,7 +566,7 @@ describe('QueriesController', () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
             await userController.deleteUser('User01')
-            const returnedUsages = await usageController.getUsages(
+            const returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
@@ -576,8 +586,8 @@ describe('QueriesController', () => {
             const req = mockRequestObject()
             req.payload.role = 'admin'
             req.payload.id = adminID
-            await serviceController.unsubscribeService('SUD', 'v1')
-            const returnedUsages = await usageController.getUsages(
+            await serviceController.deleteService('SUD', 'v1')
+            const returnedUsages = await usageController.retrieveUsages(
                 req,
                 undefined,
                 undefined,
