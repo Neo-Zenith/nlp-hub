@@ -32,20 +32,14 @@ import {
     userFixture2,
     userFixture3,
 } from '../../users/test/fixtures/users.fixture'
-import {
-    endpointFixture1,
-    endpointFixture2,
-    serviceFixture1,
-} from '../../services/test/fixtures/services.fixture'
+import { serviceFixture1 } from '../../services/test/fixtures/services.fixture'
 
 describe('QueriesController', () => {
     let mongod: MongoMemoryServer
     let mongoConnection: Connection
 
     let queryController: QueryController
-    let serviceController: ServiceController
     let usageController: UsageController
-    let userController: UserController
 
     let queryModel: Model<Query>
     let serviceModel: Model<Service>
@@ -79,9 +73,7 @@ describe('QueriesController', () => {
         }).compile()
 
         queryController = module.get<QueryController>(QueryController)
-        serviceController = module.get<ServiceController>(ServiceController)
         usageController = module.get<UsageController>(UsageController)
-        userController = module.get<UserController>(UserController)
     })
 
     afterAll(async () => {
@@ -488,12 +480,14 @@ describe('QueriesController', () => {
 
             const startDate = new Date()
             startDate.setTime(startDate.getTime() - 1000)
-            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
-            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
+            startDate.setUTCMinutes(
+                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
+            )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
-            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
-            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
+            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
 
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()
@@ -520,12 +514,14 @@ describe('QueriesController', () => {
 
             const startDate = new Date()
             startDate.setTime(startDate.getTime() - 1000)
-            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
-            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
+            startDate.setUTCMinutes(
+                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
+            )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
-            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
-            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
+            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
 
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()
@@ -552,12 +548,14 @@ describe('QueriesController', () => {
 
             const startDate = new Date()
             startDate.setTime(startDate.getTime() - 1000)
-            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
-            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
+            startDate.setUTCMinutes(
+                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
+            )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
-            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
-            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
+            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
 
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()
@@ -584,16 +582,15 @@ describe('QueriesController', () => {
 
             const startDate = new Date()
             startDate.setTime(startDate.getTime() - 1000)
-            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
-            startDate.setMinutes(
-                startDate.getMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
+            startDate.setUTCMinutes(
+                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
             )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
-            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
-            endDate.setMinutes(
-                endDate.getMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
-            )
+            endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
+            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()
 
@@ -694,6 +691,144 @@ describe('QueriesController', () => {
             response.usages.forEach((item: Record<string, any>) => {
                 expect(item).toHaveProperty('serviceDeleted', true)
             })
+        })
+    })
+
+    describe('retrieve usage', () => {
+        let userID: string[]
+        let adminID: string
+        let queryUUID: string[]
+        beforeEach(async () => {
+            userID = []
+            userID.push((await new UserModel(userFixture1).save()).id)
+            userID.push((await new UserModel(userFixture2).save()).id)
+            userID.push((await new UserModel(userFixture3).save()).id)
+            adminID = (await new AdminModel(adminFixture1).save()).id
+
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID = (
+                await new ServiceModel({ name, description, baseAddress, type }).save()
+            ).id
+            let endpointID: string[] = []
+            for (const endpoint of endpoints) {
+                endpointID.push(
+                    (await new serviceEndpointModel({ serviceID, ...endpoint }).save()).id,
+                )
+            }
+
+            const options = {
+                options1: 'Test string message.',
+                options2: 10,
+                options3: true,
+            }
+
+            const output = {
+                output1: 'Test string output.',
+                output2: 99,
+                output3: false,
+            }
+
+            const executionTime = [0.1, 5, 10]
+
+            queryUUID = []
+            queryUUID.push(
+                (
+                    await new QueryModel({
+                        userID: userID[0],
+                        serviceID,
+                        endpointID: endpointID[0],
+                        options,
+                        output: JSON.stringify(output),
+                        executionTime: executionTime[0],
+                        isAdminQuery: false,
+                    }).save()
+                ).uuid,
+            )
+
+            queryUUID.push(
+                (
+                    await new QueryModel({
+                        userID: userID[1],
+                        serviceID,
+                        endpointID: endpointID[0],
+                        options,
+                        output: JSON.stringify(output),
+                        executionTime: executionTime[1],
+                        isAdminQuery: false,
+                    }).save()
+                ).uuid,
+            )
+
+            queryUUID.push(
+                (
+                    await new QueryModel({
+                        userID: userID[2],
+                        serviceID,
+                        endpointID: endpointID[1],
+                        options,
+                        output: JSON.stringify(output),
+                        executionTime: executionTime[2],
+                        isAdminQuery: false,
+                    }).save()
+                ).uuid,
+            )
+        })
+
+        it('should retrieve usage with the specified UUID, assumed UTC', async () => {
+            const expectedUsage = await QueryModel.findOne({ uuid: queryUUID[0] })
+            const response = await usageController.retrieveUsage(queryUUID[0])
+            expect(response).toHaveProperty('uuid')
+            expect(response).toHaveProperty('executionTime')
+            expect(response).toHaveProperty('output')
+            expect(response).toHaveProperty('options')
+            expect(response).toHaveProperty('dateTime')
+            expect(response.dateTime).toEqual(expectedUsage.dateTime)
+        })
+
+        it('should retrieve usage with the specified UUID, with dateTime displayed in given positive timezone', async () => {
+            const timezone = '13.9'
+            const expectedUsage = await QueryModel.findOne({ uuid: queryUUID[1] })
+            let expectedDateTime = expectedUsage.dateTime
+            expectedDateTime.setUTCHours(expectedDateTime.getUTCHours() + Number.parseInt(timezone))
+            expectedDateTime.setUTCMinutes(
+                expectedDateTime.getUTCMinutes() +
+                    Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
+
+            const response = await usageController.retrieveUsage(queryUUID[1], timezone)
+            expect(response).toHaveProperty('uuid')
+            expect(response).toHaveProperty('executionTime')
+            expect(response).toHaveProperty('output')
+            expect(response).toHaveProperty('options')
+            expect(response).toHaveProperty('dateTime')
+            expect(response.dateTime).toEqual(expectedDateTime)
+        })
+
+        it('should retrieve usage with the specified UUID, with dateTime displayed in given negative timezone', async () => {
+            const timezone = '-11.9'
+            const expectedUsage = await QueryModel.findOne({ uuid: queryUUID[1] })
+            let expectedDateTime = expectedUsage.dateTime
+            expectedDateTime.setUTCHours(expectedDateTime.getUTCHours() + Number.parseInt(timezone))
+            expectedDateTime.setUTCMinutes(
+                expectedDateTime.getUTCMinutes() +
+                    Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
+
+            const response = await usageController.retrieveUsage(queryUUID[1], timezone)
+            expect(response).toHaveProperty('uuid')
+            expect(response).toHaveProperty('executionTime')
+            expect(response).toHaveProperty('output')
+            expect(response).toHaveProperty('options')
+            expect(response).toHaveProperty('dateTime')
+            expect(response.dateTime).toEqual(expectedDateTime)
+        })
+
+        it('should return 404 - Not Found due to invalid uuid', async () => {
+            const uuid = 'invalid-uuid-1'
+            const message = 'Usage not found. The requested resource could not be found.'
+            await expect(usageController.retrieveUsage(uuid)).rejects.toThrow(
+                new HttpException(message, HttpStatus.NOT_FOUND),
+            )
         })
     })
 })

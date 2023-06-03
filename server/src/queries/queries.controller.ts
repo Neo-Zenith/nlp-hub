@@ -162,7 +162,7 @@ export class UsageController {
                 executionTime: usage.executionTime,
                 output: usage.output,
                 options: usage.options,
-                dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
+                dateTime: this.queryService.convertTimeToUTC(usage.dateTime, timezone),
                 ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
                 ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
             }
@@ -187,7 +187,7 @@ export class UsageController {
             executionTime: usage.executionTime,
             output: usage.output,
             options: usage.options,
-            dateTime: this.queryService.convertTimezone(usage.dateTime, timezone),
+            dateTime: this.queryService.convertUTCToLocal(usage.dateTime, timezone),
             ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
             ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
         }

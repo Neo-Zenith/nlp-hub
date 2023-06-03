@@ -139,23 +139,16 @@ export class QueryService {
             query.executionTime = { $lte: Number.parseFloat(execTime) }
         }
 
-        // default timezone is UTC+0
-        let offset = timezone ? Number.parseFloat(timezone) : 0
-
         // convert range of datetime into UTC
         if (startDate) {
-            const startDateTime = new Date(startDate)
-            startDateTime.setHours(startDateTime.getHours() - Math.trunc(offset))
-            startDateTime.setMinutes(
-                startDateTime.getMinutes() - Number((offset % 1).toFixed(1)) * 60,
-            )
+            let startDateTime = new Date(startDate)
+            startDateTime = this.convertTimeToUTC(startDateTime, timezone)
             query.dateTime = { $gte: startDateTime }
         }
 
         if (endDate) {
-            const endDateTime = new Date(endDate)
-            endDateTime.setHours(endDateTime.getHours() - Math.trunc(offset))
-            endDateTime.setMinutes(endDateTime.getMinutes() - Number((offset % 1).toFixed(1)) * 60)
+            let endDateTime = new Date(endDate)
+            endDateTime = this.convertTimeToUTC(endDateTime, timezone)
             if (query.dateTime) {
                 query.dateTime.$lte = endDateTime
             } else {
@@ -229,7 +222,7 @@ export class QueryService {
             user = await this.userModel.findById(usage.userID)
         }
         if (!user) {
-            update.serviceDeleted = true
+            update.userDeleted = true
         }
 
         return Object.assign(update, usage['_doc'])
@@ -242,10 +235,17 @@ export class QueryService {
         await this.queryModel.deleteOne({ uuid: uuid })
     }
 
-    convertTimezone(dateTime: Date, timezone?: string) {
+    convertTimeToUTC(dateTime: Date, timezone?: string) {
         const offset = timezone ? Number.parseFloat(timezone) : 0
-        dateTime.setHours(dateTime.getHours() - Math.floor(offset))
-        dateTime.setMinutes(dateTime.getMinutes() - (offset % 1) * 60)
+        dateTime.setUTCHours(dateTime.getUTCHours() - Math.trunc(offset))
+        dateTime.setUTCMinutes(dateTime.getUTCMinutes() - Number((offset % 1).toFixed(1)) * 60)
+        return dateTime
+    }
+
+    convertUTCToLocal(dateTime: Date, timezone?: string) {
+        const offset = timezone ? Number.parseFloat(timezone) : 0
+        dateTime.setUTCHours(dateTime.getUTCHours() + Math.trunc(offset))
+        dateTime.setUTCMinutes(dateTime.getUTCMinutes() + Number((offset % 1).toFixed(1)) * 60)
         return dateTime
     }
 
