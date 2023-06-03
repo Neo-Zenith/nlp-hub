@@ -407,7 +407,7 @@ describe('QueriesController', () => {
             })
         })
 
-        it('should retrieve no usages with start date later than the current date', async () => {
+        it('should retrieve no usages for start date later than the current date', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -428,7 +428,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(0)
         })
 
-        it('should retrieve no usages with end date earlier than the current date', async () => {
+        it('should retrieve no usages for end date earlier than the current date', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -450,7 +450,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(0)
         })
 
-        it('should retrieve all usages with start date earlier than, and end date later than the current date', async () => {
+        it('should retrieve all usages for start date earlier than, and end date later than the current date', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -473,6 +473,222 @@ describe('QueriesController', () => {
 
             expect(Array.isArray(response.usages)).toBe(true)
             expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in positive integer', async () => {
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+
+            const timezone = '14'
+
+            const startDate = new Date()
+            startDate.setTime(startDate.getTime() - 1000)
+            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
+            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            const endDate = new Date()
+            endDate.setTime(endDate.getTime() + 1000)
+            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
+            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+
+            const startDateStr = startDate.toISOString()
+            const endDateStr = endDate.toISOString()
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                startDateStr,
+                endDateStr,
+                timezone,
+            )
+
+            expect(Array.isArray(response.usages)).toBe(true)
+            expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in negative integer', async () => {
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+
+            const timezone = '-12'
+
+            const startDate = new Date()
+            startDate.setTime(startDate.getTime() - 1000)
+            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
+            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            const endDate = new Date()
+            endDate.setTime(endDate.getTime() + 1000)
+            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
+            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+
+            const startDateStr = startDate.toISOString()
+            const endDateStr = endDate.toISOString()
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                startDateStr,
+                endDateStr,
+                timezone,
+            )
+
+            expect(Array.isArray(response.usages)).toBe(true)
+            expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in positive float', async () => {
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+
+            const timezone = '13.9'
+
+            const startDate = new Date()
+            startDate.setTime(startDate.getTime() - 1000)
+            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
+            startDate.setMinutes(startDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            const endDate = new Date()
+            endDate.setTime(endDate.getTime() + 1000)
+            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
+            endDate.setMinutes(endDate.getMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+
+            const startDateStr = startDate.toISOString()
+            const endDateStr = endDate.toISOString()
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                startDateStr,
+                endDateStr,
+                timezone,
+            )
+
+            expect(Array.isArray(response.usages)).toBe(true)
+            expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in negative float', async () => {
+            req.payload.role = 'admin'
+            req.payload.id = adminID
+
+            const timezone = '-11.9'
+
+            const startDate = new Date()
+            startDate.setTime(startDate.getTime() - 1000)
+            startDate.setHours(startDate.getHours() + Number.parseInt(timezone))
+            startDate.setMinutes(
+                startDate.getMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
+            const endDate = new Date()
+            endDate.setTime(endDate.getTime() + 1000)
+            endDate.setHours(endDate.getHours() + Number.parseInt(timezone))
+            endDate.setMinutes(
+                endDate.getMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
+            const startDateStr = startDate.toISOString()
+            const endDateStr = endDate.toISOString()
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                startDateStr,
+                endDateStr,
+                timezone,
+            )
+
+            expect(Array.isArray(response.usages)).toBe(true)
+            expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve 2 usages with userID 0 deleted and returnDelUser set to false', async () => {
+            await UserModel.deleteOne({ _id: userID[0] })
+
+            const returnDelUser = false
+            req.payload.id = adminID
+            req.payload.role = 'admin'
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelUser,
+            )
+
+            expect(response.usages.length).toBe(2)
+        })
+
+        it('should retrieve all usages with userID 0 deleted and returnDelUser set to true', async () => {
+            await UserModel.deleteOne({ _id: userID[0] })
+
+            const returnDelUser = true
+            req.payload.id = adminID
+            req.payload.role = 'admin'
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelUser,
+            )
+
+            expect(response.usages.length).toBe(3)
+        })
+
+        it('should retrieve no usages with serviceFixture1 deleted and returnDelService set to false', async () => {
+            await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
+            const returnDelService = false
+            req.payload.id = adminID
+            req.payload.role = 'admin'
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelService,
+            )
+            expect(response.usages.length).toBe(0)
+        })
+
+        it('should retrieve all usages with serviceFixture1 deleted and returnDelService set to true', async () => {
+            await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
+            const returnDelService = true
+            req.payload.id = adminID
+            req.payload.role = 'admin'
+
+            const response = await usageController.retrieveUsages(
+                req,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                returnDelService,
+            )
+            expect(response.usages.length).toBe(3)
+            response.usages.forEach((item: Record<string, any>) => {
+                expect(item).toHaveProperty('serviceDeleted', true)
+            })
         })
     })
 })

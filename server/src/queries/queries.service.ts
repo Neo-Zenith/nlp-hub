@@ -143,16 +143,17 @@ export class QueryService {
         // convert range of datetime into UTC
         if (startDate) {
             const startDateTime = new Date(startDate)
-            startDateTime.setHours(startDateTime.getHours() - Math.floor(offset))
-            startDateTime.setMinutes(startDateTime.getMinutes() - (offset % 1) * 60)
+            startDateTime.setHours(startDateTime.getHours() - Math.trunc(offset))
+            startDateTime.setMinutes(
+                startDateTime.getMinutes() - Number((offset % 1).toFixed(1)) * 60,
+            )
             query.dateTime = { $gte: startDateTime }
         }
 
         if (endDate) {
             const endDateTime = new Date(endDate)
-            endDateTime.setHours(endDateTime.getHours() - Math.floor(offset))
-            endDateTime.setMinutes(endDateTime.getMinutes() - (offset % 1) * 60)
-
+            endDateTime.setHours(endDateTime.getHours() - Math.trunc(offset))
+            endDateTime.setMinutes(endDateTime.getMinutes() - Number((offset % 1).toFixed(1)) * 60)
             if (query.dateTime) {
                 query.dateTime.$lte = endDateTime
             } else {

@@ -53,7 +53,7 @@ export abstract class ValidateRequestBodyMiddleware {
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
 
-            if (typeof fieldValue === 'string') {
+            if (typeof fieldValue === 'string' && fieldValue.length === 0) {
                 const message = `Invalid value for ${field}. String cannot be empty.`
                 throw new HttpException(message, HttpStatus.BAD_REQUEST)
             }
