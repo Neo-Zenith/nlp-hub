@@ -110,7 +110,12 @@ describe('QueriesController', () => {
             adminID = admin.id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
-            await serviceController.createService(name, description, baseAddress, type, endpoints)
+            const serviceID = (
+                await new ServiceModel({ name, description, baseAddress, type }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID, ...endpoint }).save()
+            }
         })
 
         it('should query service endpoint and return response for user', async () => {

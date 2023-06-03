@@ -50,12 +50,13 @@ export class QueryService {
         const endpointID = endpoint.id
         const userID = user.id
         const isAdminQuery = user.role === 'admin'
+        const sanitizedData = this.sanitizeResponse(data)
 
         const query = new this.queryModel({
             userID,
             serviceID,
             endpointID,
-            output: JSON.stringify(data),
+            output: JSON.stringify(sanitizedData),
             options,
             executionTime: elapsedTime,
             isAdminQuery,
@@ -66,7 +67,7 @@ export class QueryService {
         return {
             uuid: query.uuid,
             executionTime: query.executionTime,
-            output: data,
+            output: sanitizedData,
         }
     }
 
@@ -100,12 +101,13 @@ export class QueryService {
         const endpointID = endpoint.id
         const userID = user.id
         const isAdminQuery = user.role === 'admin'
+        const sanitizedData = this.sanitizeResponse(data)
 
         const query = new this.queryModel({
             userID,
             serviceID,
             endpointID,
-            output: JSON.stringify(data),
+            output: JSON.stringify(sanitizedData),
             executionTime: elapsedTime,
             isAdminQuery,
         })
@@ -115,7 +117,7 @@ export class QueryService {
         return {
             uuid: query.uuid,
             executionTime: query.executionTime,
-            output: data,
+            output: sanitizedData,
         }
     }
 
@@ -249,6 +251,13 @@ export class QueryService {
 
     private async removeFile(file: Express.Multer.File) {
         await fs.unlink(file.path)
+    }
+
+    private sanitizeResponse(data: any) {
+        if (typeof data === 'string' && data.startsWith('<!DOCTYPE html>')) {
+            return { output: 'Action completed successfully' }
+        }
+        return data
     }
 
     private async saveQueryDB(query: Query) {
