@@ -33,6 +33,30 @@ export const endpointFixture3 = {
     endpointPath: '/fixture3',
 }
 
+export const endpointFixture3dup1 = {
+    method: 'GET',
+    task: 'fixture3',
+    textBased: true,
+    options: {
+        option1: 'string',
+        option2: 'string',
+        option3: 'string',
+    },
+    endpointPath: '/fixture3-1',
+}
+
+export const endpointFixture3dup2 = {
+    method: 'GET',
+    task: 'fixture3-2',
+    textBased: true,
+    options: {
+        option1: 'string',
+        option2: 'string',
+        option3: 'string',
+    },
+    endpointPath: '/fixture3',
+}
+
 export const serviceFixture1 = {
     name: 'Service 001 - Test service 1',
     description: 'This is test service 1.',

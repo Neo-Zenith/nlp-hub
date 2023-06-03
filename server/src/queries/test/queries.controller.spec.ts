@@ -550,12 +550,15 @@ describe('QueriesController', () => {
             startDate.setTime(startDate.getTime() - 1000)
             startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
             startDate.setUTCMinutes(
-                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
+                startDate.getUTCMinutes() +
+                    Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
             )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
             endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
-            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            endDate.setUTCMinutes(
+                endDate.getUTCMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
 
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()
@@ -584,12 +587,15 @@ describe('QueriesController', () => {
             startDate.setTime(startDate.getTime() - 1000)
             startDate.setUTCHours(startDate.getUTCHours() + Number.parseInt(timezone))
             startDate.setUTCMinutes(
-                startDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60,
+                startDate.getUTCMinutes() +
+                    Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
             )
             const endDate = new Date()
             endDate.setTime(endDate.getTime() + 1000)
             endDate.setUTCHours(endDate.getUTCHours() + Number.parseInt(timezone))
-            endDate.setUTCMinutes(endDate.getUTCMinutes() + (Number.parseFloat(timezone) % 1) * 60)
+            endDate.setUTCMinutes(
+                endDate.getUTCMinutes() + Number((Number.parseFloat(timezone) % 1).toFixed(1)) * 60,
+            )
 
             const startDateStr = startDate.toISOString()
             const endDateStr = endDate.toISOString()

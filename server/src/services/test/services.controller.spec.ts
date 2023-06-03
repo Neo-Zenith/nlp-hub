@@ -8,16 +8,25 @@ import {
     Service,
     ServiceEndpoint,
     ServiceEndpointSchema,
+    ServiceModel,
     ServiceSchema,
     ServiceType,
 } from '../services.model'
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { mockRequestObject } from '../../common/test/mock/common.model'
+import {
+    endpointFixture3dup1,
+    endpointFixture3dup2,
+    serviceFixture1,
+    serviceFixture2,
+} from './fixtures/services.fixture'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController
+
     let mongod: MongoMemoryServer
     let mongoConnection: Connection
+
     let serviceModel: Model<Service>
     let serviceEndpointModel: Model<ServiceEndpoint>
 
@@ -25,10 +34,11 @@ describe('ServiceController', () => {
         mongod = await MongoMemoryServer.create()
         const uri = mongod.getUri()
         mongoConnection = (await connect(uri)).connection
+
         serviceModel = mongoConnection.model(Service.name, ServiceSchema)
         serviceEndpointModel = mongoConnection.model(ServiceEndpoint.name, ServiceEndpointSchema)
 
-        const app: TestingModule = await Test.createTestingModule({
+        const module: TestingModule = await Test.createTestingModule({
             controllers: [ServiceController],
             providers: [
                 ServiceService,
@@ -36,7 +46,8 @@ describe('ServiceController', () => {
                 { provide: getModelToken(ServiceEndpoint.name), useValue: serviceEndpointModel },
             ],
         }).compile()
-        serviceController = app.get<ServiceController>(ServiceController)
+
+        serviceController = module.get<ServiceController>(ServiceController)
     })
 
     afterAll(async () => {
@@ -55,85 +66,31 @@ describe('ServiceController', () => {
 
     describe('register service', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID = (
+                await new ServiceModel({ name, description, baseAddress, type }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
         })
 
         it('should register service and return success message', async () => {
-            const serviceData = {
-                name: 'SUD Auto-punctuator',
-                description: 'Test description.',
-                address: 'https://sud-speechlab.sg',
-                type: 'SUD',
-            }
-
-            const endpointData = {
-                task: 'predict',
-                endpointPath: '/predict',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const expectedOutput = 'Service registered.'
-            const createdMessage = await serviceController.createService(
-                serviceData.name,
-                serviceData.description,
-                serviceData.address,
-                serviceData.type,
-                [endpointData],
+            const { name, description, baseAddress, type, endpoints } = serviceFixture2
+            const response = await serviceController.createService(
+                name,
+                description,
+                baseAddress,
+                type,
+                endpoints,
             )
-
-            expect(createdMessage.message).toBe(expectedOutput)
+            expect(response.message).toBe('Service registered.')
         })
 
-        it('should return 409 - CONFLICT due to duplicated address', async () => {
-            const serviceData = {
-                name: 'SUD Auto-punctuator',
-                description: 'Test description.',
-                address: 'https://test-test.com', // same address as genesis
-                type: 'SUD',
-            }
-
-            const endpointData = {
-                task: 'predict',
-                endpointPath: '/predict',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
+        it('should return 409 - Conflict due to duplicated address', async () => {
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
             await expect(
-                serviceController.createService(
-                    serviceData.name,
-                    serviceData.description,
-                    serviceData.address,
-                    serviceData.type,
-                    [endpointData],
-                ),
+                serviceController.createService(name, description, baseAddress, type, endpoints),
             ).rejects.toThrow(
                 new HttpException(
                     'Invalid address. There is another service of the same address.',
@@ -142,41 +99,13 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 409 - CONFLICT due to duplicated endpoint task', async () => {
-            const serviceData = {
-                name: 'SUD Auto-punctuator',
-                description: 'Test description.',
-                address: 'https://test2-test.com',
-                type: 'SUD',
-            }
-
-            const endpointData1 = {
-                task: 'predict',
-                endpointPath: '/predict',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const endpointData2 = {
-                task: 'predict',
-                endpointPath: '/predict2',
-                method: 'GET',
-                options: {
-                    passes: 'number',
-                    lang: 'string',
-                },
-            }
+        it('should return 409 - Conflict due to duplicated endpoint task', async () => {
+            let localFixture = JSON.parse(JSON.stringify(serviceFixture2))
+            localFixture.endpoints.push(endpointFixture3dup1)
+            const { name, description, baseAddress, type, endpoints } = localFixture
 
             await expect(
-                serviceController.createService(
-                    serviceData.name,
-                    serviceData.description,
-                    serviceData.address,
-                    serviceData.type,
-                    [endpointData1, endpointData2],
-                ),
+                serviceController.createService(name, description, baseAddress, type, endpoints),
             ).rejects.toThrow(
                 new HttpException(
                     'Invalid task. There is another endpoint of the same task for the specified service.',
@@ -185,41 +114,13 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 409 - CONFLICT due to duplicated endpoint method', async () => {
-            const serviceData = {
-                name: 'SUD Auto-punctuator',
-                description: 'Test description.',
-                address: 'https://test2-test.com',
-                type: 'SUD',
-            }
-
-            const endpointData1 = {
-                task: 'predict',
-                endpointPath: '/predict',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const endpointData2 = {
-                task: 'change-lang',
-                endpointPath: '/predict',
-                method: 'POST',
-                options: {
-                    passes: 'number',
-                    lang: 'string',
-                },
-            }
+        it('should return 409 - Conflict due to duplicated endpoint method', async () => {
+            let localFixture = JSON.parse(JSON.stringify(serviceFixture2))
+            localFixture.endpoints.push(endpointFixture3dup2)
+            const { name, description, baseAddress, type, endpoints } = localFixture
 
             await expect(
-                serviceController.createService(
-                    serviceData.name,
-                    serviceData.description,
-                    serviceData.address,
-                    serviceData.type,
-                    [endpointData1, endpointData2],
-                ),
+                serviceController.createService(name, description, baseAddress, type, endpoints),
             ).rejects.toThrow(
                 new HttpException(
                     'Invalid method. There is another endpoint of the same method and endpointPath for the specified service.',
@@ -231,92 +132,87 @@ describe('ServiceController', () => {
 
     describe('update service', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const {
+                name: name1,
+                description: description1,
+                baseAddress: baseAddress1,
+                type: type1,
+                endpoints: endpoints1,
+            } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name: name1,
+                    description: description1,
+                    baseAddress: baseAddress1,
+                    type: type1,
+                }).save()
+            ).id
+            for (const endpoint of endpoints1) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
 
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
+            const {
+                name: name2,
+                description: description2,
+                baseAddress: baseAddress2,
+                type: type2,
+                endpoints: endpoints2,
+            } = serviceFixture2
+            const serviceID2 = (
+                await new ServiceModel({
+                    name: name2,
+                    description: description2,
+                    baseAddress: baseAddress2,
+                    type: type2,
+                }).save()
+            ).id
+            for (const endpoint of endpoints2) {
+                await new serviceEndpointModel({ serviceID: serviceID2, ...endpoint }).save()
             }
-
-            const secondService = {
-                name: 'Test name 2',
-                description: 'Test description.',
-                address: 'https://test2-test.com',
-                type: 'SUD',
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
-
-            await serviceController.createService(
-                secondService.name,
-                secondService.description,
-                secondService.address,
-                secondService.type,
-                [genesisEndpoint],
-            )
         })
 
         it('should update service and return success message', async () => {
-            const updatedServiceData = {
-                name: 'SUD Auto-punctuator Updated',
-                description: 'Test description updated.',
-                address: 'https://sud-speechlab.sg/updated',
-                type: 'NER',
-                version: 'v2',
-            }
+            const updatedName = 'Service 002 - Test service 2 (Updated)'
+            const updatedDescription = 'This is test service 2 (Updated).'
+            const updatedAddress = 'https://example.com/service2/updated'
+            const updatedType = 'NER'
+            const updatedVersion = 'v1'
 
-            const validType = 'SUD'
-            const validVersion = 'v1'
+            const type = 'SUD'
+            const version = 'v2'
 
-            const updatedMessage = await serviceController.updateService(
-                validType,
-                validVersion,
-                updatedServiceData.name,
-                updatedServiceData.version,
-                updatedServiceData.description,
-                updatedServiceData.address,
-                updatedServiceData.type,
+            const response = await serviceController.updateService(
+                type,
+                version,
+                updatedName,
+                updatedVersion,
+                updatedDescription,
+                updatedAddress,
+                updatedType,
             )
 
-            expect(updatedMessage.message).toEqual('Service updated.')
+            expect(response.message).toEqual('Service updated.')
         })
 
-        it('should return 409 - CONFLICT due to duplicated address', async () => {
-            const updatedServiceData = {
-                name: 'SUD Auto-punctuator Updated',
-                description: 'Test description updated.',
-                address: 'https://test-test.com',
-                type: 'NER',
-                version: 'v2',
-            }
+        it('should return 409 - Conflict due to duplicated address', async () => {
+            const updatedName = 'Service 002 - Test service 2 (Updated)'
+            const updatedDescription = 'This is test service 2 (Updated).'
+            const updatedAddress = 'https://sud.speechlab.sg'
+            const updatedType = 'NER'
+            const updatedVersion = 'v1'
 
-            const validType = 'SUD'
-            const validVersion = 'v2'
+            const type = 'SUD'
+            const version = 'v2'
 
             await expect(
                 serviceController.updateService(
-                    validType,
-                    validVersion,
-                    updatedServiceData.name,
-                    updatedServiceData.version,
-                    updatedServiceData.description,
-                    updatedServiceData.address,
-                    updatedServiceData.type,
+                    type,
+                    version,
+                    updatedName,
+                    updatedVersion,
+                    updatedDescription,
+                    updatedAddress,
+                    updatedType,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -326,27 +222,25 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 409 - CONFLICT due to duplicated type and version', async () => {
-            const updatedServiceData = {
-                name: 'SUD Auto-punctuator Updated',
-                description: 'Test description updated.',
-                address: 'https://sud-speechlab.sg/second',
-                type: 'SUD',
-                version: 'v1',
-            }
+        it('should return 409 - Conflict due to duplicated type and version', async () => {
+            const updatedName = 'Service 002 - Test service 2 (Updated)'
+            const updatedDescription = 'This is test service 2 (Updated).'
+            const updatedAddress = 'https://example.com/service2/updated'
+            const updatedType = 'SUD'
+            const updatedVersion = 'v1'
 
-            const validType = 'SUD'
-            const validVersion = 'v2'
+            const type = 'SUD'
+            const version = 'v2'
 
             await expect(
                 serviceController.updateService(
-                    validType,
-                    validVersion,
-                    updatedServiceData.name,
-                    updatedServiceData.version,
-                    updatedServiceData.description,
-                    updatedServiceData.address,
-                    updatedServiceData.type,
+                    type,
+                    version,
+                    updatedName,
+                    updatedVersion,
+                    updatedDescription,
+                    updatedAddress,
+                    updatedType,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -356,27 +250,25 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid type', async () => {
-            const invalidType = 'SUR'
-            const validVersion = 'v1'
+        it('should return 404 - Not Found due to invalid type', async () => {
+            const type = 'SUR'
+            const version = 'v1'
 
-            const updatedServiceData = {
-                name: 'SUD Auto-punctuator Updated',
-                description: 'Test description updated.',
-                address: 'https://sud-speechlab.sg/second',
-                type: 'NER',
-                version: 'v2',
-            }
+            const updatedName = 'Minimal Reproducible Error PH'
+            const updatedDescription = 'Minimal Reproducible Error PH'
+            const updatedAddress = 'Minimal Reproducible Error PH'
+            const updatedType = 'SUD'
+            const updatedVersion = 'v1'
 
             await expect(
                 serviceController.updateService(
-                    invalidType,
-                    validVersion,
-                    updatedServiceData.name,
-                    updatedServiceData.version,
-                    updatedServiceData.description,
-                    updatedServiceData.address,
-                    updatedServiceData.type,
+                    type,
+                    version,
+                    updatedName,
+                    updatedVersion,
+                    updatedDescription,
+                    updatedAddress,
+                    updatedType,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -386,27 +278,25 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid version', async () => {
-            const invalidVersion = 'v11'
-            const validType = 'SUD'
+        it('should return 404 - Not Found due to invalid version', async () => {
+            const type = 'SUD'
+            const version = 'v3'
 
-            const updatedServiceData = {
-                name: 'SUD Auto-punctuator Updated',
-                description: 'Test description updated.',
-                address: 'https://sud-speechlab.sg/second',
-                type: 'NER',
-                version: 'v2',
-            }
+            const updatedName = 'Minimal Reproducible Error PH'
+            const updatedDescription = 'Minimal Reproducible Error PH'
+            const updatedAddress = 'Minimal Reproducible Error PH'
+            const updatedType = 'SUD'
+            const updatedVersion = 'v1'
 
             await expect(
                 serviceController.updateService(
-                    validType,
-                    invalidVersion,
-                    updatedServiceData.name,
-                    updatedServiceData.version,
-                    updatedServiceData.description,
-                    updatedServiceData.address,
-                    updatedServiceData.type,
+                    type,
+                    version,
+                    updatedName,
+                    updatedVersion,
+                    updatedDescription,
+                    updatedAddress,
+                    updatedType,
                 ),
             ).rejects.toThrow(
                 new HttpException(
