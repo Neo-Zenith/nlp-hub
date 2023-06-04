@@ -178,7 +178,7 @@ describe('ServiceController', () => {
             const updatedType = 'NER'
             const updatedVersion = 'v1'
 
-            const type = 'SUD'
+            const type = serviceFixture2.type
             const version = 'v2'
 
             const response = await serviceController.updateService(
@@ -201,7 +201,7 @@ describe('ServiceController', () => {
             const updatedType = 'NER'
             const updatedVersion = 'v1'
 
-            const type = 'SUD'
+            const type = serviceFixture2.type
             const version = 'v2'
 
             await expect(
@@ -229,7 +229,7 @@ describe('ServiceController', () => {
             const updatedType = 'SUD'
             const updatedVersion = 'v1'
 
-            const type = 'SUD'
+            const type = serviceFixture2.type
             const version = 'v2'
 
             await expect(
@@ -279,7 +279,7 @@ describe('ServiceController', () => {
         })
 
         it('should return 404 - Not Found due to invalid version', async () => {
-            const type = 'SUD'
+            const type = serviceFixture2.type
             const version = 'v3'
 
             const updatedName = 'Minimal Reproducible Error PH'
@@ -309,44 +309,33 @@ describe('ServiceController', () => {
 
     describe('remove service', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
         })
 
         it('should remove service and return success message', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const removedMessage = await serviceController.deleteService(validType, validVersion)
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const response = await serviceController.deleteService(type, version)
 
-            expect(removedMessage.message).toEqual('Service unsubscribed.')
+            expect(response.message).toEqual('Service unsubscribed.')
         })
 
-        it('should return 404 - NOT FOUND due to invalid type', async () => {
-            const validVersion = 'v1'
-            const invalidType = 'SUR'
+        it('should return 404 - Not Found due to invalid type', async () => {
+            const version = 'v1'
+            const type = 'SUR'
 
-            expect(serviceController.deleteService(invalidType, validVersion)).rejects.toThrow(
+            expect(serviceController.deleteService(type, version)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -354,11 +343,11 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid version', async () => {
-            const validType = 'SUD'
-            const invalidVersion = 'v19'
+        it('should return 404 - Not Found due to invalid version', async () => {
+            const type = serviceFixture1.type
+            const version = 'v19'
 
-            expect(serviceController.deleteService(validType, invalidVersion)).rejects.toThrow(
+            expect(serviceController.deleteService(type, version)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -369,85 +358,94 @@ describe('ServiceController', () => {
 
     describe('retrieve services', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const {
+                name: name1,
+                description: description1,
+                baseAddress: baseAddress1,
+                type: type1,
+                endpoints: endpoints1,
+            } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name: name1,
+                    description: description1,
+                    baseAddress: baseAddress1,
+                    type: type1,
+                }).save()
+            ).id
+            for (const endpoint of endpoints1) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
 
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
+            const {
+                name: name2,
+                description: description2,
+                baseAddress: baseAddress2,
+                type: type2,
+                endpoints: endpoints2,
+            } = serviceFixture2
+            const serviceID2 = (
+                await new ServiceModel({
+                    name: name2,
+                    description: description2,
+                    baseAddress: baseAddress2,
+                    type: type2,
+                }).save()
+            ).id
+            for (const endpoint of endpoints2) {
+                await new serviceEndpointModel({ serviceID: serviceID2, ...endpoint }).save()
             }
-
-            const secondService = {
-                name: 'Test name 2',
-                description: 'Test description.',
-                address: 'https://test2-test.com',
-                type: 'SUD',
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
-
-            await serviceController.createService(
-                secondService.name,
-                secondService.description,
-                secondService.address,
-                secondService.type,
-                [genesisEndpoint],
-            )
         })
 
-        it('should retrieve all services', async () => {
+        it('should retrieve all services, with service address displayed for admin', async () => {
             const req = mockRequestObject()
             req.payload.role = 'admin'
-            const returnedServicesAdmin = await serviceController.retrieveServices(req)
-            returnedServicesAdmin.services.every((service) =>
-                expect(service).toHaveProperty('address'),
-            )
+            const response = await serviceController.retrieveServices(req)
+            expect(response.services.length).toBe(2)
+            response.services.every((service) => expect(service).toHaveProperty('address'))
+        })
 
+        it('should retrieve all services, without service address displayed for user', async () => {
+            const req = mockRequestObject()
             req.payload.role = 'user'
-            const returnedServicesUser = await serviceController.retrieveServices(req)
-            returnedServicesUser.services.every((service) =>
-                expect(service).not.toHaveProperty('address'),
-            )
+            const response = await serviceController.retrieveServices(req)
+            expect(response.services.length).toBe(2)
+            response.services.every((service) => expect(service).not.toHaveProperty('address'))
         })
 
-        it('should retrieve service with specified type', async () => {
+        it('should retrieve services with specified type (test for 2 valid results)', async () => {
             const req = mockRequestObject()
-            let type = 'NER'
-            let returnedServices = await serviceController.retrieveServices(req, undefined, type)
-            expect(returnedServices.services.length).toEqual(0)
-
-            type = 'SUD'
-            returnedServices = await serviceController.retrieveServices(req, undefined, type)
-            expect(returnedServices.services.length).toEqual(2)
+            const type = 'SUD'
+            const response = await serviceController.retrieveServices(req, undefined, type)
+            expect(response.services.length).toEqual(2)
         })
 
-        it('should retrieve service with names matching the specified name', async () => {
+        it('should retrieve no services if type is not found', async () => {
             const req = mockRequestObject()
-            let name = '2'
-            let returnedServices = await serviceController.retrieveServices(req, name)
-            expect(returnedServices.services.length).toEqual(1)
+            const type = 'SUR'
+            const response = await serviceController.retrieveServices(req, undefined, type)
+            expect(response.services.length).toEqual(0)
+        })
 
-            name = 'Test'
-            returnedServices = await serviceController.retrieveServices(req, name)
-            expect(returnedServices.services.length).toEqual(2)
+        it('should retrieve services with name matching the specified name (test for 1 valid result)', async () => {
+            const req = mockRequestObject()
+            const name = 'test service 2'
+            const response = await serviceController.retrieveServices(req, name)
+            expect(response.services.length).toEqual(1)
+        })
 
-            name = 'test'
-            returnedServices = await serviceController.retrieveServices(req, name)
-            expect(returnedServices.services.length).toEqual(2)
+        it('should retrieve services with name matching the specified name (test for 2 valid result)', async () => {
+            const req = mockRequestObject()
+            const name = 'test'
+            const response = await serviceController.retrieveServices(req, name)
+            expect(response.services.length).toEqual(2)
+        })
+
+        it('should retrieve no services if no services have name matching the specified name', async () => {
+            const req = mockRequestObject()
+            const name = 'no match'
+            const response = await serviceController.retrieveServices(req, name)
+            expect(response.services.length).toEqual(0)
         })
     })
 
@@ -483,7 +481,11 @@ describe('ServiceController', () => {
             const validVersion = 'v1'
             const req = mockRequestObject()
             req.payload.role = 'admin'
-            let returnedService = await serviceController.getService(req, validType, validVersion)
+            let returnedService = await serviceController.retrieveService(
+                req,
+                validType,
+                validVersion,
+            )
             expect(returnedService).toHaveProperty('name')
             expect(returnedService).toHaveProperty('description')
             expect(returnedService).toHaveProperty('type')
@@ -491,7 +493,7 @@ describe('ServiceController', () => {
             expect(returnedService).toHaveProperty('address')
 
             req.payload.role = 'user'
-            returnedService = await serviceController.getService(req, validType, validVersion)
+            returnedService = await serviceController.retrieveService(req, validType, validVersion)
             expect(returnedService).toHaveProperty('name')
             expect(returnedService).toHaveProperty('description')
             expect(returnedService).toHaveProperty('type')
@@ -503,7 +505,7 @@ describe('ServiceController', () => {
             const validVersion = 'v12'
             const req = mockRequestObject()
             await expect(
-                serviceController.getService(req, invalidType, validVersion),
+                serviceController.retrieveService(req, invalidType, validVersion),
             ).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
@@ -517,7 +519,7 @@ describe('ServiceController', () => {
             const invalidVersion = 'v2'
             const req = mockRequestObject()
             await expect(
-                serviceController.getService(req, validType, invalidVersion),
+                serviceController.retrieveService(req, validType, invalidVersion),
             ).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',

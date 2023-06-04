@@ -30,7 +30,7 @@ export enum UploadFormat {
 
 @Schema()
 export class Service extends Document {
-    @Prop({ required: true })
+    @Prop({ required: true, index: 'text' })
     name: string
 
     @Prop()
@@ -79,10 +79,6 @@ export class ServiceEndpoint extends Document {
 
 export const ServiceSchema = SchemaFactory.createForClass(Service)
 ServiceSchema.index({ type: 1, version: 1 }, { unique: true })
-ServiceSchema.index(
-    { name: 'text' },
-    { weights: { name: 1 }, default_language: 'none', name: 'CustomTextIndex' },
-)
 ServiceTrigger()
 export const ServiceModel = mongoose.model('Service', ServiceSchema)
 

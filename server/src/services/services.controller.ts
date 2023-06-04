@@ -128,7 +128,7 @@ export class ServiceController {
     @ApiUnauthorizedResponse({ type: UnauthorizedSchema })
     @Get(':type/:version')
     @UseGuards(new UserAuthGuard(['GET']))
-    async getService(
+    async retrieveService(
         @Req() req: CustomRequest,
         @Param('type') type: string,
         @Param('version') version: string,

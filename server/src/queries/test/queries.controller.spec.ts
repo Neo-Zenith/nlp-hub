@@ -287,7 +287,7 @@ describe('QueriesController', () => {
             }).save()
         })
 
-        it('should retrieve all usages for userID 0', async () => {
+        it('should retrieve all usages made by a specific user if user initiated the retrieval', async () => {
             req.payload.role = 'user'
             req.payload.id = userID[0]
 
@@ -303,7 +303,7 @@ describe('QueriesController', () => {
             })
         })
 
-        it('should retrieve all usages from all users for admin', async () => {
+        it('should retrieve all usages from all users if admin initiated the retrieval', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -335,7 +335,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(0)
         })
 
-        it('should retrieve 1 usage with execution time less than 0.101', async () => {
+        it('should retrieve usages with execution time less than specified number (test for 1 valid result)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -358,7 +358,7 @@ describe('QueriesController', () => {
             })
         })
 
-        it('should retrieve 2 usages with execution time less than 9.99', async () => {
+        it('should retrieve usages with execution time less than specified number (test for 2 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -381,7 +381,7 @@ describe('QueriesController', () => {
             })
         })
 
-        it('should retrieve all usages with execution time less than 10.0001', async () => {
+        it('should retrieve usages with execution time less than specified number (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -447,7 +447,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(0)
         })
 
-        it('should retrieve all usages for start date earlier than, and end date later than the current date', async () => {
+        it('should retrieve usages for start date earlier than, and end date later than the current date (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -472,7 +472,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in positive integer', async () => {
+        it('should retrieve usages for start date earlier than, and end date later than the current date, given timezone in positive integer (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -506,7 +506,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in negative integer', async () => {
+        it('should retrieve usages for start date earlier than, and end date later than the current date, given timezone in negative integer (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -540,7 +540,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in positive float', async () => {
+        it('should retrieve usages for start date earlier than, and end date later than the current date, given timezone in positive float (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -577,7 +577,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve all usages for start date earlier than, and end date later than the current date, given timezone in negative float', async () => {
+        it('should retrieve usages for start date earlier than, and end date later than the current date, given timezone in negative float (test for 3 valid results)', async () => {
             req.payload.role = 'admin'
             req.payload.id = adminID
 
@@ -614,7 +614,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve 2 usages with userID 0 deleted and returnDelUser set to false', async () => {
+        it('should retrieve usages excluding those made by userID 0 if userID 0 is deleted and returnDelUser set to false', async () => {
             await UserModel.deleteOne({ _id: userID[0] })
 
             const returnDelUser = false
@@ -635,7 +635,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(2)
         })
 
-        it('should retrieve all usages with userID 0 deleted and returnDelUser set to true', async () => {
+        it('should retrieve usages including those made by userID 0 if userID 0 is deleted and returnDelUser set to true', async () => {
             await UserModel.deleteOne({ _id: userID[0] })
 
             const returnDelUser = true
@@ -656,7 +656,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(3)
         })
 
-        it('should retrieve no usages with serviceFixture1 deleted and returnDelService set to false', async () => {
+        it('should retrieve usages excluding those made on serviceFixture1 if serviceFixture1 is deleted and returnDelService set to false', async () => {
             await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
             const returnDelService = false
             req.payload.id = adminID
@@ -676,7 +676,7 @@ describe('QueriesController', () => {
             expect(response.usages.length).toBe(0)
         })
 
-        it('should retrieve all usages with serviceFixture1 deleted and returnDelService set to true', async () => {
+        it('should retrieve usages including those made on serviceFixture1 if serviceFixture1 is deleted and returnDelService set to true', async () => {
             await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
             const returnDelService = true
             req.payload.id = adminID

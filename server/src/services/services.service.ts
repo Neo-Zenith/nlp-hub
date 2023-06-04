@@ -76,10 +76,12 @@ export class ServiceService {
     }
 
     async getServices(name?: string, type?: string): Promise<Service[]> {
+        const queryName = `\"${name}\"`
         const query = {
-            ...(name && { $text: { $search: name } }),
+            ...(name && { $text: { $search: queryName, $caseSensitive: false } }),
             ...(type && { type }),
         }
+
         const services = await this.serviceModel.find(query).exec()
         return services
     }
@@ -201,10 +203,7 @@ export class ServiceService {
         }
     }
 
-    private async updateServiceDB(
-        service: Service,
-        updates: Record<string, any>,
-    ): Promise<void> {
+    private async updateServiceDB(service: Service, updates: Record<string, any>): Promise<void> {
         try {
             await this.serviceModel.updateOne({ _id: service.id }, { $set: updates })
         } catch (err) {
