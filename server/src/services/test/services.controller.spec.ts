@@ -1,19 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { HttpException, HttpStatus } from '@nestjs/common'
+import { getModelToken } from '@nestjs/mongoose'
 import { MongoMemoryServer } from 'mongodb-memory-server'
+import { Connection, connect, Model } from 'mongoose'
+
 import { ServiceController } from '../services.controller'
 import { ServiceService } from '../services.service'
-import { Connection, connect, Model } from 'mongoose'
-import { getModelToken } from '@nestjs/mongoose'
 import {
     Service,
+    ServiceType,
     ServiceEndpoint,
     ServiceEndpointSchema,
-    ServiceModel,
     ServiceSchema,
-    ServiceType,
 } from '../services.model'
-import { HttpException, HttpStatus } from '@nestjs/common'
-import { mockRequestObject } from '../../common/test/mock/common.model'
 import {
     serviceFixture1,
     serviceFixture2,
@@ -23,6 +22,7 @@ import {
     endpointFixture3dup1,
     endpointFixture3dup2,
 } from './fixtures/services.fixture'
+import { mockRequestObject } from '../../common/test/mock/common.model'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController
@@ -71,7 +71,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID = (
-                await new ServiceModel({ name, description, baseAddress, type }).save()
+                await new serviceModel({ name, description, baseAddress, type }).save()
             ).id
             for (const endpoint of endpoints) {
                 await new serviceEndpointModel({ serviceID, ...endpoint }).save()
@@ -143,7 +143,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints1,
             } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name1,
                     description: description1,
                     baseAddress: baseAddress1,
@@ -162,7 +162,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints2,
             } = serviceFixture2
             const serviceID2 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name2,
                     description: description2,
                     baseAddress: baseAddress2,
@@ -314,7 +314,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -378,7 +378,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints1,
             } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name1,
                     description: description1,
                     baseAddress: baseAddress1,
@@ -397,7 +397,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints2,
             } = serviceFixture2
             const serviceID2 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name2,
                     description: description2,
                     baseAddress: baseAddress2,
@@ -477,7 +477,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -546,7 +546,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -632,7 +632,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -804,7 +804,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -866,7 +866,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -971,7 +971,7 @@ describe('ServiceController', () => {
         beforeEach(async () => {
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name,
                     description,
                     baseAddress,
@@ -1042,7 +1042,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints1,
             } = serviceFixture1
             const serviceID1 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name1,
                     description: description1,
                     baseAddress: baseAddress1,
@@ -1061,7 +1061,7 @@ describe('ServiceController', () => {
                 endpoints: endpoints2,
             } = serviceFixture2
             const serviceID2 = (
-                await new ServiceModel({
+                await new serviceModel({
                     name: name2,
                     description: description2,
                     baseAddress: baseAddress2,

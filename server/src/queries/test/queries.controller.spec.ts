@@ -1,29 +1,22 @@
+import { getModelToken } from '@nestjs/mongoose'
+import { Test, TestingModule } from '@nestjs/testing'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { Connection, Model, connect } from 'mongoose'
+import { HttpException, HttpStatus } from '@nestjs/common'
+
 import { Query, QueryModel, QuerySchema } from '../queries.model'
-import { Test, TestingModule } from '@nestjs/testing'
 import { QueryController, UsageController } from '../queries.controller'
 import { QueryService } from '../queries.service'
-import { getModelToken } from '@nestjs/mongoose'
 import { ServiceController } from '../../services/services.controller'
+import { serviceFixture1 } from '../../services/test/fixtures/services.fixture'
+import { ServiceService } from '../../services/services.service'
 import {
     Service,
     ServiceEndpoint,
     ServiceEndpointSchema,
-    ServiceModel,
     ServiceSchema,
 } from '../../services/services.model'
-import {
-    Admin,
-    AdminModel,
-    AdminSchema,
-    User,
-    UserModel,
-    UserSchema,
-} from '../../users/users.model'
-import { ServiceService } from '../../services/services.service'
-import { mockRequestObject } from '../../common/test/mock/common.model'
-import { HttpException, HttpStatus } from '@nestjs/common'
+import { Admin, AdminSchema, User, UserSchema } from '../../users/users.model'
 import { UserController } from '../../users/users.controller'
 import { UserService } from '../../users/users.service'
 import {
@@ -32,7 +25,7 @@ import {
     userFixture2,
     userFixture3,
 } from '../../users/test/fixtures/users.fixture'
-import { serviceFixture1 } from '../../services/test/fixtures/services.fixture'
+import { mockRequestObject } from '../../common/test/mock/common.model'
 
 describe('QueriesController', () => {
     let mongod: MongoMemoryServer
@@ -95,15 +88,15 @@ describe('QueriesController', () => {
         let adminID: string
         let req = mockRequestObject()
         beforeEach(async () => {
-            const user = await new UserModel(userFixture1).save()
+            const user = await new userModel(userFixture1).save()
             userID = user.id
 
-            const admin = await new AdminModel(adminFixture1).save()
+            const admin = await new adminModel(adminFixture1).save()
             adminID = admin.id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID = (
-                await new ServiceModel({ name, description, baseAddress, type }).save()
+                await new serviceModel({ name, description, baseAddress, type }).save()
             ).id
             for (const endpoint of endpoints) {
                 await new serviceEndpointModel({ serviceID, ...endpoint }).save()
@@ -226,14 +219,14 @@ describe('QueriesController', () => {
         let req = mockRequestObject()
         beforeEach(async () => {
             userID = []
-            userID.push((await new UserModel(userFixture1).save()).id)
-            userID.push((await new UserModel(userFixture2).save()).id)
-            userID.push((await new UserModel(userFixture3).save()).id)
-            adminID = (await new AdminModel(adminFixture1).save()).id
+            userID.push((await new userModel(userFixture1).save()).id)
+            userID.push((await new userModel(userFixture2).save()).id)
+            userID.push((await new userModel(userFixture3).save()).id)
+            adminID = (await new adminModel(adminFixture1).save()).id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID = (
-                await new ServiceModel({ name, description, baseAddress, type }).save()
+                await new serviceModel({ name, description, baseAddress, type }).save()
             ).id
             let endpointID: string[] = []
             for (const endpoint of endpoints) {
@@ -615,7 +608,7 @@ describe('QueriesController', () => {
         })
 
         it('should retrieve usages excluding those made by userID 0 if userID 0 is deleted and returnDelUser set to false', async () => {
-            await UserModel.deleteOne({ _id: userID[0] })
+            await userModel.deleteOne({ _id: userID[0] })
 
             const returnDelUser = false
             req.payload.id = adminID
@@ -636,7 +629,7 @@ describe('QueriesController', () => {
         })
 
         it('should retrieve usages including those made by userID 0 if userID 0 is deleted and returnDelUser set to true', async () => {
-            await UserModel.deleteOne({ _id: userID[0] })
+            await userModel.deleteOne({ _id: userID[0] })
 
             const returnDelUser = true
             req.payload.id = adminID
@@ -657,7 +650,7 @@ describe('QueriesController', () => {
         })
 
         it('should retrieve usages excluding those made on serviceFixture1 if serviceFixture1 is deleted and returnDelService set to false', async () => {
-            await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
+            await serviceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
             const returnDelService = false
             req.payload.id = adminID
             req.payload.role = 'admin'
@@ -677,7 +670,7 @@ describe('QueriesController', () => {
         })
 
         it('should retrieve usages including those made on serviceFixture1 if serviceFixture1 is deleted and returnDelService set to true', async () => {
-            await ServiceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
+            await serviceModel.deleteOne({ type: serviceFixture1.type, version: 'v1' })
             const returnDelService = true
             req.payload.id = adminID
             req.payload.role = 'admin'
@@ -706,14 +699,14 @@ describe('QueriesController', () => {
         let queryUUID: string[]
         beforeEach(async () => {
             userID = []
-            userID.push((await new UserModel(userFixture1).save()).id)
-            userID.push((await new UserModel(userFixture2).save()).id)
-            userID.push((await new UserModel(userFixture3).save()).id)
-            adminID = (await new AdminModel(adminFixture1).save()).id
+            userID.push((await new userModel(userFixture1).save()).id)
+            userID.push((await new userModel(userFixture2).save()).id)
+            userID.push((await new userModel(userFixture3).save()).id)
+            adminID = (await new adminModel(adminFixture1).save()).id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
             const serviceID = (
-                await new ServiceModel({ name, description, baseAddress, type }).save()
+                await new serviceModel({ name, description, baseAddress, type }).save()
             ).id
             let endpointID: string[] = []
             for (const endpoint of endpoints) {
