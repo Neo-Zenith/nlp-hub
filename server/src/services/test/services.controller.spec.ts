@@ -15,14 +15,14 @@ import {
 import { HttpException, HttpStatus } from '@nestjs/common'
 import { mockRequestObject } from '../../common/test/mock/common.model'
 import {
-    endpointFixture3dup1,
-    endpointFixture3dup2,
     serviceFixture1,
     serviceFixture2,
+    endpointFixture1,
+    endpointFixture2,
+    endpointFixture3,
+    endpointFixture3dup1,
+    endpointFixture3dup2,
 } from './fixtures/services.fixture'
-import { endpointFixture1 } from './fixtures/services.fixture'
-import { endpointFixture3 } from './fixtures/services.fixture'
-import { endpointFixture2 } from './fixtures/services.fixture'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController
