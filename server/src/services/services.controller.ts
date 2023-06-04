@@ -233,7 +233,7 @@ export class ServiceController {
     @ApiNotFoundResponse({ type: NotFoundSchema })
     @Get(':type/:version/endpoints')
     @UseGuards(new UserAuthGuard(['GET']))
-    async getEndpoints(
+    async retrieveEndpoints(
         @Param('type') type: string,
         @Param('version') version: string,
         @Query('task') task?: string,

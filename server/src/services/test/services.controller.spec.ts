@@ -20,6 +20,9 @@ import {
     serviceFixture1,
     serviceFixture2,
 } from './fixtures/services.fixture'
+import { endpointFixture1 } from './fixtures/services.fixture'
+import { endpointFixture3 } from './fixtures/services.fixture'
+import { endpointFixture2 } from './fixtures/services.fixture'
 
 describe('ServiceController', () => {
     let serviceController: ServiceController
@@ -329,6 +332,15 @@ describe('ServiceController', () => {
             const response = await serviceController.deleteService(type, version)
 
             expect(response.message).toEqual('Service unsubscribed.')
+
+            const req = mockRequestObject()
+            req.payload.role = 'admin'
+            await expect(serviceController.retrieveService(req, type, version)).rejects.toThrow(
+                new HttpException(
+                    'Service not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
+            )
         })
 
         it('should return 404 - Not Found due to invalid type', async () => {
@@ -402,7 +414,13 @@ describe('ServiceController', () => {
             req.payload.role = 'admin'
             const response = await serviceController.retrieveServices(req)
             expect(response.services.length).toBe(2)
-            response.services.every((service) => expect(service).toHaveProperty('address'))
+            response.services.every((service) => {
+                expect(service).toHaveProperty('name')
+                expect(service).toHaveProperty('description')
+                expect(service).toHaveProperty('type')
+                expect(service).toHaveProperty('version')
+                expect(service).toHaveProperty('address')
+            })
         })
 
         it('should retrieve all services, without service address displayed for user', async () => {
@@ -410,7 +428,13 @@ describe('ServiceController', () => {
             req.payload.role = 'user'
             const response = await serviceController.retrieveServices(req)
             expect(response.services.length).toBe(2)
-            response.services.every((service) => expect(service).not.toHaveProperty('address'))
+            response.services.every((service) => {
+                expect(service).not.toHaveProperty('address')
+                expect(service).toHaveProperty('name')
+                expect(service).toHaveProperty('description')
+                expect(service).toHaveProperty('type')
+                expect(service).toHaveProperty('version')
+            })
         })
 
         it('should retrieve services with specified type (test for 2 valid results)', async () => {
@@ -451,62 +475,53 @@ describe('ServiceController', () => {
 
     describe('retrieve a service', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
         })
 
-        it('should retrieve a service based on type and version', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
+        it('should retrieve a service based on type and version, with service address displayed for admin', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
             const req = mockRequestObject()
             req.payload.role = 'admin'
-            let returnedService = await serviceController.retrieveService(
-                req,
-                validType,
-                validVersion,
-            )
-            expect(returnedService).toHaveProperty('name')
-            expect(returnedService).toHaveProperty('description')
-            expect(returnedService).toHaveProperty('type')
-            expect(returnedService).toHaveProperty('version')
-            expect(returnedService).toHaveProperty('address')
 
-            req.payload.role = 'user'
-            returnedService = await serviceController.retrieveService(req, validType, validVersion)
-            expect(returnedService).toHaveProperty('name')
-            expect(returnedService).toHaveProperty('description')
-            expect(returnedService).toHaveProperty('type')
-            expect(returnedService).toHaveProperty('version')
+            const response = await serviceController.retrieveService(req, type, version)
+            expect(response).toHaveProperty('name')
+            expect(response).toHaveProperty('description')
+            expect(response).toHaveProperty('type')
+            expect(response).toHaveProperty('version')
+            expect(response).toHaveProperty('address')
         })
 
-        it('should return 404 - NOT FOUND due to invalid type', async () => {
-            const invalidType = 'TUR'
-            const validVersion = 'v12'
+        it('should retrieve a service based on type and version, without service address displayed for admin', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
             const req = mockRequestObject()
-            await expect(
-                serviceController.retrieveService(req, invalidType, validVersion),
-            ).rejects.toThrow(
+            req.payload.role = 'user'
+
+            const response = await serviceController.retrieveService(req, type, version)
+            expect(response).toHaveProperty('name')
+            expect(response).toHaveProperty('description')
+            expect(response).toHaveProperty('type')
+            expect(response).toHaveProperty('version')
+            expect(response).not.toHaveProperty('address')
+        })
+
+        it('should return 404 - Not Found due to invalid type', async () => {
+            const type = 'Invalid type'
+            const version = 'v1'
+            const req = mockRequestObject()
+            await expect(serviceController.retrieveService(req, type, version)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -514,13 +529,11 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid version', async () => {
-            const validType = 'SUD'
-            const invalidVersion = 'v2'
+        it('should return 404 - Not Found due to invalid version', async () => {
+            const type = serviceFixture1.type
+            const version = 'v2'
             const req = mockRequestObject()
-            await expect(
-                serviceController.retrieveService(req, validType, invalidVersion),
-            ).rejects.toThrow(
+            await expect(serviceController.retrieveService(req, type, version)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -531,77 +544,55 @@ describe('ServiceController', () => {
 
     describe('add endpoint', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
         })
 
         it('should add endpoint and return success message', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
+            const type = 'SUD'
+            const version = 'v1'
 
-            const endpointData = {
-                task: 'Test task 2',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
-            }
+            const { method, task, textBased, options, endpointPath } = endpointFixture3
 
-            const returnedMessage = await serviceController.createEndpoint(
-                validType,
-                validVersion,
-                endpointData.method,
-                endpointData.endpointPath,
-                endpointData.task,
-                endpointData.options,
+            const response = await serviceController.createEndpoint(
+                type,
+                version,
+                method,
+                endpointPath,
+                task,
+                options,
+                textBased,
             )
 
-            expect(returnedMessage.message).toEqual('Endpoint registered.')
+            expect(response.message).toEqual('Endpoint registered.')
         })
 
-        it('should return 409 - CONFLICT due to duplicated endpointPath and method', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
+        it('should return 409 - Conflict due to duplicated endpointPath and method', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
 
-            const endpointData = {
-                task: 'Test task 2',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
-            }
+            const { task, textBased, options } = endpointFixture3
+            const { method, endpointPath } = serviceFixture1.endpoints[0]
 
             await expect(
                 serviceController.createEndpoint(
-                    validType,
-                    validVersion,
-                    endpointData.method,
-                    endpointData.endpointPath,
-                    endpointData.task,
-                    endpointData.options,
+                    type,
+                    version,
+                    method,
+                    endpointPath,
+                    task,
+                    options,
+                    textBased,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -611,29 +602,22 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 409 - CONFLICT due to duplicated task', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
+        it('should return 409 - Conflict due to duplicated task', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
 
-            const endpointData = {
-                task: 'Test task',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
-                textBased: true,
-            }
+            const { method, endpointPath, textBased, options } = endpointFixture3
+            const { task } = serviceFixture1.endpoints[0]
 
             await expect(
                 serviceController.createEndpoint(
-                    validType,
-                    validVersion,
-                    endpointData.method,
-                    endpointData.endpointPath,
-                    endpointData.task,
-                    endpointData.options,
-                    endpointData.textBased,
+                    type,
+                    version,
+                    method,
+                    endpointPath,
+                    task,
+                    options,
+                    textBased,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -646,89 +630,70 @@ describe('ServiceController', () => {
 
     describe('update endpoint', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const secondEndpoint = {
-                task: 'Test task 2',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    auto: 'string',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint, secondEndpoint],
-            )
         })
 
         it('should update endpoint and return success message', async () => {
-            const updatedEndpointData = {
-                task: 'Test task3',
-                endpointPath: '/test3',
-                method: 'GET',
-                options: {
-                    normalize: 'boolean',
-                },
-            }
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const validTask = 'Test task 2'
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = serviceFixture1.endpoints[0].task
 
-            const updatedEndpoint = await serviceController.updateEndpoint(
-                validType,
-                validVersion,
-                validTask,
-                updatedEndpointData.method,
-                updatedEndpointData.endpointPath,
-                updatedEndpointData.task,
-                updatedEndpointData.options,
+            const updatedMethod = 'GET'
+            const updatedEndpointPath = '/lang_change(updated)'
+            const updatedTask = 'lang-change(updated)'
+            const updatedOptions = {
+                fav_language: 'string',
+                punc_type: 'string',
+                updated: 'boolean',
+            }
+
+            const response = await serviceController.updateEndpoint(
+                type,
+                version,
+                task,
+                updatedMethod,
+                updatedEndpointPath,
+                updatedTask,
+                updatedOptions,
             )
 
-            expect(updatedEndpoint.message).toEqual('Endpoint updated.')
+            expect(response.message).toEqual('Endpoint updated.')
         })
 
-        it('should return 409 - CONFLICT due to duplicated task', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const validTask = 'Test task 2'
+        it('should return 409 - Conflict due to duplicated task', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = serviceFixture1.endpoints[0].task
 
-            const updatedEndpointData = {
-                task: 'Test task',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
+            const updatedMethod = 'GET'
+            const updatedEndpointPath = '/lang_change(updated)'
+            const updatedTask = endpointFixture2.task
+            const updatedOptions = {
+                fav_language: 'string',
+                punc_type: 'string',
+                updated: 'boolean',
             }
 
             await expect(
                 serviceController.updateEndpoint(
-                    validType,
-                    validVersion,
-                    validTask,
-                    updatedEndpointData.method,
-                    updatedEndpointData.endpointPath,
-                    updatedEndpointData.task,
-                    updatedEndpointData.options,
+                    type,
+                    version,
+                    task,
+                    updatedMethod,
+                    updatedEndpointPath,
+                    updatedTask,
+                    updatedOptions,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -738,29 +703,29 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 409 - CONFLICT due to duplicated method and endpointPath', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const validTask = 'Test task 2'
+        it('should return 409 - Conflict due to duplicated method and endpointPath', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = serviceFixture1.endpoints[0].task
 
-            const updatedEndpointData = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
+            const updatedMethod = endpointFixture2.method
+            const updatedEndpointPath = endpointFixture2.endpointPath
+            const updatedTask = 'lang-change(updated)'
+            const updatedOptions = {
+                fav_language: 'string',
+                punc_type: 'string',
+                updated: 'boolean',
             }
 
             await expect(
                 serviceController.updateEndpoint(
-                    validType,
-                    validVersion,
-                    validTask,
-                    updatedEndpointData.method,
-                    updatedEndpointData.endpointPath,
-                    updatedEndpointData.task,
-                    updatedEndpointData.options,
+                    type,
+                    version,
+                    task,
+                    updatedMethod,
+                    updatedEndpointPath,
+                    updatedTask,
+                    updatedOptions,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -770,29 +735,29 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
-            const invalidType = 'SUR'
-            const invalidVersion = 'v22'
-            const validTask = 'Test task 2'
+        it('should return 404 - Not Found due to invalid type and version', async () => {
+            const type = 'Invalid type'
+            const version = 'v22'
+            const task = endpointFixture1.task
 
-            const updatedEndpointData = {
-                task: 'Test task',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
+            const updatedMethod = 'GET'
+            const updatedEndpointPath = '/lang_change(updated)'
+            const updatedTask = 'lang-change(updated)'
+            const updatedOptions = {
+                fav_language: 'string',
+                punc_type: 'string',
+                updated: 'boolean',
             }
 
             await expect(
                 serviceController.updateEndpoint(
-                    invalidType,
-                    invalidVersion,
-                    validTask,
-                    updatedEndpointData.method,
-                    updatedEndpointData.endpointPath,
-                    updatedEndpointData.task,
-                    updatedEndpointData.options,
+                    type,
+                    version,
+                    task,
+                    updatedMethod,
+                    updatedEndpointPath,
+                    updatedTask,
+                    updatedOptions,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -802,29 +767,29 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid task name', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const invalidTask = 'Test task 19'
+        it('should return 404 - Not Found due to invalid task name', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = 'Invalid task name'
 
-            const updatedEndpointData = {
-                task: 'Test task',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    autocheck: 'boolean',
-                },
+            const updatedMethod = 'GET'
+            const updatedEndpointPath = '/lang_change(updated)'
+            const updatedTask = 'lang-change(updated)'
+            const updatedOptions = {
+                fav_language: 'string',
+                punc_type: 'string',
+                updated: 'boolean',
             }
 
             await expect(
                 serviceController.updateEndpoint(
-                    validType,
-                    validVersion,
-                    invalidTask,
-                    updatedEndpointData.method,
-                    updatedEndpointData.endpointPath,
-                    updatedEndpointData.task,
-                    updatedEndpointData.options,
+                    type,
+                    version,
+                    task,
+                    updatedMethod,
+                    updatedEndpointPath,
+                    updatedTask,
+                    updatedOptions,
                 ),
             ).rejects.toThrow(
                 new HttpException(
@@ -837,62 +802,45 @@ describe('ServiceController', () => {
 
     describe('remove endpoint', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const secondEndpoint = {
-                task: 'Test task 2',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    auto: 'string',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint, secondEndpoint],
-            )
         })
 
         it('should remove endpoint and return success message', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const validTask = 'Test task'
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = serviceFixture1.endpoints[0].task
 
-            const removedMessage = await serviceController.deleteEndpoint(
-                validType,
-                validVersion,
-                validTask,
+            const response = await serviceController.deleteEndpoint(type, version, task)
+
+            expect(response.message).toEqual('Endpoint deleted.')
+
+            const endpoints = await serviceController.retrieveEndpoints(type, version)
+            expect(endpoints.endpoints.length).toBe(1)
+            await expect(serviceController.retrieveEndpoint(type, version, task)).rejects.toThrow(
+                new HttpException(
+                    'Endpoint not found. The requested resource could not be found.',
+                    HttpStatus.NOT_FOUND,
+                ),
             )
-
-            expect(removedMessage.message).toEqual('Endpoint deleted.')
         })
 
-        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
-            const invalidType = 'NER'
-            const invalidVersion = 'v12'
-            const validTask = 'Test task'
+        it('should return 404 - Not Found due to invalid type and version', async () => {
+            const type = 'Invalid type'
+            const version = 'v12'
+            const task = serviceFixture1.endpoints[0].task
 
-            await expect(
-                serviceController.deleteEndpoint(invalidType, invalidVersion, validTask),
-            ).rejects.toThrow(
+            await expect(serviceController.deleteEndpoint(type, version, task)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -900,14 +848,12 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid task name', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const invalidTask = 'Test task 17'
+        it('should return 404 - Not Found due to invalid task name', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = 'Invalid task name'
 
-            await expect(
-                serviceController.deleteEndpoint(validType, validVersion, invalidTask),
-            ).rejects.toThrow(
+            await expect(serviceController.deleteEndpoint(type, version, task)).rejects.toThrow(
                 new HttpException(
                     'Endpoint not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -918,59 +864,27 @@ describe('ServiceController', () => {
 
     describe('retrieve endpoints', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const secondEndpoint = {
-                task: 'Test task 2',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    auto: 'string',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint, secondEndpoint],
-            )
         })
 
         it('should retrieve all endpoints', async () => {
-            const validType = 'SUD'
+            const validType = serviceFixture1.type
             const validVersion = 'v1'
 
-            let returnedEndpoints = await serviceController.getEndpoints(validType, validVersion)
-            expect(returnedEndpoints.endpoints.length).toEqual(2)
-            returnedEndpoints.endpoints.every((endpoint: Record<string, any>) => {
-                expect(endpoint).toHaveProperty('method')
-                expect(endpoint).toHaveProperty('task')
-                expect(endpoint).toHaveProperty('options')
-                expect(endpoint).toHaveProperty('textBased')
-            })
-
-            const validMethod = 'POST'
-            returnedEndpoints = await serviceController.getEndpoints(
+            let returnedEndpoints = await serviceController.retrieveEndpoints(
                 validType,
                 validVersion,
-                undefined,
-                validMethod,
             )
             expect(returnedEndpoints.endpoints.length).toEqual(2)
             returnedEndpoints.endpoints.every((endpoint: Record<string, any>) => {
@@ -979,38 +893,21 @@ describe('ServiceController', () => {
                 expect(endpoint).toHaveProperty('options')
                 expect(endpoint).toHaveProperty('textBased')
             })
-
-            const invalidTask = 'predict'
-            returnedEndpoints = await serviceController.getEndpoints(
-                validType,
-                validVersion,
-                invalidTask,
-            )
-            expect(returnedEndpoints.endpoints.length).toEqual(0)
-
-            const invalidMethod = 'PUT'
-            returnedEndpoints = await serviceController.getEndpoints(
-                validType,
-                validVersion,
-                undefined,
-                invalidMethod,
-            )
-            expect(returnedEndpoints.endpoints.length).toEqual(0)
         })
 
-        it('should return an endpoint with the specified task name', async () => {
-            const validTask = 'Test task 2'
-            const validType = 'SUD'
-            const validVersion = 'v1'
+        it('should retrieve all endpoints with the specified method', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const method = serviceFixture1.endpoints[0].method
 
-            const returnedEndpoints = await serviceController.getEndpoints(
-                validType,
-                validVersion,
-                validTask,
+            const response = await serviceController.retrieveEndpoints(
+                type,
+                version,
+                undefined,
+                method,
             )
-
-            expect(returnedEndpoints.endpoints.length).toEqual(1)
-            returnedEndpoints.endpoints.every((endpoint: Record<string, any>) => {
+            expect(response.endpoints.length).toEqual(2)
+            response.endpoints.every((endpoint: Record<string, any>) => {
                 expect(endpoint).toHaveProperty('method')
                 expect(endpoint).toHaveProperty('task')
                 expect(endpoint).toHaveProperty('options')
@@ -1018,13 +915,50 @@ describe('ServiceController', () => {
             })
         })
 
-        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
-            const invalidType = 'SUR'
-            const invalidVersion = 'v11'
+        it('should retrieve no endpoints with an invalid method', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const method = 'PUT'
 
-            await expect(
-                serviceController.getEndpoints(invalidType, invalidVersion),
-            ).rejects.toThrow(
+            const response = await serviceController.retrieveEndpoints(
+                type,
+                version,
+                undefined,
+                method,
+            )
+            expect(response.endpoints.length).toEqual(0)
+        })
+
+        it('should retrieve an endpoint with the specified task name', async () => {
+            const task = serviceFixture1.endpoints[0].task
+            const type = serviceFixture1.type
+            const version = 'v1'
+
+            const response = await serviceController.retrieveEndpoints(type, version, task)
+
+            expect(response.endpoints.length).toEqual(1)
+            response.endpoints.every((endpoint: Record<string, any>) => {
+                expect(endpoint).toHaveProperty('method')
+                expect(endpoint).toHaveProperty('task')
+                expect(endpoint).toHaveProperty('options')
+                expect(endpoint).toHaveProperty('textBased')
+            })
+        })
+
+        it('should retrive no endpoints with an invalid task name', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = 'Invalid task name'
+
+            const response = await serviceController.retrieveEndpoints(type, version, task)
+            expect(response.endpoints.length).toEqual(0)
+        })
+
+        it('should return 404 - Not Found due to invalid type and version', async () => {
+            const type = 'Invalid type'
+            const version = 'v11'
+
+            await expect(serviceController.retrieveEndpoints(type, version)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -1035,64 +969,41 @@ describe('ServiceController', () => {
 
     describe('retrieve an endpoint', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const { name, description, baseAddress, type, endpoints } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name,
+                    description,
+                    baseAddress,
+                    type,
+                }).save()
+            ).id
+            for (const endpoint of endpoints) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const secondEndpoint = {
-                task: 'Test task 2',
-                endpointPath: '/test2',
-                method: 'POST',
-                options: {
-                    auto: 'string',
-                },
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint, secondEndpoint],
-            )
         })
 
         it('should retrieve an endpoint based on type, version and task name', async () => {
-            const validTask = 'Test task 2'
-            const validType = 'SUD'
-            const validVersion = 'v1'
+            const task = serviceFixture1.endpoints[0].task
+            const type = serviceFixture1.type
+            const version = 'v1'
 
-            const returnedEndpoint = await serviceController.retrieveEndpoint(
-                validType,
-                validVersion,
-                validTask,
-            )
+            let response = await serviceController.retrieveEndpoint(type, version, task)
 
-            expect(returnedEndpoint).toHaveProperty('task')
-            expect(returnedEndpoint).toHaveProperty('method')
-            expect(returnedEndpoint).toHaveProperty('options')
+            expect(response).toHaveProperty('task', serviceFixture1.endpoints[0].task)
+            expect(response).toHaveProperty('method', serviceFixture1.endpoints[0].method)
+            expect(response).toHaveProperty('options')
+
+            response = JSON.parse(JSON.stringify(response))
+            expect(response.options).toEqual(serviceFixture1.endpoints[0].options)
         })
 
-        it('should return 404 - NOT FOUND due to invalid type and version', async () => {
-            const invalidType = 'SUR'
-            const invalidVersion = 'v11'
-            const validTask = 'Test task 2'
+        it('should return 404 - Not Found due to invalid type and version', async () => {
+            const type = 'Invalid type'
+            const version = 'v11'
+            const task = serviceFixture1.endpoints[0].task
 
-            await expect(
-                serviceController.retrieveEndpoint(invalidType, invalidVersion, validTask),
-            ).rejects.toThrow(
+            await expect(serviceController.retrieveEndpoint(type, version, task)).rejects.toThrow(
                 new HttpException(
                     'Service not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -1100,14 +1011,12 @@ describe('ServiceController', () => {
             )
         })
 
-        it('should return 404 - NOT FOUND due to invalid task name', async () => {
-            const validType = 'SUD'
-            const validVersion = 'v1'
-            const invalidTask = 'Test task 21'
+        it('should return 404 - Not Found due to invalid task name', async () => {
+            const type = serviceFixture1.type
+            const version = 'v1'
+            const task = 'Invalid task name'
 
-            await expect(
-                serviceController.retrieveEndpoint(validType, validVersion, invalidTask),
-            ).rejects.toThrow(
+            await expect(serviceController.retrieveEndpoint(type, version, task)).rejects.toThrow(
                 new HttpException(
                     'Endpoint not found. The requested resource could not be found.',
                     HttpStatus.NOT_FOUND,
@@ -1117,47 +1026,6 @@ describe('ServiceController', () => {
     })
 
     describe('retrieve types of service', () => {
-        beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
-            }
-
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
-            }
-
-            const secondService = {
-                name: 'Test name 2',
-                description: 'Test description 2.',
-                address: 'https://test2-test.com',
-                type: 'NER',
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
-
-            await serviceController.createService(
-                secondService.name,
-                secondService.description,
-                secondService.address,
-                secondService.type,
-                [genesisEndpoint],
-            )
-        })
-
         it('should return all service types', async () => {
             const returnedServiceTypes = await serviceController.retrieveServiceTypes()
             expect(returnedServiceTypes.types).toEqual(Object.values(ServiceType))
@@ -1166,59 +1034,60 @@ describe('ServiceController', () => {
 
     describe('retrieve all versions of a service type', () => {
         beforeEach(async () => {
-            const genesisService = {
-                name: 'Test name',
-                description: 'Test description.',
-                address: 'https://test-test.com',
-                type: 'SUD',
+            const {
+                name: name1,
+                description: description1,
+                baseAddress: baseAddress1,
+                type: type1,
+                endpoints: endpoints1,
+            } = serviceFixture1
+            const serviceID1 = (
+                await new ServiceModel({
+                    name: name1,
+                    description: description1,
+                    baseAddress: baseAddress1,
+                    type: type1,
+                }).save()
+            ).id
+            for (const endpoint of endpoints1) {
+                await new serviceEndpointModel({ serviceID: serviceID1, ...endpoint }).save()
             }
 
-            const genesisEndpoint = {
-                task: 'Test task',
-                endpointPath: '/test',
-                method: 'POST',
-                options: {
-                    removeIsFluency: 'boolean',
-                },
+            const {
+                name: name2,
+                description: description2,
+                baseAddress: baseAddress2,
+                type: type2,
+                endpoints: endpoints2,
+            } = serviceFixture2
+            const serviceID2 = (
+                await new ServiceModel({
+                    name: name2,
+                    description: description2,
+                    baseAddress: baseAddress2,
+                    type: type2,
+                }).save()
+            ).id
+            for (const endpoint of endpoints2) {
+                await new serviceEndpointModel({ serviceID: serviceID2, ...endpoint }).save()
             }
-
-            const secondService = {
-                name: 'Test name 2',
-                description: 'Test description 2.',
-                address: 'https://test2-test.com',
-                type: 'NER',
-            }
-
-            await serviceController.createService(
-                genesisService.name,
-                genesisService.description,
-                genesisService.address,
-                genesisService.type,
-                [genesisEndpoint],
-            )
-
-            await serviceController.createService(
-                secondService.name,
-                secondService.description,
-                secondService.address,
-                secondService.type,
-                [genesisEndpoint],
-            )
         })
 
         it('should return all versions of a service type', async () => {
-            const validType = 'SUD'
-            const returnedServiceTypes = await serviceController.retrieveServiceVersion(validType)
-            expect(returnedServiceTypes.versions.length).toEqual(1)
+            const type = serviceFixture1.type
+            const response = await serviceController.retrieveServiceVersion(type)
+            expect(response.versions.length).toEqual(2)
+            expect(response.versions).toContain('v1')
+            expect(response.versions).toContain('v2')
         })
 
-        it('should return 404 - NOT FOUND due to invalid service type', async () => {
-            const invalidType = 'SUR'
-            await expect(serviceController.retrieveServiceVersion(invalidType)).rejects.toThrow(
+        it('should return 404 - Not Found due to invalid service type', async () => {
+            const type = 'Invalid type'
+            await expect(serviceController.retrieveServiceVersion(type)).rejects.toThrow(
                 new HttpException(
                     `Invalid type. Expected any of ${Object.values(ServiceType).join(
                         ', ',
-                    )}, but received ${invalidType}`,
+                    )}, but received ${type}`,
                     HttpStatus.NOT_FOUND,
                 ),
             )
