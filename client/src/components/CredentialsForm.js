@@ -114,7 +114,7 @@ export function LoginComponent() {
             </form>
             <div className="redirect-signup">
                 <span>
-                    Don't have an account? <a href="">Register now</a>
+                    Don't have an account? <a href="/signup">Register now</a>
                 </span>
             </div>
         </div>
@@ -165,10 +165,20 @@ export function SignupComponent() {
             department
         );
 
-        if (response) {
+        if (response === true) {
             setErrorMsg("");
         } else {
-            setErrorMsg(response.message);
+            if (response.statusCode === 400) {
+                if (response.message.includes("username")) {
+                    setErrorMsg(
+                        "Username must be at least 5 alphanumeric characters."
+                    );
+                } else if (response.message.includes("password")) {
+                    setErrorMsg("Password must be minimum 8 characters.");
+                }
+            } else if (response.statusCode === 409) {
+                setErrorMsg(response.message);
+            }
         }
     }
 
@@ -208,6 +218,7 @@ export function SignupComponent() {
                 }
             }
         };
+        setErrorMsg("");
         handleInputNameStyle();
     }, [username, password, retypedPassword, name, email, department]);
 
@@ -316,7 +327,7 @@ export function SignupComponent() {
             </form>
             <div className="redirect-login">
                 <span>
-                    Already have an account? <a href="">Login now</a>
+                    Already have an account? <a href="/login">Login now</a>
                 </span>
             </div>
         </div>

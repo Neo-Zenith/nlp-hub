@@ -33,11 +33,11 @@ export class UsersService extends Component {
         const url = "https://nlphub.azurewebsites.net/users/register";
 
         const requestBody = {
-            username: "User01",
-            password: "password123",
-            name: "John Doe",
-            email: "test@example.com",
-            department: "SCSE",
+            username: username,
+            password: password,
+            name: name,
+            email: email,
+            department: department,
         };
 
         const response = await fetch(url, {
@@ -48,14 +48,14 @@ export class UsersService extends Component {
             },
             body: JSON.stringify(requestBody),
         });
-        console.log(response);
-        switch (response.status) {
-            case 409:
-                return response.json();
 
+        switch (response.status) {
             case 201:
-                await response.json();
                 return true;
+
+            default:
+                const payload = await response.json();
+                return payload;
         }
     }
 }
