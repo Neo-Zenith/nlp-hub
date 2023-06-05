@@ -35,7 +35,7 @@ class CredentialsValidator {
     public static isValidUsername(req: CustomRequest): boolean {
         const username = req.body.username
         const pattern = /^[a-zA-Z0-9]{5,}$/
-        if (pattern.test(username)) {
+        if (!pattern.test(username)) {
             const message =
                 'Invalid username. Expected username to be at least 5 characters and must only contain alphanumerics.'
             throw new HttpException(message, HttpStatus.BAD_REQUEST)
