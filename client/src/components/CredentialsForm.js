@@ -4,6 +4,8 @@ import { UsersService } from "../services/UsersService";
 
 export function LoginComponent() {
     const usersService = new UsersService();
+    const [errorMsg, setErrorMsg] = useState("");
+    const [accessToken, setAccessToken] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
@@ -15,12 +17,18 @@ export function LoginComponent() {
         setPassword(e.target.value);
     };
 
-    const handleLogin = (e) => {
+    async function handleLogin(e) {
         e.preventDefault();
-        usersService.loginUser(username, password);
-        setUsername("");
-        setPassword("");
-    };
+        setErrorMsg("");
+        const response = await usersService.loginUser(username, password);
+        if (response) {
+            setAccessToken(accessToken);
+            setUsername("");
+            setPassword("");
+        } else {
+            setErrorMsg("Invalid username and/or password.");
+        }
+    }
 
     useEffect(() => {
         const handleInputNameStyle = () => {
@@ -65,9 +73,23 @@ export function LoginComponent() {
         handleInputNameStyle();
     }, [username, password]);
 
+    useEffect(() => {
+        const displayErrorMessage = () => {
+            if (errorMsg) {
+                document.getElementById("error-message").style.opacity = "1";
+            } else {
+                document.getElementById("error-message").style.opacity = "0";
+            }
+        };
+        displayErrorMessage();
+    }, [errorMsg]);
+
     return (
         <div className="login-container">
             <h2 className="login-title">Welcome</h2>
+            <div className="error-container">
+                <span id="error-message">{errorMsg}</span>
+            </div>
             <form className="login-form" onSubmit={handleLogin}>
                 <label>
                     <input
