@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../styles/components/CredentialsForm.css";
 import { UsersService } from "../services/UsersService";
 
-export function LoginContainer() {
+export function LoginComponent() {
     const usersService = new UsersService();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
