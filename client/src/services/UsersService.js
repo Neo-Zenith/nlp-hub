@@ -10,17 +10,11 @@ export class UsersService extends Component {
         };
 
         try {
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(requestBody),
-            });
-
+            const response = await fetch(
+                "https://nlphub.azurewebsites.net/admins/login"
+            );
             const data = await response.json();
-            // Handle the response data here
-            console.log(data);
+            console.log(response.status, data);
         } catch (error) {
             // Handle any errors that occur during the request
             console.error("Error:", error);
