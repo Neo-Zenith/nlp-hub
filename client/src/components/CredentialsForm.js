@@ -22,9 +22,7 @@ export function LoginComponent() {
         setErrorMsg("");
         const response = await usersService.loginUser(username, password);
         if (response) {
-            setAccessToken(accessToken);
-            setUsername("");
-            setPassword("");
+            setAccessToken(response);
         } else {
             setErrorMsg("Invalid username and/or password.");
         }
@@ -72,6 +70,14 @@ export function LoginComponent() {
         };
         handleInputNameStyle();
     }, [username, password]);
+
+    useEffect(() => {
+        /**
+         * * log access token and username into redux store
+         */
+        setUsername("");
+        setPassword("");
+    }, [accessToken]);
 
     useEffect(() => {
         const displayErrorMessage = () => {
