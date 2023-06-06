@@ -19,7 +19,6 @@ export function LoginComponent() {
     };
 
     async function handleLogin(e) {
-        console.log("here?");
         e.preventDefault();
         const response = await usersService.loginUser(username, password);
         if (response) {
