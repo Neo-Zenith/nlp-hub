@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../styles/components/CredentialsForm.css";
 import { UsersService } from "../services/UsersService";
 
 export function LoginComponent() {
     const usersService = new UsersService();
-    const [errorMsg, setErrorMsg] = useState("");
     const [accessToken, setAccessToken] = useState("");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -18,15 +19,28 @@ export function LoginComponent() {
     };
 
     async function handleLogin(e) {
+        console.log("here?");
         e.preventDefault();
-        setErrorMsg("");
         const response = await usersService.loginUser(username, password);
         if (response) {
             setAccessToken(response);
         } else {
-            setErrorMsg("Invalid username and/or password.");
+            showToastError("Invalid username and/or password.");
         }
     }
+
+    const showToastError = (message) => {
+        const existingToast = toast.isActive(message);
+
+        if (existingToast) {
+            toast.update(existingToast, {
+                type: toast.TYPE.ERROR,
+                autoClose: 3000,
+            });
+        } else {
+            toast.error(message, { toastId: message });
+        }
+    };
 
     useEffect(() => {
         const handleInputNameStyle = () => {
@@ -68,23 +82,9 @@ export function LoginComponent() {
         setPassword("");
     }, [accessToken]);
 
-    useEffect(() => {
-        const displayErrorMessage = () => {
-            if (errorMsg) {
-                document.getElementById("error-message").style.opacity = "1";
-            } else {
-                document.getElementById("error-message").style.opacity = "0";
-            }
-        };
-        displayErrorMessage();
-    }, [errorMsg]);
-
     return (
         <div className="login-container">
             <h2 className="login-title">Welcome</h2>
-            <div className="error-container">
-                <span id="error-message">{errorMsg}</span>
-            </div>
             <form className="login-form" onSubmit={handleLogin}>
                 <label>
                     <input
@@ -123,13 +123,13 @@ export function LoginComponent() {
 
 export function SignupComponent() {
     const usersService = new UsersService();
-    const [errorMsg, setErrorMsg] = useState("");
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [password, setPassword] = useState("");
     const [retypedPassword, setRetypedPassword] = useState("");
+    const [passwordMatch, setPasswordMatch] = useState({});
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -155,8 +155,25 @@ export function SignupComponent() {
         setRetypedPassword(e.target.value);
     };
 
+    const showToastError = (message) => {
+        const existingToast = toast.isActive(message);
+
+        if (existingToast) {
+            toast.update(existingToast, {
+                type: toast.TYPE.ERROR,
+                autoClose: 3000,
+            });
+        } else {
+            toast.error(message, { toastId: message });
+        }
+    };
+
     async function handleSignup(e) {
         e.preventDefault();
+        if (password !== retypedPassword) {
+            showToastError("Passwords do not match");
+            return;
+        }
         const response = await usersService.registerUser(
             username,
             name,
@@ -165,19 +182,17 @@ export function SignupComponent() {
             department
         );
 
-        if (response === true) {
-            setErrorMsg("");
-        } else {
+        if (response !== true) {
             if (response.statusCode === 400) {
                 if (response.message.includes("username")) {
-                    setErrorMsg(
+                    showToastError(
                         "Username must be at least 5 alphanumeric characters."
                     );
                 } else if (response.message.includes("password")) {
-                    setErrorMsg("Password must be minimum 8 characters.");
+                    showToastError("Password must be minimum 8 characters.");
                 }
             } else if (response.statusCode === 409) {
-                setErrorMsg(response.message);
+                showToastError(response.message);
             }
         }
     }
@@ -218,35 +233,39 @@ export function SignupComponent() {
                 }
             }
         };
-        setErrorMsg("");
         handleInputNameStyle();
     }, [username, password, retypedPassword, name, email, department]);
 
     useEffect(() => {
         if (password && retypedPassword && password !== retypedPassword) {
-            setErrorMsg("Passwords do not match!");
+            setPasswordMatch({
+                message: "Passwords do not match",
+                color: "var(--primary-red)",
+            });
+        } else if (
+            password &&
+            retypedPassword &&
+            password === retypedPassword
+        ) {
+            setPasswordMatch({
+                message: "Passwords match",
+                color: "var(--primary-green)",
+            });
         } else {
-            setErrorMsg("");
+            setPasswordMatch({
+                message: "",
+            });
         }
-    }, [retypedPassword, password]);
+    }, [username, password, retypedPassword, name, email, department]);
 
     useEffect(() => {
-        const displayErrorMessage = () => {
-            if (errorMsg) {
-                document.getElementById("error-message").style.opacity = "1";
-            } else {
-                document.getElementById("error-message").style.opacity = "0";
-            }
-        };
-        displayErrorMessage();
-    }, [errorMsg]);
+        document.getElementById("password-checker").style.color =
+            passwordMatch.color;
+    }, [passwordMatch]);
 
     return (
         <div className="signup-container">
             <h2 className="signup-title">Welcome</h2>
-            <div className="error-container">
-                <span id="error-message">{errorMsg}</span>
-            </div>
             <form className="signup-form" onSubmit={handleSignup}>
                 <label>
                     <input
@@ -323,6 +342,7 @@ export function SignupComponent() {
                         Retype Password
                     </span>
                 </label>
+                <div id="password-checker">{passwordMatch.message}</div>
                 <button type="submit">SIGNUP</button>
             </form>
             <div className="redirect-login">

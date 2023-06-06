@@ -12,7 +12,9 @@
 :root {
     --primary-magneta: #c44d8c;
     --primary-red: #910000;
+    --primary-green: #059100;
     --light-grey: #E6E3E5;
+    --dark-grey: #9b9da0;
 }
 
 html,
