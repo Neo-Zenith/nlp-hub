@@ -134,6 +134,12 @@ export function LoginComponent() {
     return (
         <div className="login-container">
             <h2 className="login-title">Welcome</h2>
+            <div className="login-prompt">
+                <span>
+                    To login as Admin, click&nbsp;
+                    <a href="">here</a>.
+                </span>
+            </div>
             <div className="login-form">
                 <label>
                     <input
@@ -166,10 +172,7 @@ export function LoginComponent() {
                         onClick={togglePasswordVisibility}
                         id="password-visibility-toggle"
                     >
-                        <i
-                            id="toggle-icon"
-                            className="fa-sharp fa-solid fa-eye"
-                        ></i>
+                        <i id="toggle-icon" className="fa-solid fa-eye"></i>
                     </button>
                 </label>
                 <button onClick={handleLogin} type="submit">
@@ -500,10 +503,7 @@ export function SignupComponent() {
                             onClick={togglePasswordVisibility}
                             id="password-visibility-toggle"
                         >
-                            <i
-                                id="toggle-icon"
-                                className="fa-sharp fa-solid fa-eye"
-                            ></i>
+                            <i id="toggle-icon" className="fa-solid fa-eye"></i>
                         </button>
                     </label>
                 </div>

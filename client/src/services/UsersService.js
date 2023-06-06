@@ -67,6 +67,9 @@ export default class UsersService extends Component {
 
     logoutUser() {
         const { dispatch } = this.props;
+        dispatch(setUsername(null));
+        dispatch(setRole(null));
         dispatch(setAccessToken(null));
+        return true;
     }
 }

@@ -16,12 +16,15 @@
 :root {
     --primary-magneta: #c44d8c;
     --primary-red: #e7545b;
+    --primary-purple: #262658f6;
+    --secondary-purple: #494983f6;
+    --tertiary-purple: #DFDDFF;
     --tertiary-red: #fae2e2;
     --primary-green: #379ca4;
     --tertiary-green: #eff9fa;
-    --light-grey: #E6E3E5;
-    --medium-grey: #c9c7c7;
-    --dark-grey: #9b9da0;
+    --light-grey: #e1dde6;
+    --medium-grey: #c1b5ca;
+    --dark-grey: #92889e;
 }
 
 html,
