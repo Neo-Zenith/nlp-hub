@@ -2,13 +2,16 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/components/CredentialsForm.css";
-import { UsersService } from "../services/UsersService";
+import UsersService from "../services/UsersService";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export function LoginComponent() {
-    const usersService = new UsersService();
-    const [accessToken, setAccessToken] = useState("");
+    const usersService = new UsersService({ dispatch: useDispatch() });
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const navigate = useNavigate();
+    const accessToken = useSelector((state) => state.accessToken);
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -55,6 +58,7 @@ export function LoginComponent() {
             showToastError("Username and password cannot be empty.");
             return false;
         }
+        return true;
     }
 
     async function handleLogin(e) {
@@ -63,9 +67,7 @@ export function LoginComponent() {
             return false;
         }
         const response = await usersService.loginUser(username, password);
-        if (response) {
-            setAccessToken(response);
-        } else {
+        if (!response) {
             showToastError("Invalid username and/or password.");
         }
     }
@@ -82,6 +84,12 @@ export function LoginComponent() {
             toast.error(message, { toastId: message });
         }
     };
+
+    useEffect(() => {
+        if (accessToken !== null) {
+            navigate("/");
+        }
+    }, [accessToken]);
 
     useEffect(() => {
         const handleInputNameStyle = () => {
@@ -116,12 +124,12 @@ export function LoginComponent() {
     }, [username, password]);
 
     useEffect(() => {
-        /**
-         * * log access token and username into redux store
-         */
         setUsername("");
         setPassword("");
-    }, [accessToken]);
+        if (accessToken !== null) {
+            navigate("/");
+        }
+    }, [accessToken, navigate]);
 
     return (
         <div className="login-container">
@@ -186,6 +194,8 @@ export function SignupComponent() {
     const [password, setPassword] = useState("");
     const [retypedPassword, setRetypedPassword] = useState("");
     const [passwordMatch, setPasswordMatch] = useState({});
+    const accessToken = useSelector((state) => state.accessToken);
+    const navigate = useNavigate();
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -315,6 +325,12 @@ export function SignupComponent() {
             }
         }
     }
+
+    useEffect(() => {
+        if (accessToken !== null) {
+            navigate("/");
+        }
+    }, [accessToken, navigate]);
 
     useEffect(() => {
         const handleInputNameStyle = () => {

@@ -1,7 +1,9 @@
 import { Component } from "react";
+import { setAccessToken, setUsername, setRole } from "../store/actions";
 
-export class UsersService extends Component {
+export default class UsersService extends Component {
     async loginUser(username, password) {
+        const { dispatch } = this.props;
         const url = "https://nlphub.azurewebsites.net/users/login";
 
         const requestBody = {
@@ -25,7 +27,10 @@ export class UsersService extends Component {
             case 201:
                 const data = await response.json();
                 const { accessToken } = data;
-                return accessToken;
+                dispatch(setAccessToken(accessToken));
+                dispatch(setUsername(username));
+                dispatch(setRole("user"));
+                return true;
         }
     }
 
@@ -51,11 +56,17 @@ export class UsersService extends Component {
 
         switch (response.status) {
             case 201:
+                await this.loginUser(username, password);
                 return true;
 
             default:
                 const payload = await response.json();
                 return payload;
         }
+    }
+
+    logoutUser() {
+        const { dispatch } = this.props;
+        dispatch(setAccessToken(null));
     }
 }
