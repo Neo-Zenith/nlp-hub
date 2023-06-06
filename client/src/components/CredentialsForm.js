@@ -18,8 +18,50 @@ export function LoginComponent() {
         setPassword(e.target.value);
     };
 
+    const handleOnFocus = (e) => {
+        const targetID = e.target.id.split("-")[0] + "-field-name";
+        document.getElementById(targetID).style.transform =
+            "translate(0, -1rem)";
+    };
+
+    const handleExitFocus = (e) => {
+        const variable = e.target.id.split("-")[0];
+        const targetID = variable + "-field-name";
+        if (eval(variable) === "") {
+            document.getElementById(targetID).style.transform =
+                "translate(0, 0.3rem)";
+        }
+    };
+
+    const togglePasswordVisibility = (e) => {
+        const icons = {
+            visible: "fa-solid fa-eye",
+            invisible: "fa-solid fa-eye-slash",
+        };
+
+        if (
+            document.getElementById("toggle-icon").className === icons.visible
+        ) {
+            document.getElementById("toggle-icon").className = icons.invisible;
+            document.getElementById("password-field-input").type = "text";
+        } else {
+            document.getElementById("toggle-icon").className = icons.visible;
+            document.getElementById("password-field-input").type = "password";
+        }
+    };
+
+    function validateInputs() {
+        if (username === "" || password === "") {
+            showToastError("Username and password cannot be empty.");
+            return false;
+        }
+    }
+
     async function handleLogin(e) {
         e.preventDefault();
+        if (!validateInputs()) {
+            return false;
+        }
         const response = await usersService.loginUser(username, password);
         if (response) {
             setAccessToken(response);
@@ -84,13 +126,15 @@ export function LoginComponent() {
     return (
         <div className="login-container">
             <h2 className="login-title">Welcome</h2>
-            <form className="login-form" onSubmit={handleLogin}>
+            <div className="login-form">
                 <label>
                     <input
                         id="username-field-input"
                         type="text"
                         value={username}
                         onChange={handleUsernameChange}
+                        onFocus={handleOnFocus}
+                        onBlur={handleExitFocus}
                         required
                     />
                     <span id="username-field-name" className="input-name">
@@ -103,14 +147,27 @@ export function LoginComponent() {
                         type="password"
                         value={password}
                         onChange={handlePasswordChange}
+                        onFocus={handleOnFocus}
+                        onBlur={handleExitFocus}
                         required
                     />
                     <span id="password-field-name" className="input-name">
                         Password
                     </span>
+                    <button
+                        onClick={togglePasswordVisibility}
+                        id="password-visibility-toggle"
+                    >
+                        <i
+                            id="toggle-icon"
+                            className="fa-sharp fa-solid fa-eye"
+                        ></i>
+                    </button>
                 </label>
-                <button type="submit">LOGIN</button>
-            </form>
+                <button onClick={handleLogin} type="submit">
+                    LOGIN
+                </button>
+            </div>
             <div className="redirect-signup">
                 <span>
                     Don't have an account? <a href="/signup">Register now</a>
@@ -167,11 +224,74 @@ export function SignupComponent() {
         }
     };
 
-    async function handleSignup(e) {
-        e.preventDefault();
+    const handleOnFocus = (e) => {
+        const targetID = e.target.id.split("-")[0] + "-field-name";
+        document.getElementById(targetID).style.transform =
+            "translate(0, -1rem)";
+    };
+
+    const handleExitFocus = (e) => {
+        const variable = e.target.id.split("-")[0];
+        const targetID = variable + "-field-name";
+        if (eval(variable) === "") {
+            document.getElementById(targetID).style.transform =
+                "translate(0, 0.3rem)";
+        }
+    };
+
+    const togglePasswordVisibility = (e) => {
+        const icons = {
+            visible: "fa-solid fa-eye",
+            invisible: "fa-solid fa-eye-slash",
+        };
+
+        if (
+            document.getElementById("toggle-icon").className === icons.visible
+        ) {
+            document.getElementById("toggle-icon").className = icons.invisible;
+            document.getElementById("password-field-input").type = "text";
+            document.getElementById("retypedPassword-field-input").type =
+                "text";
+        } else {
+            document.getElementById("toggle-icon").className = icons.visible;
+            document.getElementById("password-field-input").type = "password";
+            document.getElementById("retypedPassword-field-input").type =
+                "password";
+        }
+    };
+
+    function validateInputs() {
+        if (username === "") {
+            showToastError("A username is required.");
+            return false;
+        }
+        if (name === "") {
+            showToastError("A name is required.");
+            return false;
+        }
+        if (email === "") {
+            showToastError("An email address is required.");
+            return false;
+        }
+        if (department === "") {
+            showToastError("A department is required.");
+            return false;
+        }
+        if (password === "") {
+            showToastError("A password is required.");
+            return false;
+        }
         if (password !== retypedPassword) {
             showToastError("Passwords do not match");
-            return;
+            return false;
+        }
+        return true;
+    }
+
+    async function handleSignup(e) {
+        e.preventDefault();
+        if (!validateInputs()) {
+            return false;
         }
         const response = await usersService.registerUser(
             username,
@@ -209,6 +329,8 @@ export function SignupComponent() {
 
             for (const input of inputs) {
                 if (eval(input) !== "") {
+                    document.getElementById(`${input}-field-name`).style.color =
+                        "var(--dark-grey)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, -1rem)";
@@ -223,6 +345,8 @@ export function SignupComponent() {
                     ).style.borderImage =
                         "linear-gradient(to right, #ff00ff, #00ffff) 1";
                 } else {
+                    document.getElementById(`${input}-field-name`).style.color =
+                        "var(--medium-grey)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, 0.3rem)";
@@ -265,37 +389,46 @@ export function SignupComponent() {
     return (
         <div className="signup-container">
             <h2 className="signup-title">Welcome</h2>
-            <form className="signup-form" onSubmit={handleSignup}>
-                <label>
-                    <input
-                        id="username-field-input"
-                        type="text"
-                        value={username}
-                        onChange={handleUsernameChange}
-                        required
-                    />
-                    <span id="username-field-name" className="input-name">
-                        Username
-                    </span>
-                </label>
-                <label>
-                    <input
-                        id="name-field-input"
-                        type="text"
-                        value={name}
-                        onChange={handleNameChange}
-                        required
-                    />
-                    <span id="name-field-name" className="input-name">
-                        Name
-                    </span>
-                </label>
+            <div className="signup-form">
+                <div className="name-inputs">
+                    <label>
+                        <input
+                            id="username-field-input"
+                            type="text"
+                            value={username}
+                            onChange={handleUsernameChange}
+                            onFocus={handleOnFocus}
+                            onBlur={handleExitFocus}
+                            required
+                        />
+                        <span id="username-field-name" className="input-name">
+                            Username
+                        </span>
+                    </label>
+                    <label>
+                        <input
+                            id="name-field-input"
+                            type="text"
+                            value={name}
+                            onChange={handleNameChange}
+                            onFocus={handleOnFocus}
+                            onBlur={handleExitFocus}
+                            required
+                        />
+                        <span id="name-field-name" className="input-name">
+                            Name
+                        </span>
+                    </label>
+                </div>
+
                 <label>
                     <input
                         id="email-field-input"
                         type="email"
                         value={email}
                         onChange={handleEmailChange}
+                        onFocus={handleOnFocus}
+                        onBlur={handleExitFocus}
                         required
                     />
                     <span id="email-field-name" className="input-name">
@@ -308,42 +441,62 @@ export function SignupComponent() {
                         type="text"
                         value={department}
                         onChange={handleDepartmentChange}
+                        onFocus={handleOnFocus}
+                        onBlur={handleExitFocus}
                         required
                     />
                     <span id="department-field-name" className="input-name">
                         Department
                     </span>
                 </label>
-                <label>
-                    <input
-                        id="password-field-input"
-                        type="password"
-                        value={password}
-                        onChange={handlePasswordChange}
-                        required
-                    />
-                    <span id="password-field-name" className="input-name">
-                        Password
-                    </span>
-                </label>
-                <label>
-                    <input
-                        id="retypedPassword-field-input"
-                        type="password"
-                        value={retypedPassword}
-                        onChange={handleRetypedPasswordChange}
-                        required
-                    />
-                    <span
-                        id="retypedPassword-field-name"
-                        className="input-name"
-                    >
-                        Retype Password
-                    </span>
-                </label>
+                <div className="password-inputs">
+                    <label>
+                        <input
+                            id="password-field-input"
+                            type="password"
+                            value={password}
+                            onChange={handlePasswordChange}
+                            onFocus={handleOnFocus}
+                            onBlur={handleExitFocus}
+                            required
+                        />
+                        <span id="password-field-name" className="input-name">
+                            Password
+                        </span>
+                    </label>
+                    <label>
+                        <input
+                            id="retypedPassword-field-input"
+                            type="password"
+                            value={retypedPassword}
+                            onChange={handleRetypedPasswordChange}
+                            onFocus={handleOnFocus}
+                            onBlur={handleExitFocus}
+                            required
+                        />
+                        <span
+                            id="retypedPassword-field-name"
+                            className="input-name"
+                        >
+                            Confirm Password
+                        </span>
+                        <button
+                            onClick={togglePasswordVisibility}
+                            id="password-visibility-toggle"
+                        >
+                            <i
+                                id="toggle-icon"
+                                className="fa-sharp fa-solid fa-eye"
+                            ></i>
+                        </button>
+                    </label>
+                </div>
+
                 <div id="password-checker">{passwordMatch.message}</div>
-                <button type="submit">SIGNUP</button>
-            </form>
+                <button onClick={handleSignup} type="submit">
+                    SIGNUP
+                </button>
+            </div>
             <div className="redirect-login">
                 <span>
                     Already have an account? <a href="/login">Login now</a>

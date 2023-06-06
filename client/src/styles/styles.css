@@ -8,12 +8,19 @@
 */
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 
+/*
+    * 'Poppins
+*/
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 :root {
     --primary-magneta: #c44d8c;
-    --primary-red: #910000;
-    --primary-green: #059100;
+    --primary-red: #e7545b;
+    --tertiary-red: #fae2e2;
+    --primary-green: #379ca4;
+    --tertiary-green: #eff9fa;
     --light-grey: #E6E3E5;
+    --medium-grey: #c9c7c7;
     --dark-grey: #9b9da0;
 }
 
