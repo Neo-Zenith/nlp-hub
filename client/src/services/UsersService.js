@@ -74,12 +74,12 @@ export default class UsersService extends Component {
             method: "GET",
             headers: {
                 "content-type": "application/json",
-                authorization: accessToken,
+                authorization: "Bearer " + accessToken,
             },
         });
 
         const payload = await response.json();
-        return response.status, payload;
+        return [response.status, payload];
     }
 
     logoutUser() {

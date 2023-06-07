@@ -131,7 +131,7 @@ export class UserController {
     @UseGuards(new UserAuthGuard(['GET']))
     @UseInterceptors(RetrieveUserInterceptor)
     async retrieveUser(@Param('username') username: string) {
-        const user = await this.userService.getUser('user', username)
+        const user = await this.userService.getUser(username)
         const userDetails = {
             username: user.username,
             name: user.name,
