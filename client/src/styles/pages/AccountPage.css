@@ -1,0 +1,9 @@
+.account-page-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.account-page-content {
+    width: 100%;
+}

@@ -1,18 +1,18 @@
 import React from "react";
-import { SignupComponent } from "../components/CredentialsForm";
-import bg from "../img/credential-form-bg.jpg";
-import "../styles/pages/CredentialsPage.css";
+import "../styles/pages/AccountPage.css";
 import { ToastContainer } from "react-toastify";
+import { AccountDetails } from "../components/AccountDetails";
+import { MenuComponent } from "../components/Menu";
+import { TopBar } from "../components/TopBar";
 
-export function SignupPage() {
+export function AccountPage() {
     return (
         <>
-            <div className="signup-page-wrapper">
-                <div className="signup-container-wrapper">
-                    <img className="signup-bg" src={bg} />
-                    <div className="signup-component">
-                        <SignupComponent />
-                    </div>
+            <div className="account-page-wrapper">
+                <MenuComponent />
+                <div className="account-page-content">
+                    <TopBar />
+                    <AccountDetails />
                 </div>
                 <ToastContainer
                     limit={3}

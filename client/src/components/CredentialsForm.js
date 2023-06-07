@@ -98,7 +98,7 @@ export function LoginComponent() {
             for (const input of inputs) {
                 if (eval(input) !== "") {
                     document.getElementById(`${input}-field-name`).style.color =
-                        "var(--color-text-highlight)";
+                        "var(--color-secondary-red)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, -1rem)";
@@ -110,7 +110,7 @@ export function LoginComponent() {
                     ).style.borderWidth = "0 0 0.1rem 0";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderColor = "var(--color-text-highlight)";
+                    ).style.borderColor = "var(--color-secondary-red)";
                 } else {
                     document.getElementById(`${input}-field-name`).style.color =
                         "var(--color-grey)";
@@ -192,7 +192,7 @@ export function LoginComponent() {
 }
 
 export function SignupComponent() {
-    const usersService = new UsersService();
+    const usersService = new UsersService({ dispatch: useDispatch() });
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -352,7 +352,7 @@ export function SignupComponent() {
             for (const input of inputs) {
                 if (eval(input) !== "") {
                     document.getElementById(`${input}-field-name`).style.color =
-                        "var(--color-text-highlight)";
+                        "var(--color-secondary-red)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, -1rem)";
@@ -364,7 +364,7 @@ export function SignupComponent() {
                     ).style.borderWidth = "0 0 0.1rem 0";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderColor = "var(--color-text-highlight)";
+                    ).style.borderColor = "var(--color-secondary-red)";
                 } else {
                     document.getElementById(`${input}-field-name`).style.color =
                         "var(--color-grey)";

@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { setAccessToken, setUsername, setRole } from "../store/actions";
+import { useSelector } from "react-redux";
 
 export default class UsersService extends Component {
     async loginUser(username, password) {
@@ -63,6 +64,22 @@ export default class UsersService extends Component {
                 const payload = await response.json();
                 return payload;
         }
+    }
+
+    async retrieveUser(username, accessToken) {
+        const url = "https://nlphub.azurewebsites.net/users/";
+        const fullUrl = url + username;
+
+        const response = await fetch(fullUrl, {
+            method: "GET",
+            headers: {
+                "content-type": "application/json",
+                authorization: accessToken,
+            },
+        });
+
+        const payload = await response.json();
+        return response.status, payload;
     }
 
     logoutUser() {

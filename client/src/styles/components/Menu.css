@@ -1,5 +1,5 @@
 .menu-container {
-    background: var(--color-dashboard-bg);
+    background: var(--color-primary-blue);
     display: flex;
     flex-direction: column;
     width: 22%;
@@ -21,12 +21,12 @@
 }
 
 .menu-welcome-text .username {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-style: normal;
 }
 
 .menu-welcome-text span {
-    color: var(--color-grey);
+    color: var(--color-light-grey);
     margin-bottom: 0.15rem;
     font-family: 'Poppins';
     font-weight: 400;
@@ -40,7 +40,7 @@
 
 .menu-title span {
     color: var(--color-light-grey);
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-family: 'Poppins';
     font-weight: 600;
 }
@@ -59,10 +59,10 @@
 }
 
 .menu-section .section-title {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-family: 'Poppins';
     font-weight: 400;
-    color: var(--color-dark-grey)
+    color: var(--color-grey)
 }
 
 .menu-section .section-list {
@@ -72,10 +72,7 @@
 }
 
 .section-list li {
-    margin-bottom: 0.8rem;
-    font-size: 0.8rem;
-    font-family: 'Poppins';
-    font-weight: 400;
+    margin-bottom: 0.6rem;
 }
 
 .section-list li button {
@@ -88,12 +85,15 @@
     border-radius: 0.5rem;
     cursor: pointer;
     text-align: start;
+    font-size: 0.7rem;
+    font-family: 'Poppins';
+    font-weight: 400;
 }
 
 .section-list li button:hover {
     transform: translate(0.15rem);
     transition: 0.2s all ease-in-out;
-    background-color: var(--color-dashboard-fg);
+    background-color: var(--color-primary-blue-light);
 }
 
 .menu-footer {
@@ -117,7 +117,7 @@
 
 .menu-footer .logout-btn {
     justify-content: flex-end;
-    color: var(--color-grey);
+    color: var(--color-light-grey);
     background: none;
     border: none;
     font-size: 1.2rem;
@@ -125,6 +125,6 @@
 }
 
 .menu-footer .logout-btn:hover {
-    color: var(--color-light-grey);
+    color: var(--color-secondary-red);
     transition: 0.2s all ease-in-out;
 }

@@ -18,19 +18,19 @@ export function TopBar() {
                         placeholder="Search"
                     />
                     <span>
-                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <i className="fa-solid fa-magnifying-glass"></i>
                     </span>
                 </div>
                 <div className="settings">
                     <ul className="settings-list">
                         <li>
                             <button>
-                                <i class="fa-solid fa-user"></i>
+                                <i className="fa-solid fa-user"></i>
                             </button>
                         </li>
                         <li>
                             <button>
-                                <i class="fa-solid fa-gear"></i>
+                                <i className="fa-solid fa-gear"></i>
                             </button>
                         </li>
                     </ul>

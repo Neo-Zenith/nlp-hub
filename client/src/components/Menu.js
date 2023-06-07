@@ -69,8 +69,8 @@ export function MenuComponent() {
                             </li>
                             <li>
                                 <button>
-                                    <i class="fa-solid fa-chart-pie"></i> &nbsp;
-                                    Usage Statistics
+                                    <i className="fa-solid fa-chart-pie"></i>{" "}
+                                    &nbsp; Usage Statistics
                                 </button>
                             </li>
                         </ul>
@@ -79,7 +79,7 @@ export function MenuComponent() {
                 <div className="menu-footer">
                     <span>{new Date().toDateString()}</span>
                     <button className="logout-btn" onClick={handleLogout}>
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <i className="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
             </div>

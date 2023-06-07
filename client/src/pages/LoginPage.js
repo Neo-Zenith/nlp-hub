@@ -20,11 +20,10 @@ export function LoginPage() {
                     position="top-right"
                     hideProgressBar="true"
                     toastStyle={{
-                        fontFamily: "Poppins",
+                        fontFamily: "Quicksand",
                         fontWeight: "400",
                         fontSize: "0.7rem",
-                        background: "var(--tertiary-red)",
-                        border: "0.05rem solid var(--primary-red)",
+                        border: "0.05rem solid var(--color-primary-red)",
                         borderRadius: "0.5rem",
                     }}
                 />
