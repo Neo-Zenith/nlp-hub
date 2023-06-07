@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import { MenuComponent } from "../components/Menu";
+import { TopBar } from "../components/TopBar";
+import "../styles/pages/DashboardPage.css";
 
 export function DashboardPage() {
     const username = useSelector((state) => state.username);
@@ -10,7 +12,10 @@ export function DashboardPage() {
     });
     return (
         <>
-            <MenuComponent />
+            <div className="dashboard-wrapper">
+                <MenuComponent />
+                <TopBar />
+            </div>
         </>
     );
 }

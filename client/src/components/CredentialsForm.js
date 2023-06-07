@@ -97,6 +97,8 @@ export function LoginComponent() {
 
             for (const input of inputs) {
                 if (eval(input) !== "") {
+                    document.getElementById(`${input}-field-name`).style.color =
+                        "var(--color-text-highlight)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, -1rem)";
@@ -108,15 +110,16 @@ export function LoginComponent() {
                     ).style.borderWidth = "0 0 0.1rem 0";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderImage =
-                        "linear-gradient(to right, #ff00ff, #00ffff) 1";
+                    ).style.borderColor = "var(--color-text-highlight)";
                 } else {
+                    document.getElementById(`${input}-field-name`).style.color =
+                        "var(--color-grey)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, 0.3rem)";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderImage = "none";
+                    ).style.borderColor = "var(--color-light-grey)";
                 }
             }
         };
@@ -349,7 +352,7 @@ export function SignupComponent() {
             for (const input of inputs) {
                 if (eval(input) !== "") {
                     document.getElementById(`${input}-field-name`).style.color =
-                        "var(--dark-grey)";
+                        "var(--color-text-highlight)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, -1rem)";
@@ -361,17 +364,16 @@ export function SignupComponent() {
                     ).style.borderWidth = "0 0 0.1rem 0";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderImage =
-                        "linear-gradient(to right, #ff00ff, #00ffff) 1";
+                    ).style.borderColor = "var(--color-text-highlight)";
                 } else {
                     document.getElementById(`${input}-field-name`).style.color =
-                        "var(--medium-grey)";
+                        "var(--color-grey)";
                     document.getElementById(
                         `${input}-field-name`
                     ).style.transform = "translate(0, 0.3rem)";
                     document.getElementById(
                         `${input}-field-input`
-                    ).style.borderImage = "none";
+                    ).style.borderColor = "var(--color-light-grey)";
                 }
             }
         };
@@ -382,7 +384,7 @@ export function SignupComponent() {
         if (password && retypedPassword && password !== retypedPassword) {
             setPasswordMatch({
                 message: "Passwords do not match",
-                color: "var(--primary-red)",
+                color: "var(--color-warning)",
             });
         } else if (
             password &&
@@ -391,7 +393,7 @@ export function SignupComponent() {
         ) {
             setPasswordMatch({
                 message: "Passwords match",
-                color: "var(--primary-green)",
+                color: "var(--color-success)",
             });
         } else {
             setPasswordMatch({

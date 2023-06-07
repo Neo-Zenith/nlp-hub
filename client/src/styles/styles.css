@@ -14,17 +14,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 :root {
-    --primary-magneta: #c44d8c;
-    --primary-red: #e7545b;
-    --primary-purple: #262658f6;
-    --secondary-purple: #494983f6;
-    --tertiary-purple: #DFDDFF;
-    --tertiary-red: #fae2e2;
-    --primary-green: #379ca4;
-    --tertiary-green: #eff9fa;
-    --light-grey: #e1dde6;
-    --medium-grey: #c1b5ca;
-    --dark-grey: #92889e;
+    --color-warning: #e7545b;
+    --color-success: #379ca4;
+    --color-text-highlight: #c44d8c;
+    --color-dashboard-fg:#40445c;
+    --color-dashboard-bg: #303444;
+    --color-primary: #6a41b6;
+    --color-secondary: #7f63b3;
+    --color-tertiary: #ac96d4;
+    --color-light-grey: #e6e6e6;
+    --color-grey: #c1b8c7;
+    --color-dark-grey: #92889e;
 }
 
 html,
