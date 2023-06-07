@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import "../styles/components/TopBar.css";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export function TopBar() {
     const [searchString, setSearchString] = useState("");
+    const navigate = useNavigate();
+    const username = useSelector((state) => state.username);
 
     const handleSearchStringChange = (e) => {
         setSearchString(e.target.value);
+    };
+
+    const handleRedirectProfile = (e) => {
+        navigate("/user/" + username);
     };
 
     return (
@@ -24,7 +32,7 @@ export function TopBar() {
                 <div className="settings">
                     <ul className="settings-list">
                         <li>
-                            <button>
+                            <button onClick={handleRedirectProfile}>
                                 <i className="fa-solid fa-user"></i>
                             </button>
                         </li>

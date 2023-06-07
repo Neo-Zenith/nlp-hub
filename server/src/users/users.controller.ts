@@ -161,7 +161,7 @@ export class UserController {
         @Body('password') password?: string,
         @Body('department') department?: string,
     ) {
-        const user = await this.userService.getUser('user', oldUsername)
+        const user = await this.userService.getUser(oldUsername)
         await this.userService.updateUser(user, newUsername, name, email, password, department)
         const response = { message: 'User updated.' }
         return response
@@ -196,7 +196,7 @@ export class UserController {
         @Param('username') username: string,
         @Body('extension') extension: string,
     ) {
-        const user = (await this.userService.getUser('user', username)) as User
+        const user = (await this.userService.getUser(username)) as User
         await this.userService.extendUserSubscription(user, extension)
         const response = { message: 'User subscription extended.' }
         return response

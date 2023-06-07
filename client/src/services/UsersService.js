@@ -77,7 +77,6 @@ export default class UsersService extends Component {
                 authorization: "Bearer " + accessToken,
             },
         });
-
         const payload = await response.json();
         return [response.status, payload];
     }
