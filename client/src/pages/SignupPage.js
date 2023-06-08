@@ -1,10 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SignupComponent } from "../components/CredentialsForm";
 import bg from "../img/credential-form-bg.jpg";
 import "../styles/pages/CredentialsPage.css";
 import { ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export function SignupPage() {
+    const accessToken = useSelector((state) => state.accessToken);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (accessToken !== null) {
+            navigate("/");
+        }
+    }, [accessToken, navigate]);
+
     return (
         <>
             <div className="signup-page-wrapper">

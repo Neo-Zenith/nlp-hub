@@ -6,7 +6,6 @@ import { useEffect } from "react";
 
 export function MenuComponent() {
     const username = useSelector((state) => state.username);
-    const accessToken = useSelector((state) => state.accessToken);
     const navigate = useNavigate();
     const userService = new UsersService({ dispatch: useDispatch() });
     const handleLogout = (e) => {
@@ -15,12 +14,6 @@ export function MenuComponent() {
             navigate("/login");
         }
     };
-
-    useEffect(() => {
-        if (accessToken === null) {
-            navigate("/login");
-        }
-    }, [accessToken]);
 
     return (
         <>

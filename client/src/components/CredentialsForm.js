@@ -10,8 +10,6 @@ export function LoginComponent() {
     const usersService = new UsersService({ dispatch: useDispatch() });
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const navigate = useNavigate();
-    const accessToken = useSelector((state) => state.accessToken);
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -86,12 +84,6 @@ export function LoginComponent() {
     };
 
     useEffect(() => {
-        if (accessToken !== null) {
-            navigate("/");
-        }
-    }, [accessToken]);
-
-    useEffect(() => {
         const handleInputNameStyle = () => {
             const inputs = ["username", "password"];
 
@@ -125,14 +117,6 @@ export function LoginComponent() {
         };
         handleInputNameStyle();
     }, [username, password]);
-
-    useEffect(() => {
-        setUsername("");
-        setPassword("");
-        if (accessToken !== null) {
-            navigate("/");
-        }
-    }, [accessToken, navigate]);
 
     return (
         <div className="login-container">
@@ -200,8 +184,6 @@ export function SignupComponent() {
     const [password, setPassword] = useState("");
     const [retypedPassword, setRetypedPassword] = useState("");
     const [passwordMatch, setPasswordMatch] = useState({});
-    const accessToken = useSelector((state) => state.accessToken);
-    const navigate = useNavigate();
 
     const handleUsernameChange = (e) => {
         setUsername(e.target.value);
@@ -331,12 +313,6 @@ export function SignupComponent() {
             }
         }
     }
-
-    useEffect(() => {
-        if (accessToken !== null) {
-            navigate("/");
-        }
-    }, [accessToken, navigate]);
 
     useEffect(() => {
         const handleInputNameStyle = () => {

@@ -1,10 +1,21 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { LoginComponent } from "../components/CredentialsForm";
 import bg from "../img/credential-form-bg.jpg";
 import "../styles/pages/CredentialsPage.css";
 import { ToastContainer } from "react-toastify";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 export function LoginPage() {
+    const accessToken = useSelector((state) => state.accessToken);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (accessToken !== null) {
+            navigate("/");
+        }
+    }, [accessToken, navigate]);
+
     return (
         <>
             <div className="login-page-wrapper">
