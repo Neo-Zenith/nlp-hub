@@ -19,9 +19,9 @@ export function ServicesList() {
     const [typeFilter, setTypeFilter] = useState("");
     const [nameFilter, setNameFilter] = useState("");
     const [nameFilterActive, setNameFilterActive] = useState(false);
-    const [filteredServices, setFilteredServices] = useState([]);
-    const [services, setServices] = useState([]);
-    const [serviceTypes, setServiceTypes] = useState([]);
+    const [filteredServices, setFilteredServices] = useState(null);
+    const [services, setServices] = useState(null);
+    const [serviceTypes, setServiceTypes] = useState(null);
 
     const closeTypeFilter = (e) => {
         const value = e.target.textContent;
@@ -96,10 +96,10 @@ export function ServicesList() {
 
         fetchServices();
         fetchServicesTypes();
-        setDataLoaded(true);
     }, []);
 
     useEffect(() => {
+        setDataLoaded(false);
         if (typeFilter !== "" && typeFilter !== "All") {
             let filteredServices = [];
             for (const service of services) {
@@ -115,16 +115,23 @@ export function ServicesList() {
     }, [typeFilter]);
 
     useEffect(() => {
+        setDataLoaded(false);
         if (nameFilter.includes("Ascending")) {
             setFilteredServices(
                 filteredServices.sort((a, b) => a.name.localeCompare(b.name))
             );
-        } else {
+        } else if (nameFilter.includes("Descending")) {
             setFilteredServices(
                 filteredServices.sort((a, b) => b.name.localeCompare(a.name))
             );
         }
     }, [nameFilter]);
+
+    useEffect(() => {
+        if (services !== null && serviceTypes !== null && filteredServices !== null) {
+            setDataLoaded(true);
+        }
+    }, [services, serviceTypes, filteredServices]);
 
     return (
         <>
