@@ -1,13 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import React, { useEffect, useMemo, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import "../styles/components/CredentialsForm.css";
 import UsersService from "../services/UsersService";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { UIService } from "../services/UIServices";
 
 export function LoginComponent() {
-    const usersService = new UsersService({ dispatch: useDispatch() });
+    const dispatch = useDispatch();
+
+    const usersService = useMemo(() => {
+        return new UsersService({ dispatch });
+    }, [dispatch]);
+    const uiServices = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
@@ -53,7 +60,8 @@ export function LoginComponent() {
 
     function validateInputs() {
         if (username === "" || password === "") {
-            showToastError("Username and password cannot be empty.");
+            const error = "Username and password cannot be empty.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         return true;
@@ -66,22 +74,10 @@ export function LoginComponent() {
         }
         const response = await usersService.loginUser(username, password);
         if (!response) {
-            showToastError("Invalid username and/or password.");
+            const error = "Invalid username and/or password.";
+            uiServices.setErrorMsg(error);
         }
     }
-
-    const showToastError = (message) => {
-        const existingToast = toast.isActive(message);
-
-        if (existingToast) {
-            toast.update(existingToast, {
-                type: toast.TYPE.ERROR,
-                autoClose: 3000,
-            });
-        } else {
-            toast.error(message, { toastId: message });
-        }
-    };
 
     useEffect(() => {
         const handleInputNameStyle = () => {
@@ -176,7 +172,15 @@ export function LoginComponent() {
 }
 
 export function SignupComponent() {
-    const usersService = new UsersService({ dispatch: useDispatch() });
+    const dispatch = useDispatch();
+
+    const usersService = useMemo(() => {
+        return new UsersService({ dispatch });
+    }, [dispatch]);
+    const uiServices = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -207,19 +211,6 @@ export function SignupComponent() {
 
     const handleRetypedPasswordChange = (e) => {
         setRetypedPassword(e.target.value);
-    };
-
-    const showToastError = (message) => {
-        const existingToast = toast.isActive(message);
-
-        if (existingToast) {
-            toast.update(existingToast, {
-                type: toast.TYPE.ERROR,
-                autoClose: 3000,
-            });
-        } else {
-            toast.error(message, { toastId: message });
-        }
     };
 
     const handleOnFocus = (e) => {
@@ -260,27 +251,33 @@ export function SignupComponent() {
 
     function validateInputs() {
         if (username === "") {
-            showToastError("A username is required.");
+            const error = "A username is required.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         if (name === "") {
-            showToastError("A name is required.");
+            const error = "A name is required.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         if (email === "") {
-            showToastError("An email address is required.");
+            const error = "An email address is required.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         if (department === "") {
-            showToastError("A department is required.");
+            const error = "A department is required.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         if (password === "") {
-            showToastError("A password is required.");
+            const error = "A password is required.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         if (password !== retypedPassword) {
-            showToastError("Passwords do not match");
+            const error = "Passwords do not match.";
+            uiServices.setErrorMsg(error);
             return false;
         }
         return true;
@@ -302,14 +299,15 @@ export function SignupComponent() {
         if (response !== true) {
             if (response.statusCode === 400) {
                 if (response.message.includes("username")) {
-                    showToastError(
-                        "Username must be at least 5 alphanumeric characters."
-                    );
+                    const error =
+                        "Username must be at least 5 alphanumeric characters.";
+                    uiServices.setErrorMsg(error);
                 } else if (response.message.includes("password")) {
-                    showToastError("Password must be minimum 8 characters.");
+                    const error = "Password must be minimum 8 characters.";
+                    uiServices.setErrorMsg(error);
                 }
             } else if (response.statusCode === 409) {
-                showToastError(response.message);
+                uiServices.setErrorMsg(response.message);
             }
         }
     }

@@ -7,6 +7,7 @@ const initialState = {
     accessToken: null,
     username: null,
     role: null,
+    error: null,
 };
 
 // Reducer function
@@ -18,6 +19,8 @@ const reducer = (state = initialState, action) => {
             return { ...state, username: action.payload };
         case "SET_ROLE":
             return { ...state, role: action.payload };
+        case "SET_ERROR":
+            return { ...state, error: action.payload };
         default:
             return state;
     }

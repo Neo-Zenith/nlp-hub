@@ -1,20 +1,33 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { LoginComponent } from "../components/CredentialsForm";
 import bg from "../img/credential-form-bg.jpg";
 import "../styles/pages/CredentialsPage.css";
-import { ToastContainer } from "react-toastify";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { UIService } from "../services/UIServices";
 
 export function LoginPage() {
-    const accessToken = useSelector((state) => state.accessToken);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const uiServices = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
+    const accessToken = useSelector((state) => state.accessToken);
+    const error = useSelector((state) => state.error);
 
     useEffect(() => {
         if (accessToken !== null) {
             navigate("/");
         }
     }, [accessToken, navigate]);
+
+    useEffect(() => {
+        if (error !== null) {
+            uiServices.displayErrorMsg(error);
+        }
+    }, [error, uiServices]);
 
     return (
         <>
@@ -25,19 +38,6 @@ export function LoginPage() {
                         <LoginComponent />
                     </div>
                 </div>
-                <ToastContainer
-                    limit={3}
-                    autoClose={3500}
-                    position="top-right"
-                    hideProgressBar="true"
-                    toastStyle={{
-                        fontFamily: "Quicksand",
-                        fontWeight: "400",
-                        fontSize: "0.7rem",
-                        border: "0.05rem solid var(--color-primary-red)",
-                        borderRadius: "0.5rem",
-                    }}
-                />
             </div>
         </>
     );

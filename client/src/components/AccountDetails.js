@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import "../styles/components/AccountDetails.css";
 import UsersService from "../services/UsersService";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { ThreeCircles } from "react-loader-spinner";
-import { setUsername } from "../store/actions";
+import { UIService } from "../services/UIServices";
 
 export function AccountDetails() {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const usersService = useMemo(() => {
+        return new UsersService({ dispatch });
+    }, [dispatch]);
+    const uiServices = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
     const username = useSelector((state) => state.username);
+    const accessToken = useSelector((state) => state.accessToken);
+
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [department, setDepartment] = useState("");
     const [dataLoaded, setDataLoaded] = useState(false);
     const [updateActive, setUpdateActive] = useState(false);
-
-    const accessToken = useSelector((state) => state.accessToken);
-    const usersService = new UsersService({ dispatch: useDispatch() });
-    const navigate = useNavigate();
 
     const handleUpdate = async (e) => {
         const field = e.currentTarget.id.split("-")[1];
@@ -77,7 +84,8 @@ export function AccountDetails() {
             }
             return true;
         } else {
-            toast.error(response.message);
+            const error = response.message;
+            uiServices.setErrorMsg(error);
             return false;
         }
     }
@@ -95,22 +103,25 @@ export function AccountDetails() {
                 setEmail(email);
                 setDepartment(department);
                 setDataLoaded(true);
-            } else {
-                toast.error("Invalid request. Username is not valid.", {
-                    onClose: () => {
-                        navigate("/");
-                    },
-                    autoClose: 500,
-                    pauseOnHover: false,
-                });
+            } else if (statusCode === 404) {
+                const error =
+                    "Invalid request. User details could not be retrieved.";
+                uiServices.setErrorMsg(error);
+                navigate("/");
             }
         };
         fetchData();
-    }, [navigate]);
-
-    useEffect(() => {
-        console.log(name);
-    }, [username, name, email, department]);
+    }, [
+        navigate,
+        accessToken,
+        username,
+        name,
+        email,
+        department,
+        dataLoaded,
+        uiServices,
+        usersService,
+    ]);
 
     return (
         <>

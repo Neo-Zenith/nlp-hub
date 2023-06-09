@@ -15,6 +15,19 @@ export function MenuComponent() {
         }
     };
 
+    const navigateToLink = (e) => {
+        console.log(e);
+        const link = e.currentTarget.id.split("-")[0];
+        switch (link) {
+            case "services":
+                navigate("/services");
+                break;
+            case "query":
+                navigate("/query");
+                break;
+        }
+    };
+
     return (
         <>
             <div className="menu-container">
@@ -32,13 +45,19 @@ export function MenuComponent() {
                         <div className="section-title">Services</div>
                         <ul className="section-list">
                             <li>
-                                <button>
+                                <button
+                                    id="services-details-nav"
+                                    onClick={navigateToLink}
+                                >
                                     <i className="fa-solid fa-list"></i> &nbsp;
                                     Available Services
                                 </button>
                             </li>
                             <li>
-                                <button>
+                                <button
+                                    id="query-service-nav"
+                                    onClick={navigateToLink}
+                                >
                                     <i className="fa-solid fa-comment"></i>{" "}
                                     &nbsp; Query Service
                                 </button>

@@ -1,6 +1,5 @@
 import { Component } from "react";
 import { setAccessToken, setUsername, setRole } from "../store/actions";
-import { useSelector } from "react-redux";
 
 export default class UsersService extends Component {
     async loginUser(username, password) {
