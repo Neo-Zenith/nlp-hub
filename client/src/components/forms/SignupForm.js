@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import UsersService from "../../services/UsersService";
 import UIService from "../../services/UIServices";
@@ -9,8 +9,6 @@ import "../../styles/components/forms/SignupForm.css";
 export default function SignupForm() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
-    const accessToken = useSelector((state) => state.accessToken);
 
     const usersService = useMemo(() => {
         return new UsersService({ dispatch });
@@ -32,12 +30,6 @@ export default function SignupForm() {
     const [hasLower, setHasLower] = useState(false);
     const [hasDigit, setHasDigit] = useState(false);
 
-    useEffect(() => {
-        if (accessToken !== null) {
-            navigate("/");
-        }
-    }, [accessToken]);
-    
     useEffect(() => {
         if (password !== "" && cfmPassword !== "") {
             document
@@ -478,13 +470,17 @@ export default function SignupForm() {
                     </div>
 
                     <button
-                        onClick={(e) => {
+                        onClick={() => {
                             handleSignup();
                         }}
                         className="signup-btn"
                     >
                         Sign Up
                     </button>
+
+                    <span className="redirect-link">
+                        Already have an account? <a href="/login">Login now</a>.
+                    </span>
                 </div>
             </div>
         </>

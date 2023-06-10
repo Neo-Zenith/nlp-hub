@@ -1,6 +1,6 @@
-import React, { Component } from "react";
+import { Component } from "react";
 
-export class ServicesService extends Component {
+export default class ServicesService extends Component {
     async retrieveServices(accessToken) {
         const url = "https://nlphub.azurewebsites.net/services";
         const response = await fetch(url, {

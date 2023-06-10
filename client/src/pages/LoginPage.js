@@ -1,19 +1,18 @@
 import { useEffect, useMemo } from "react";
-import SignupForm from "../components/forms/SignupForm";
-import "../styles/pages/SignupPage.css";
+import "../styles/pages/LoginPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import UIService from "../services/UIServices";
-import UsersService from "../services/UsersService";
+import LoginForm from "../components/forms/LoginForm";
 import { useNavigate } from "react-router-dom";
+import UsersService from "../services/UsersService";
 
-export function SignupPage() {
+export default function LoginPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const error = useSelector((state) => state.error);
     const accessToken = useSelector((state) => state.accessToken);
-
-    const uiServices = useMemo(() => {
+    const uiService = useMemo(() => {
         return new UIService({ dispatch });
     });
     const usersService = useMemo(() => {
@@ -24,16 +23,16 @@ export function SignupPage() {
         if (accessToken && usersService.validateTokenExpiry(accessToken)) {
             navigate("/");
         }
-    }, [accessToken, usersService]);
+    }, [accessToken]);
 
     useEffect(() => {
-        uiServices.displayErrorMsg(error);
+        uiService.displayErrorMsg(error);
     }, [error]);
 
     return (
         <>
-            <div className="signup-form-wrapper">
-                <SignupForm />
+            <div className="login-form-wrapper">
+                <LoginForm />
             </div>
         </>
     );
