@@ -2,7 +2,7 @@ import { Component } from "react";
 import { setError } from "../store/actions";
 import { toast } from "react-toastify";
 
-export class UIService extends Component {
+export default class UIService extends Component {
     displayErrorMsg(error) {
         const { dispatch } = this.props;
 

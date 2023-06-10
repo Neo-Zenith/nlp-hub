@@ -57,11 +57,11 @@ export default class UsersService extends Component {
         switch (response.status) {
             case 201:
                 await this.loginUser(username, password);
-                return true;
+                return [response.status, true];
 
             default:
                 const payload = await response.json();
-                return payload;
+                return [response.status, payload];
         }
     }
 
