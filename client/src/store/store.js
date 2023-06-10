@@ -8,6 +8,7 @@ const initialState = {
     username: null,
     role: null,
     error: null,
+    loaded: false,
 };
 
 // Reducer function
@@ -21,6 +22,8 @@ const reducer = (state = initialState, action) => {
             return { ...state, role: action.payload };
         case "SET_ERROR":
             return { ...state, error: action.payload };
+        case "SET_LOADED":
+            return { ...state, loaded: action.payload };
         default:
             return state;
     }

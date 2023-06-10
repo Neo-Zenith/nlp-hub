@@ -17,3 +17,8 @@ export const setError = (error) => ({
     type: "SET_ERROR",
     payload: error,
 });
+
+export const setLoaded = (loaded) => ({
+    type: "SET_LOADED",
+    payload: loaded,
+});
