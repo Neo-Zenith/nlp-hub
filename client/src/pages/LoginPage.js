@@ -14,20 +14,20 @@ export default function LoginPage() {
     const accessToken = useSelector((state) => state.accessToken);
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
-    });
+    }, [dispatch]);
     const usersService = useMemo(() => {
         return new UsersService({ dispatch });
-    });
+    }, [dispatch]);
 
     useEffect(() => {
         if (accessToken && usersService.validateTokenExpiry(accessToken)) {
             navigate("/");
         }
-    }, [accessToken]);
+    }, [accessToken, usersService, navigate]);
 
     useEffect(() => {
         uiService.displayErrorMsg(error);
-    }, [error]);
+    }, [error, uiService]);
 
     return (
         <>

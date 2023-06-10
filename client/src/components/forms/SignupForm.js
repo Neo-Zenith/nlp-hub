@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import UsersService from "../../services/UsersService";
@@ -15,7 +15,7 @@ export default function SignupForm() {
     }, [dispatch]);
     const uiServices = useMemo(() => {
         return new UIService({ dispatch });
-    });
+    }, [dispatch]);
 
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
@@ -158,7 +158,7 @@ export default function SignupForm() {
         }
     }
 
-    function validatePassword() {
+    const validatePassword = useCallback(() => {
         const lengthPattern = /^.{8,}$/;
         const uppercasePattern = /[A-Z]/;
         const lowercasePattern = /[a-z]/;
@@ -168,7 +168,7 @@ export default function SignupForm() {
         setHasUpper(uppercasePattern.test(password));
         setHasLower(lowercasePattern.test(password));
         setHasDigit(digitPattern.test(password));
-    }
+    }, [password]);
 
     function validateInputs() {
         if (username === "") {
@@ -242,7 +242,7 @@ export default function SignupForm() {
             setHasLower(false);
             setHasDigit(false);
         }
-    }, [password]);
+    }, [password, validatePassword]);
 
     useEffect(() => {
         if (hasValidLength) {
@@ -303,7 +303,7 @@ export default function SignupForm() {
         <>
             <div className="signup-form-container">
                 <div className="signup-form-bg">
-                    <img src={bg} />
+                    <img src={bg} alt="signup-bg" />
                 </div>
                 <div className="signup-form">
                     <span className="signup-form-title">Welcome</span>

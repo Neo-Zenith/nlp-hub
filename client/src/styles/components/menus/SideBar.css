@@ -1,0 +1,171 @@
+.sidebar-container {
+    min-width: 35rem;
+    height: 100%;
+    background-color: var(--color-primary-blue);
+    display: flex;
+    flex-direction: column;
+}
+
+#hamburger-btn {
+    display: none;
+    font-size: 2rem;
+}
+
+#cancel-btn {
+    flex: 1;
+    margin-top: 4rem;
+    padding: 0;
+    width: 3rem;
+    height: 3rem;
+    margin-left: 3rem;
+    font-size: 2.5rem;
+    background-color: transparent;
+    color: var(--color-light-grey);
+    border: none;
+    cursor: pointer;
+    display: none;
+}
+
+#cancel-btn:hover {
+    color: var(--color-secondary-red)
+}
+
+.welcome-title {
+    flex: 1;
+    margin-top: 5rem;
+    font: 600 2.5rem 'Nunito';
+    margin-left: 3rem;
+    color: var(--color-light-grey);
+}
+
+.sidebar-username {
+    flex: 1;
+    margin-left: 3rem;
+    margin-top: 1rem;
+    font: 500 2rem 'Poppins';
+    font-style: italic;
+    color: var(--color-light-grey);
+}
+
+.dashboard-title {
+    flex: 1;
+    margin-top: 5rem;
+    font: 600 1.8rem 'Poppins';
+    margin-left: 3rem;
+    color: var(--color-light-grey);
+}
+
+.sidebar-navigation {
+    flex: 10;
+    display: flex;
+    flex-direction: column;
+    margin-top: 5rem;
+    margin-left: 3rem;
+}
+
+.nav-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+}
+
+.nav-section span {
+    font: 400 1.8rem 'Poppins';
+    color: var(--color-grey)
+}
+
+.nav-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: 1rem;
+}
+
+.nav-section ul li {
+    margin: 2rem 0rem;
+}
+
+.nav-section ul li a {
+    text-decoration: none;
+    font: 400 1.6rem 'Poppins';
+    color: var(--color-light-grey)
+}
+
+.nav-section ul li a:hover {
+    color: var(--color-secondary-red);
+    transition: 0.2s all ease-in-out;
+}
+
+.sidebar-footer {
+    flex: 5;
+    margin-left: 3rem;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    padding-bottom: 3rem;
+}
+
+.sidebar-footer > span {
+    flex: 1.5;
+    font: 400 1.4rem 'Poppins';
+    color: var(--color-grey)
+}
+
+.sidebar-footer > button {
+    flex: 0.5;
+    margin-right: 3rem;
+    margin-left: 3rem;
+    font-size: 3rem;
+    border: none;
+    background-color: transparent;
+    color: var(--color-light-grey);
+    cursor: pointer;
+}
+
+.sidebar-footer > button:hover {
+    color: var(--color-secondary-red);
+    transition: 0.2s all ease-in-out;
+}
+
+@media screen and (max-width: 1020px) {
+    .sidebar-container {
+        display: none;
+    }
+
+    .sidebar-container.sidebar-fade-in {
+        animation: sidebar-fade-in 0.5s forwards;
+    }
+
+    .sidebar-container.sidebar-fade-out {
+        animation: sidebar-fade-out 0.5s forwards;
+    }
+
+    #hamburger-btn {
+        display: flex;
+        position: absolute;
+        margin-left: 4rem;
+        margin-top: 4rem;
+        font-size: 2.5rem;
+    }
+}
+
+@keyframes sidebar-fade-in {
+    0% {
+        transform: translate(-35rem);
+    }
+    100% {
+        transform: translate(0rem);
+    }
+}
+
+@keyframes sidebar-fade-out {
+    0% {
+        transform: translate(0rem);
+    }
+    100% {
+        
+        transform: translate(-35rem);
+    }
+}

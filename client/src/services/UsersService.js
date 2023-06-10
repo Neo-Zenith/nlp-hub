@@ -20,17 +20,17 @@ export default class UsersService extends Component {
             body: JSON.stringify(requestBody),
         });
 
+        const data = await response.json();
         switch (response.status) {
-            case 401:
-                return false;
-
             case 201:
-                const data = await response.json();
                 const { accessToken } = data;
                 dispatch(setAccessToken(accessToken));
                 dispatch(setUsername(username));
                 dispatch(setRole("user"));
-                return true;
+                return [response.status, true];
+
+            default:
+                return [response.status, data];
         }
     }
 
@@ -94,7 +94,7 @@ export default class UsersService extends Component {
             },
             body: JSON.stringify(updatePackage),
         });
-        console.log(response);
+
         switch (response.status) {
             case 200:
                 if (updatePackage.username) {

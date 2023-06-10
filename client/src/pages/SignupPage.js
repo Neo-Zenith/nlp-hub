@@ -15,20 +15,20 @@ export function SignupPage() {
 
     const uiServices = useMemo(() => {
         return new UIService({ dispatch });
-    });
+    }, [dispatch]);
     const usersService = useMemo(() => {
         return new UsersService({ dispatch });
-    });
+    }, [dispatch]);
 
     useEffect(() => {
         if (accessToken && usersService.validateTokenExpiry(accessToken)) {
             navigate("/");
         }
-    }, [accessToken, usersService]);
+    }, [accessToken, usersService, navigate]);
 
     useEffect(() => {
         uiServices.displayErrorMsg(error);
-    }, [error]);
+    }, [error, uiServices]);
 
     return (
         <>

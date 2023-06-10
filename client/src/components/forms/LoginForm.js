@@ -15,7 +15,7 @@ export default function LoginForm() {
     }, [dispatch]);
     const uiServices = useMemo(() => {
         return new UIService({ dispatch });
-    });
+    }, [dispatch]);
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -112,7 +112,7 @@ export default function LoginForm() {
         <>
             <div className="login-form-container">
                 <div className="login-form-bg">
-                    <img src={bg} />
+                    <img src={bg} alt="login-bg" />
                 </div>
                 <div className="login-form">
                     <span className="login-form-title">Welcome</span>
