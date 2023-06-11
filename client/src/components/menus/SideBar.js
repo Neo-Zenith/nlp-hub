@@ -56,12 +56,11 @@ export default function SideBar() {
             setWindowWidth(window.innerWidth);
             setWindowHeight(document.documentElement.scrollHeight);
             handleDisplayCollapseBtn();
-            document.getElementById("sidebar-container").style.height =
-                document.documentElement.scrollHeight.toString() + "px";
         }
 
         window.addEventListener("resize", handleResize);
-
+        document.getElementById("sidebar-container").style.height =
+            document.documentElement.scrollHeight.toString() + "px";
         return () => {
             window.removeEventListener("resize", handleResize);
         };
@@ -73,7 +72,7 @@ export default function SideBar() {
 
     useEffect(() => {
         document.getElementById("sidebar-container").style.height =
-            document.documentElement.scrollHeight;
+            document.documentElement.scrollHeight.toString() + "px";
     }, [windowHeight]);
 
     return (
