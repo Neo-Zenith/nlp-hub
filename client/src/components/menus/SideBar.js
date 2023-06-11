@@ -19,7 +19,6 @@ export default function SideBar() {
 
     function handleSidebarFade() {
         if (!sidebarActive) {
-            document.getElementById("sidebar-container").style.display = "flex";
             document
                 .getElementById("sidebar-container")
                 .classList.remove("sidebar-fade-out");
@@ -77,9 +76,11 @@ export default function SideBar() {
 
     return (
         <>
-            <button onClick={handleSidebarFade} id="hamburger-btn">
-                <i className="fa-solid fa-bars"></i>
-            </button>
+            {windowWidth < 1020 && !sidebarActive && (
+                <button onClick={handleSidebarFade} id="hamburger-btn">
+                    <i className="fa-solid fa-bars"></i>
+                </button>
+            )}
             <div id="sidebar-container" className="sidebar-container">
                 <button onClick={handleSidebarFade} id="cancel-btn">
                     <i className="fa-solid fa-chevron-left"></i>

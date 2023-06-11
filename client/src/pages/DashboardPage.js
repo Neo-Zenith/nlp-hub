@@ -5,6 +5,7 @@ import "../styles/pages/DashboardPage.css";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import UsersService from "../services/UsersService";
+import TopBar from "../components/menus/TopBar";
 
 export default function DashboardPage() {
     const dispatch = useDispatch();
@@ -32,6 +33,9 @@ export default function DashboardPage() {
         <>
             <div className="sidebar-wrapper">
                 <SideBar />
+            </div>
+            <div className="top-bar-wrapper">
+                <TopBar />
             </div>
         </>
     );

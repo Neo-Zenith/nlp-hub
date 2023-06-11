@@ -1,0 +1,96 @@
+.topbar-container {
+    height: fit-content;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+}
+
+.search-bar {
+    margin-top: 2rem;
+    flex: 2.5;
+    display: flex;
+    justify-content: flex-end;
+    height: fit-content;
+}
+
+.search-bar > i {
+    margin-top: 1rem;
+    transform: translate(3.5rem);
+    font-size: 1.6rem;
+    color: var(--color-grey)
+}
+
+.search-bar > input {
+    font: 400 1.6rem 'Poppins';
+    width: 50%;
+    padding: 0.5rem 0;
+    padding-left: 5.5rem;
+    border: none;
+    border: 0.1rem solid var(--color-grey);
+    border-radius: 1rem;
+}
+
+.search-bar > input:focus {
+    outline: none;
+    border-color: var(--color-secondary-red);
+}
+
+.topbar-links {
+    flex: 2;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    margin-bottom: 2em;
+    margin-right: 8rem;
+}
+
+.topbar-links button {
+    font-size: 2.8rem;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.topbar-links button:hover {
+    color: var(--color-secondary-red);
+    transition: 0.2s all ease-in-out;
+}
+
+.topbar-links button:first-child {
+    margin-right: 2.5em;
+}
+
+@media screen and (max-width: 1600px) {
+    .search-bar {
+        flex: 9;
+    }
+
+    .search-bar > input {
+        width: 45%;
+    }
+
+    .topbar-links {
+        margin-right: 3rem;
+    }
+
+    .topbar-links button:first-child {
+        margin-right: 1.5em;
+    }
+}
+
+@media screen and (max-width: 1020px) {
+    .search-bar {
+        margin-top: 4rem;
+        justify-content: center;
+    }
+
+    .topbar-links {
+        margin-top: 4rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .search-bar {
+        display: none;
+    }
+}

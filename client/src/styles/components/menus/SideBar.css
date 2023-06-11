@@ -33,7 +33,7 @@
 .welcome-title {
     flex: 1;
     margin-top: 5rem;
-    font: 600 2.5rem 'Nunito';
+    font: 600 2rem 'Nunito';
     margin-left: 3rem;
     color: var(--color-light-grey);
 }
@@ -41,8 +41,8 @@
 .sidebar-username {
     flex: 1;
     margin-left: 3rem;
-    margin-top: 1rem;
-    font: 500 2rem 'Poppins';
+    margin-top: -0.5rem;
+    font: 500 3.2rem 'Poppins';
     font-style: italic;
     color: var(--color-light-grey);
 }
@@ -131,7 +131,7 @@
 
 @media screen and (max-width: 1020px) {
     .sidebar-container {
-        display: none;
+        margin-left: -35rem;
     }
 
     .sidebar-container.sidebar-fade-in {
@@ -148,24 +148,34 @@
         margin-left: 4rem;
         margin-top: 4rem;
         font-size: 2.5rem;
+        background-color: transparent;
+        border: 0.15rem solid var(--color-primary-blue);
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+    }
+
+    #hamburger-btn:hover {
+        background-color: var(--color-primary-blue-light);
+        color: var(--color-light-grey);
+        transition: 0.2s all ease-in-out;
     }
 }
 
 @keyframes sidebar-fade-in {
     0% {
-        transform: translate(-35rem);
+        margin-left: -35rem;
     }
     100% {
-        transform: translate(0rem);
+        margin-left: 0rem;
     }
 }
 
 @keyframes sidebar-fade-out {
     0% {
-        transform: translate(0rem);
+        margin-left: 0rem;
     }
     100% {
-        
-        transform: translate(-35rem);
+        margin-left: -35rem;
     }
 }

@@ -5,3 +5,8 @@
     left: 0;
     bottom: 0;
 }
+
+.topbar-wrapper {
+    position: absolute;
+    top: 0;
+}
