@@ -1,0 +1,146 @@
+.account-details-container {
+    display: flex;
+    width: 100%;
+}
+
+.account-details-container > ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 80%;
+    min-width: 75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.account-details-container > ul > li {
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    margin: 0.7rem 0;
+    border: 0.1rem solid var(--color-primary-blue);
+    border-radius: 1rem;
+}
+
+.details-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.action-btn {
+    flex: 0.2;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.action-btn > button {
+    margin-bottom: 2rem;
+    margin-right: 2rem;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.action-btn > button > i {
+    font-size: 2.5rem;
+}
+
+.action-cancel-btn {
+    display: none;
+}
+
+.action-cancel-btn > i {
+    font-size: 2.7rem !important;
+    color: var(--color-warning);
+}
+
+.action-submit-btn {
+    display: none;
+}
+
+.action-btn > button:hover {
+    color: var(--color-secondary-red);
+    transition: 0.2s all ease-in-out;
+}
+
+.details-field-title {
+    padding-top: 1rem;
+    padding-left: 1rem;
+    width: 100%;
+    font: 600 1.8rem 'Poppins';
+    color: var(--color-primary-blue);
+}
+
+.details-field-value-wrapper {
+    padding-top: 1rem;
+    padding-left: 1rem;
+    padding-bottom: 1.5rem;
+    display: flex;
+}
+
+.details-field-value-wrapper > input {
+    width: 25rem;
+    position: absolute;
+    padding-top: 0.35rem;
+    padding-left: 1rem;
+    padding-bottom: 0.35rem;
+    display: none;
+    border-radius: 0.5rem;
+    border: 0.15rem solid var(--color-primary-blue);
+    font: 400 1.8rem 'Poppins';
+}
+
+.details-field-value-wrapper > input:focus {
+    outline: none;
+    border: 0.15rem solid var(--color-secondary-red);
+}
+
+.details-field-value {
+    font: 300 2.2rem 'Poppins';
+    color: var(--color-primary-blue);
+}
+
+#password-ph > i{
+    margin-right: 0.15rem;
+    font-size: 1.2rem;
+}
+
+@media screen and (max-width: 720px) {
+    .account-details-container > ul {
+        min-width: 50rem;
+    }
+
+    .details-field-title {
+        font-size: 1.5rem;
+    }
+
+    .details-field-value-wrapper > input {
+        font-size: 1.5rem;
+        width: 18rem;
+    }
+
+    .details-field-value {
+        font-size: 1.9rem;
+    }
+
+    .action-btn > button {
+        margin-right: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn > button > i {
+        font-size: 1.9rem;
+    }
+
+    .action-cancel-btn  {
+        margin-bottom: 1rem !important;
+    }
+
+    .action-cancel-btn > i {
+        font-size: 2.2rem;
+    }
+}

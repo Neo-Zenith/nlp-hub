@@ -9,6 +9,7 @@ const initialState = {
     role: null,
     error: null,
     loaded: false,
+    expiry: null,
 };
 
 // Reducer function
@@ -24,6 +25,8 @@ const reducer = (state = initialState, action) => {
             return { ...state, error: action.payload };
         case "SET_LOADED":
             return { ...state, loaded: action.payload };
+        case "SET_EXPIRY":
+            return { ...state, expiry: action.payload };
         default:
             return state;
     }

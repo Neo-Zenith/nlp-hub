@@ -14,7 +14,7 @@
 .content-wrapper {
     margin-left: 35rem;
     margin-top: 2rem;
-    width: 100% - 35rem;
+    width: 100vw - 35rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -40,9 +40,16 @@
 }
 
 .options > button:hover {
+    font-weight: 500;
     color: var(--color-secondary-red);
     border-bottom: 0.3rem solid var(--color-secondary-red);
     transition: 0.2s all ease-in-out;
+}
+
+.options > button.active {
+    font-weight: 500;
+    color: var(--color-secondary-red);
+    border-bottom: 0.3rem solid var(--color-secondary-red);
 }
 
 .options > button:first-child {
@@ -58,10 +65,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 100%;
 }
 
 .update-account-wrapper {
     position: absolute;
+    align-self: flex-start;
+    width: 100% - 35rem;
+    display: flex;
+    justify-content: center;
 }
 
 .update-account-wrapper.fade-in {
@@ -74,6 +86,7 @@
 
 .view-subscription-wrapper {
     position: absolute;
+    align-self: flex-start;
 }
 
 .view-subscription-wrapper.fade-in {
@@ -82,6 +95,40 @@
 
 .view-subscription-wrapper.fade-out {
     animation: options-fade-out 0.5s ease-in-out forwards;
+}
+
+@media screen and (max-width: 1020px) {
+    .content-wrapper {
+        margin-left: 0rem;
+    }
+
+    .options > button {
+        min-width: 20rem;
+        font-size: 2rem;
+    }
+
+    .options > button:first-child {
+        margin-right: 3rem;
+    }
+    
+    .options > button:last-child {
+        margin-left: 3rem;
+    }
+}
+
+@media screen and (max-width: 720px) {
+    .options > button {
+        min-width: 16rem;
+        font-size: 1.6rem;
+    }
+
+    .options > button:first-child {
+        margin-right: 1.2rem;
+    }
+    
+    .options > button:last-child {
+        margin-left: 1.2rem;
+    }
 }
 
 @keyframes options-fade-in {

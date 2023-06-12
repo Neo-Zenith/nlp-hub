@@ -22,3 +22,8 @@ export const setLoaded = (loaded) => ({
     type: "SET_LOADED",
     payload: loaded,
 });
+
+export const setExpiry = (expiry) => ({
+    type: "SET_EXPIRY",
+    payload: expiry,
+});

@@ -1,5 +1,10 @@
 import { Component } from "react";
-import { setAccessToken, setUsername, setRole } from "../store/actions";
+import {
+    setAccessToken,
+    setUsername,
+    setRole,
+    setExpiry,
+} from "../store/actions";
 
 export default class UsersService extends Component {
     async loginUser(username, password) {
@@ -66,6 +71,7 @@ export default class UsersService extends Component {
     }
 
     async retrieveUser(username, accessToken) {
+        const { dispatch } = this.props;
         const url = "https://nlphub.azurewebsites.net/users/";
         const fullUrl = url + username;
 
@@ -76,7 +82,11 @@ export default class UsersService extends Component {
                 authorization: "Bearer " + accessToken,
             },
         });
+
         const payload = await response.json();
+        if (response.status === 200) {
+            dispatch(setExpiry(payload.subscriptionExpiryDate));
+        }
         return [response.status, payload];
     }
 
@@ -100,11 +110,11 @@ export default class UsersService extends Component {
                 if (updatePackage.username) {
                     dispatch(setUsername(updatePackage.username));
                 }
-                return true;
+                return [response.status, true];
 
             default:
                 const payload = await response.json();
-                return payload;
+                return [response.status, payload];
         }
     }
 

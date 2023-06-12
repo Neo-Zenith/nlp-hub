@@ -1,16 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SideBar from "../components/menus/SideBar";
 import TopBar from "../components/menus/TopBar";
-import UpdateAccount from "../components/sections/UpdateAccount";
+import AccountDetails from "../components/sections/AccountDetails";
 import ViewSubscription from "../components/sections/ViewSubscription";
 import "../styles/pages/AccountDetailsPage.css";
+import { useDispatch, useSelector } from "react-redux";
+import UIService from "../services/UIServices";
 
 export default function AccountDetailsPage() {
+    const dispatch = useDispatch();
+
+    const error = useSelector((state) => state.error);
+
+    const uiService = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
     const [activeOption, setActiveOption] = useState("updateAccount");
 
     const handleOptionClick = (option) => {
         setActiveOption(option);
     };
+
+    useEffect(() => {
+        if (error !== null) {
+            uiService.displayErrorMsg(error);
+        }
+    }, [error]);
 
     useEffect(() => {
         if (activeOption === "updateAccount") {
@@ -20,6 +36,10 @@ export default function AccountDetailsPage() {
             document
                 .getElementById("view-subscription-wrapper")
                 .classList.add("fade-out");
+            document.getElementById("view-subscription-wrapper").style.display =
+                "none";
+            document.getElementById("update-account-wrapper").style.display =
+                "flex";
             document
                 .getElementById("update-account-wrapper")
                 .classList.remove("fade-out");
@@ -33,6 +53,10 @@ export default function AccountDetailsPage() {
             document
                 .getElementById("update-account-wrapper")
                 .classList.add("fade-out");
+            document.getElementById("update-account-wrapper").style.display =
+                "none";
+            document.getElementById("view-subscription-wrapper").style.display =
+                "flex";
             document
                 .getElementById("view-subscription-wrapper")
                 .classList.remove("fade-out");
@@ -58,11 +82,11 @@ export default function AccountDetailsPage() {
                         }
                         onClick={() => handleOptionClick("updateAccount")}
                     >
-                        Update Account
+                        Account Details
                     </button>
                     <button
                         className={
-                            activeOption === "viewSubscription" ? "active" : ""
+                            activeOption === "updateAccount" ? "" : "active"
                         }
                         onClick={() => handleOptionClick("viewSubscription")}
                     >
@@ -74,7 +98,7 @@ export default function AccountDetailsPage() {
                         id="update-account-wrapper"
                         className="update-account-wrapper"
                     >
-                        <UpdateAccount />
+                        <AccountDetails />
                     </div>
                     <div
                         id="view-subscription-wrapper"
