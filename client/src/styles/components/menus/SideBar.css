@@ -162,6 +162,12 @@
     }
 }
 
+@media screen and (max-width: 720px) {
+    #hamburger-btn {
+        font-size: 2rem;
+    }
+}
+
 @keyframes sidebar-fade-in {
     0% {
         margin-left: -35rem;

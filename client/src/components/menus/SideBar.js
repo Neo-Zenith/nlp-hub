@@ -93,7 +93,7 @@ export default function SideBar() {
                         <span>Services</span>
                         <ul>
                             <li>
-                                <a onClick={handleSidebarFade} href="/">
+                                <a onClick={handleSidebarFade} href="/services">
                                     <i className="fa-solid fa-list"></i>
                                     &nbsp;&nbsp;&nbsp;Available Services
                                 </a>

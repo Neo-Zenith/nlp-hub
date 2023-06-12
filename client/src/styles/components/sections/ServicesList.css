@@ -10,12 +10,13 @@
     font: 600 3rem 'Poppins'
 }
 
-.services-list {
+.services-list-filters {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 }
 
 .filters {
+    margin-right: 5rem;
     display: flex;
     margin-top: 2rem;
     font: 400 1.8rem 'Poppins';
@@ -34,7 +35,6 @@
 
 .filters > select > option {
     font: 400 1.4rem 'Poppins';
-    background-color: var(--color-light-grey);
 }
 
 .services-list-table {
@@ -49,6 +49,7 @@
     list-style: none;
     margin: 0;
     padding: 0;
+    background-color: var(--color-light-grey);
 }
 
 .service-type-value, .service-version-value, .service-action, .service-index-value,
@@ -56,6 +57,11 @@
     flex: 1;
     font: 400 1.8rem 'Poppins';
     text-align: center;
+}
+
+.services-table-title > li {
+    margin: 2rem 0;
+    font: 600 2rem 'Poppins';
 }
 
 .service-action > button {
@@ -72,22 +78,29 @@
 
 #name-title,
 .service-name-value {
+    margin-right: 3rem !important;
     flex: 2;
+    text-align: start;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     text-align: start;
 }
 
 #desc-title,
 .service-desc-value {
     flex: 3;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
     text-align: start;
 }
 
 .services-table-content {
-    margin-top: 3rem;
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: 50rem;
+    min-height: 42rem;
 }
 
 .services-table-content > ul {
@@ -100,7 +113,7 @@
     align-items: center;
 }
 
-.services-table-content > ul:nth-child(odd) {
+.services-table-content > ul:nth-child(even) {
     background-color: var(--color-light-grey);
     border-radius: 0.5rem;
 }
@@ -118,12 +131,12 @@
 }
 
 .pagination > li:not(:last-child) {
-    margin-right: 2.5rem;
+    margin-right: 1.5rem;
 }
 
 .pagination > li > button {
     font: 400 1.8rem 'Poppins';
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.3rem;
     background-color: var(--color-light-grey);
     border: 0.15rem solid var(--color-primary-blue);
     border-radius: 0.5rem;
@@ -152,8 +165,21 @@
 }
 
 @media screen and (max-width: 720px) {
+    .services-list-container {
+        width: 90%;
+    }
+
+    .services-list-filters {
+       flex-direction: column;
+    }
+
+    .filters {
+        margin-top: 1.5rem;
+    }
+
     .services-list-table {
         width: 95%;
+        font-size: 1.2rem;
     }
 
     .services-list-title {
@@ -173,20 +199,25 @@
         font-size: 1.3rem;
     }
     
-    .services-list-table {
-        font-size: 1.2rem;
-    }
-    
     .service-type-value, .service-version-value, .service-action > button, .service-index-value,
     .services-table-title > li {
         font-size: 1.2rem;
     }
 
+    .services-table-content {
+        min-height: 35rem;
+    }
+
+    #name-title,
+    .service-name-value {
+        margin-right: 1rem !important;
+    }
+
     .pagination > li > button {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .pagination > li > span {
-        font-size: 1.8rem;
+        font-size: 1.4rem;
     }
 }

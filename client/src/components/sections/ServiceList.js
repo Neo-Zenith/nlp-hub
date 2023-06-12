@@ -1,77 +1,98 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/components/sections/ServicesList.css";
+import { useDispatch, useSelector } from "react-redux";
+import ServicesService from "../../services/ServicesService.js";
+import UIService from "../../services/UIServices.js";
+import { setLoaded } from "../../store/actions";
 
-const servicesData = [
-    {
-        name: "Service A",
-        description: "Description A",
-        type: "SUD",
-        version: "1.0",
-    },
-    {
-        name: "Service B",
-        description: "Description B",
-        type: "NER",
-        version: "2.0",
-    },
-    {
-        name: "Service C",
-        description: "Description C",
-        type: "SUD",
-        version: "1.5",
-    },
-    {
-        name: "Service D",
-        description: "Description D",
-        type: "NER",
-        version: "3.0",
-    },
-    {
-        name: "Service D",
-        description: "Description D",
-        type: "NER",
-        version: "3.0",
-    },
-    {
-        name: "Service D",
-        description: "Description D",
-        type: "NER",
-        version: "3.0",
-    },
-    {
-        name: "Service D",
-        description: "Description D",
-        type: "NER",
-        version: "3.0",
-    },
-    // Add more services as needed
-];
+export default function ServicesList() {
+    const dispatch = useDispatch();
 
-const ServicesList = () => {
+    const servicesService = useMemo(() => {
+        return new ServicesService({ dispatch });
+    }, [dispatch]);
+    const uiService = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
+    const accessToken = useSelector((state) => state.accessToken);
+    const dataLoaded = useSelector((state) => state.loaded);
+
     const [currentPage, setCurrentPage] = useState(1);
-    const [servicesPerPage] = useState(5); // Number of services per page
+    const [servicesPerPage] = useState(4);
     const [filterType, setFilterType] = useState("");
+    const [orderType, setOrderType] = useState("");
+    const [serviceTypes, setServiceTypes] = useState([]);
+    const [services, setServices] = useState([]);
+    const [filteredServices, setFilteredServices] = useState([]);
 
-    // Get unique service types for the dropdown
-    const serviceTypes = [
-        ...new Set(servicesData.map((service) => service.type)),
-    ];
-
-    // Filter services based on type
-    const filteredServices = filterType
-        ? servicesData.filter((service) => service.type === filterType)
-        : servicesData;
-
-    // Pagination
-    const indexOfLastService = currentPage * servicesPerPage;
-    const indexOfFirstService = indexOfLastService - servicesPerPage;
-    const currentServices = filteredServices.slice(
-        indexOfFirstService,
-        indexOfLastService
-    );
-
-    // Change page
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    useEffect(() => {
+        const fetchServiceTypes = async () => {
+            dispatch(setLoaded(false));
+            const response = await servicesService.retrieveServicesTypes(
+                accessToken
+            );
+
+            switch (response[0]) {
+                case 200:
+                    setServiceTypes(response[1].types);
+                    break;
+                default:
+                    uiService.setErrorMsg(response[1].message);
+                    break;
+            }
+        };
+
+        const fetchServices = async () => {
+            dispatch(setLoaded(false));
+            const response = await servicesService.retrieveServices(
+                accessToken
+            );
+
+            switch (response[0]) {
+                case 200:
+                    setServices(response[1].services);
+                    setFilteredServices(response[1].services);
+                    break;
+                default:
+                    uiService.setErrorMsg(response[1].message);
+                    break;
+            }
+        };
+        fetchServiceTypes();
+        fetchServices();
+        dispatch(setLoaded(true));
+    }, []);
+
+    useEffect(() => {
+        if (dataLoaded) {
+            if (filterType !== "" && filterType !== "All") {
+                setFilteredServices(
+                    services.filter((service) => service.type === filterType)
+                );
+            } else {
+                setFilteredServices(services);
+            }
+        }
+    }, [filterType, dataLoaded, services]);
+
+    useEffect(() => {
+        if (dataLoaded) {
+            if (orderType !== "") {
+                const sortedServices = [...filteredServices];
+
+                if (orderType.includes("Ascending")) {
+                    sortedServices.sort((a, b) => (a.name < b.name ? -1 : 1));
+                } else {
+                    sortedServices.sort((a, b) => (a.name > b.name ? -1 : 1));
+                }
+
+                setFilteredServices(sortedServices);
+            }
+        }
+    }, [orderType, dataLoaded, filteredServices]);
 
     const renderPaginationNumbers = () => {
         const totalPages = Math.ceil(filteredServices.length / servicesPerPage);
@@ -148,7 +169,7 @@ const ServicesList = () => {
         <div className="services-list-container">
             <span className="services-list-title">Services</span>
 
-            <div className="services-list">
+            <div className="services-list-filters">
                 <label className="filters">
                     Filter by Type:
                     <select
@@ -163,6 +184,20 @@ const ServicesList = () => {
                         ))}
                     </select>
                 </label>
+                <label className="filters">
+                    Order by Name:
+                    <select
+                        value={orderType}
+                        onChange={(e) => setOrderType(e.target.value)}
+                    >
+                        <option value="Ascending Order (A - Z)">
+                            Ascending Order (A - Z)
+                        </option>
+                        <option value="Descending Order (Z - A)">
+                            Descending Order (Z - A)
+                        </option>
+                    </select>
+                </label>
             </div>
 
             <div className="services-list-table">
@@ -175,7 +210,7 @@ const ServicesList = () => {
                     <li id="action-title"> </li>
                 </ul>
                 <div className="services-table-content">
-                    {currentServices.map((service, index) => (
+                    {filteredServices.map((service, index) => (
                         <ul key={index}>
                             <li className="service-index-value">
                                 {(currentPage - 1) * servicesPerPage +
@@ -224,6 +259,4 @@ const ServicesList = () => {
             </ul>
         </div>
     );
-};
-
-export default ServicesList;
+}
