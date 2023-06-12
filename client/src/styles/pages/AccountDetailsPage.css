@@ -11,9 +11,13 @@
     top: 0;
 }
 
+.quick-nav-wrapper {
+    margin-left: 35rem;
+    margin-top: 3.5rem;
+}
+
 .content-wrapper {
     margin-left: 35rem;
-    margin-top: 2rem;
     width: 100vw - 35rem;
     display: flex;
     flex-direction: column;
@@ -23,20 +27,22 @@
 .options {
     margin-top: 5rem;
     display: flex;
-    width: 100%;
+    width: 70rem;
     justify-content: center;
+    margin-bottom: 0rem;
 }
 
 .options > button {
+    flex: 1;
     min-width: 15rem;
-    width: 15%;
-    margin-bottom: 3.5rem;
     font: 400 2rem 'Poppins';
     border: none;
     background-color: transparent;
     cursor: pointer;
-    border-bottom: 0.3rem solid white;
-    padding-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+    margin-bottom: 0rem;
 }
 
 .options > button:hover {
@@ -50,28 +56,22 @@
     font-weight: 500;
     color: var(--color-secondary-red);
     border-bottom: 0.3rem solid var(--color-secondary-red);
-}
-
-.options > button:first-child {
-    margin-right: 5rem;
-}
-
-.options > button:last-child {
-    margin-left: 5rem;
+    box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
+    -webkit-box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
+    -moz-box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
 }
 
 .component-wrapper {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
 }
 
-.update-account-wrapper {
+.update-account-wrapper,
+.view-subscription-wrapper {
+    width: 70rem;
     position: absolute;
     align-self: flex-start;
-    width: 100% - 35rem;
     display: flex;
     justify-content: center;
 }
@@ -84,11 +84,6 @@
     animation: options-fade-out 0.5s ease-in-out forwards;
 }
 
-.view-subscription-wrapper {
-    position: absolute;
-    align-self: flex-start;
-}
-
 .view-subscription-wrapper.fade-in {
     animation: options-fade-in 0.5s ease-in-out forwards;
 }
@@ -98,36 +93,36 @@
 }
 
 @media screen and (max-width: 1020px) {
+    .quick-nav-wrapper {
+        margin-left: 1.5rem;
+        margin-top: 2rem;
+    }
+
     .content-wrapper {
         margin-left: 0rem;
     }
 
-    .options > button {
-        min-width: 20rem;
-        font-size: 2rem;
+    .options {
+        margin-top: 2.5rem;
     }
 
-    .options > button:first-child {
-        margin-right: 3rem;
-    }
-    
-    .options > button:last-child {
-        margin-left: 3rem;
+    .options > button {
+        font-size: 2rem;
     }
 }
 
 @media screen and (max-width: 720px) {
-    .options > button {
-        min-width: 16rem;
-        font-size: 1.6rem;
+    .options {
+        width: 40rem;
     }
 
-    .options > button:first-child {
-        margin-right: 1.2rem;
+    .update-account-wrapper,
+    .view-subscription-wrapper {
+        width: 40rem;
     }
-    
-    .options > button:last-child {
-        margin-left: 1.2rem;
+
+    .options > button {
+        font-size: 1.6rem;
     }
 }
 

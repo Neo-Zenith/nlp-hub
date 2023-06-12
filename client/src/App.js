@@ -19,9 +19,3 @@ export default function App() {
         </>
     );
 }
-
-export const loader = {
-    position: "absolute",
-    display: "block",
-    margin: "0 auto",
-};

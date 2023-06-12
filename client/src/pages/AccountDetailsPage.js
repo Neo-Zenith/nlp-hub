@@ -6,6 +6,7 @@ import ViewSubscription from "../components/sections/ViewSubscription";
 import "../styles/pages/AccountDetailsPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import UIService from "../services/UIServices";
+import QuickNavigation from "../components/sections/QuickNavigation";
 
 export default function AccountDetailsPage() {
     const dispatch = useDispatch();
@@ -26,7 +27,7 @@ export default function AccountDetailsPage() {
         if (error !== null) {
             uiService.displayErrorMsg(error);
         }
-    }, [error]);
+    }, [error, uiService]);
 
     useEffect(() => {
         if (activeOption === "updateAccount") {
@@ -73,6 +74,9 @@ export default function AccountDetailsPage() {
             </div>
             <div className="top-bar-wrapper">
                 <TopBar />
+            </div>
+            <div className="quick-nav-wrapper">
+                <QuickNavigation current="Profile" url={window.location.href} />
             </div>
             <div className="content-wrapper">
                 <div className="options">

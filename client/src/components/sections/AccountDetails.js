@@ -3,13 +3,19 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import "../../styles/components/sections/AccountDetails.css";
 import { BounceLoader } from "react-spinners";
-import { setLoaded, setUsername } from "../../store/actions";
+import { setLoaded } from "../../store/actions";
 import UsersService from "../../services/UsersService";
 import UIService from "../../services/UIServices";
 
 export default function AccountDetails() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const loader = {
+        position: "absolute",
+        display: "block",
+        margin: "0 auto",
+        marginTop: "20rem",
+    };
 
     const dataLoaded = useSelector((state) => state.loaded);
     const username = useSelector((state) => state.username);
@@ -100,6 +106,8 @@ export default function AccountDetails() {
             case "department":
                 setRetrievedDep(inputValue);
                 break;
+            default:
+                break;
         }
     }
 
@@ -133,7 +141,10 @@ export default function AccountDetails() {
         <>
             <div className="account-details-container">
                 {!dataLoaded ? (
-                    <BounceLoader />
+                    <BounceLoader
+                        cssOverride={loader}
+                        color="var(--color-secondary-red)"
+                    />
                 ) : (
                     <ul>
                         <li>

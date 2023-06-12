@@ -6,7 +6,7 @@
 }
 
 .search-bar {
-    margin-top: 2rem;
+    margin-top: 3rem;
     flex: 2.5;
     display: flex;
     justify-content: flex-end;
@@ -39,7 +39,7 @@
     flex: 2;
     display: flex;
     justify-content: flex-end;
-    margin-top: 2rem;
+    margin-top: 3rem;
     margin-bottom: 2em;
     margin-right: 8rem;
 }
@@ -72,7 +72,7 @@
         margin-right: 3rem;
     }
 
-    .topbar-links button:first-child {
+    .topbar-links a:first-child {
         margin-right: 1.5em;
     }
 }
@@ -91,5 +91,10 @@
 @media screen and (max-width: 768px) {
     .search-bar {
         display: none;
+    }
+
+    .topbar-links a {
+        margin-top: 0.6rem;
+        font-size: 2.4rem;
     }
 }
