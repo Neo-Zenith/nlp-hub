@@ -12,8 +12,8 @@ export default function AccountDetails() {
     const navigate = useNavigate();
     const loader = {
         position: "absolute",
-        display: "block",
-        margin: "0 auto",
+        display: "flex",
+        marginLeft: "35rem",
         marginTop: "20rem",
     };
 

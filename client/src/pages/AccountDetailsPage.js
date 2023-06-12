@@ -7,14 +7,23 @@ import "../styles/pages/AccountDetailsPage.css";
 import { useDispatch, useSelector } from "react-redux";
 import UIService from "../services/UIServices";
 import QuickNavigation from "../components/sections/QuickNavigation";
+import { useNavigate, useParams } from "react-router-dom";
+import UsersService from "../services/UsersService";
 
 export default function AccountDetailsPage() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const params = useParams();
 
     const error = useSelector((state) => state.error);
+    const username = useSelector((state) => state.username);
+    const accessToken = useSelector((state) => state.accessToken);
 
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
+    }, [dispatch]);
+    const usersSerivce = useMemo(() => {
+        return new UsersService({ dispatch });
     }, [dispatch]);
 
     const [activeOption, setActiveOption] = useState("updateAccount");
@@ -66,6 +75,21 @@ export default function AccountDetailsPage() {
                 .classList.add("fade-in");
         }
     });
+
+    useEffect(() => {
+        if (params.username !== username) {
+            navigate("/" + username);
+        }
+    }, [params, username, navigate]);
+
+    useEffect(() => {
+        if (accessToken === null) {
+            navigate("/login");
+        } else if (!usersSerivce.validateTokenExpiry(accessToken)) {
+            uiService.setErrorMsg("Session expired. Please login again.");
+            navigate("/login");
+        }
+    }, [accessToken, uiService, usersSerivce, navigate]);
 
     return (
         <div className="container">
