@@ -1,0 +1,192 @@
+.services-list-container {
+    width: 100%;
+    display: flex;
+    margin-left: 8rem;
+    flex-direction: column;
+}
+
+.services-list-title {
+    margin-top: 5rem;
+    font: 600 3rem 'Poppins'
+}
+
+.services-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.filters {
+    display: flex;
+    margin-top: 2rem;
+    font: 400 1.8rem 'Poppins';
+    align-items: center;
+}
+
+.filters > select {
+    margin-left: 1.5rem;
+    font: 400 1.4rem 'Poppins';
+    background-color: var(--color-light-grey);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+}
+
+.filters > select > option {
+    font: 400 1.4rem 'Poppins';
+    background-color: var(--color-light-grey);
+}
+
+.services-list-table {
+    font: 400 1.8rem 'Poppins';
+    width: 90%;
+    margin-top: 5.5rem;
+}
+
+.services-table-title {
+    display: flex;
+    width: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.service-type-value, .service-version-value, .service-action, .service-index-value,
+.services-table-title > li {
+    flex: 1;
+    font: 400 1.8rem 'Poppins';
+    text-align: center;
+}
+
+.service-action > button {
+    font: 400 2.5rem 'Poppins';
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+.service-action > button:hover {
+    color: var(--color-secondary-red);
+    transition: 0.2s all ease-in-out;
+}
+
+#name-title,
+.service-name-value {
+    flex: 2;
+    text-align: start;
+}
+
+#desc-title,
+.service-desc-value {
+    flex: 3;
+    text-align: start;
+}
+
+.services-table-content {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 50rem;
+}
+
+.services-table-content > ul {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    align-items: center;
+}
+
+.services-table-content > ul:nth-child(odd) {
+    background-color: var(--color-light-grey);
+    border-radius: 0.5rem;
+}
+
+.services-table-content > ul > li {
+    margin: 2rem 0;
+}
+
+.pagination {
+    width: 90%;
+    display: flex;
+    list-style: none;
+    justify-content: flex-end;
+    padding: 0;
+}
+
+.pagination > li:not(:last-child) {
+    margin-right: 2.5rem;
+}
+
+.pagination > li > button {
+    font: 400 1.8rem 'Poppins';
+    padding: 0.5rem 1rem;
+    background-color: var(--color-light-grey);
+    border: 0.15rem solid var(--color-primary-blue);
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.pagination > li > button:hover {
+    background-color: var(--color-secondary-red);
+    color: white;
+    transition: 0.2s all ease-in-out;
+}
+
+.pagination > li > button.active {
+    background-color: var(--color-secondary-red);
+    color: white;
+}
+
+.pagination > li > span {
+    font: 400 2.5rem 'Poppins'
+}
+
+@media screen and (max-width: 1020px) {
+    .services-list-container {
+        margin-left: 3rem;
+    }
+}
+
+@media screen and (max-width: 720px) {
+    .services-list-table {
+        width: 95%;
+    }
+
+    .services-list-title {
+        margin-top: 5rem;
+        font-size: 2rem;
+    }
+    
+    .filters {
+        font-size: 1.3rem;
+    }
+    
+    .filters > select {
+        font-size: 1.3rem;
+    }
+    
+    .filters > select > option {
+        font-size: 1.3rem;
+    }
+    
+    .services-list-table {
+        font-size: 1.2rem;
+    }
+    
+    .service-type-value, .service-version-value, .service-action > button, .service-index-value,
+    .services-table-title > li {
+        font-size: 1.2rem;
+    }
+
+    .pagination > li > button {
+        font-size: 1.1rem;
+    }
+
+    .pagination > li > span {
+        font-size: 1.8rem;
+    }
+}
