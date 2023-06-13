@@ -42,7 +42,7 @@
 
 .signup-form-subtitle a {
     text-decoration: none;
-    color: var(--color-secondary);
+    color: var(--color-compliment);
 }
 
 .signup-form > div {
@@ -95,7 +95,7 @@
 
 .signup-form label span.on-active-text {
     animation: on-active-text 0.25s ease-in-out forwards;
-    color: var(--color-secondary);
+    color: var(--color-compliment);
 }
 
 .signup-form label span.on-inactive-text {
@@ -105,7 +105,7 @@
 .signup-form label input {
     border: none;
     border-bottom: 0.15rem solid var(--color-grey);
-    color: var(--color-secondary);
+    color: var(--color-compliment);
     font: 400 1.4rem 'Open Sans';
     padding-bottom: 1rem;
 }
@@ -124,7 +124,7 @@
     margin-bottom: 3.5rem;
     border: none;
     border-radius: 100px;
-    background-color: var(--color-secondary);
+    background-color: var(--color-compliment);
     color: white;
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
@@ -132,7 +132,7 @@
 }
 
 .signup-btn:hover {
-    background-color: var(--color-secondary);
+    background-color: var(--color-compliment);
     box-shadow: 0 0 10px var(--color-tertiary);
     transform: scale(1.05);
   }
@@ -160,7 +160,7 @@
 }
 
 #password-visibility-toggle:hover {
-    color: var(--color-secondary);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 

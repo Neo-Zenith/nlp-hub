@@ -4,6 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import ServicesService from "../../services/ServicesService.js";
 import UIService from "../../services/UIServices.js";
 import { setLoaded } from "../../store/actions";
+import Selector from "../utils/Selector";
+import noResultBg from "../../img/no-result-pic.png";
+import { BounceLoader } from "react-spinners";
 
 export default function ServicesList() {
     const dispatch = useDispatch();
@@ -17,14 +20,23 @@ export default function ServicesList() {
 
     const accessToken = useSelector((state) => state.accessToken);
     const dataLoaded = useSelector((state) => state.loaded);
+    const role = useSelector((state) => state.role);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [servicesPerPage] = useState(4);
-    const [filterType, setFilterType] = useState("");
+    const [servicesPerPage] = useState(8);
+    const [filterType, setFilterType] = useState("All Types");
     const [orderType, setOrderType] = useState("");
     const [serviceTypes, setServiceTypes] = useState([]);
-    const [services, setServices] = useState([]);
-    const [filteredServices, setFilteredServices] = useState([]);
+    const [services, setServices] = useState(null);
+    const [filteredServices, setFilteredServices] = useState(null);
+    const [activeButtonId, setActiveButtonId] = useState(null);
+
+    const loader = {
+        position: "absolute",
+        display: "flex",
+        marginLeft: "40%",
+        marginTop: "25rem",
+    };
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -53,7 +65,7 @@ export default function ServicesList() {
 
             switch (response[0]) {
                 case 200:
-                    setServices(response[1].services);
+                    setServices(response[1].services.concat({ name: "Test" }));
                     setFilteredServices(response[1].services);
                     break;
                 default:
@@ -63,12 +75,18 @@ export default function ServicesList() {
         };
         fetchServiceTypes();
         fetchServices();
-        dispatch(setLoaded(true));
+        console.log(dataLoaded);
     }, []);
 
     useEffect(() => {
+        if (services !== null && filteredServices !== null) {
+            dispatch(setLoaded(true));
+        }
+    }, [services, filteredServices]);
+
+    useEffect(() => {
         if (dataLoaded) {
-            if (filterType !== "" && filterType !== "All") {
+            if (filterType !== "" && filterType !== "All Types") {
                 setFilteredServices(
                     services.filter((service) => service.type === filterType)
                 );
@@ -95,6 +113,9 @@ export default function ServicesList() {
     }, [orderType, dataLoaded, filteredServices]);
 
     const renderPaginationNumbers = () => {
+        if (!filteredServices) {
+            return [];
+        }
         const totalPages = Math.ceil(filteredServices.length / servicesPerPage);
         const maxShownPages = 5;
         let returnedPagination = [];
@@ -161,102 +182,200 @@ export default function ServicesList() {
         return result;
     }
 
+    function handleActionDropDown(e) {
+        const id = e.currentTarget.id.split("-")[2];
+        const div = "actions-drop-down-" + id;
+        if (activeButtonId === id) {
+            setActiveButtonId(null);
+            document.getElementById(div).style.display = "none";
+        } else {
+            setActiveButtonId(id);
+        }
+    }
+
+    useEffect(() => {
+        if (activeButtonId) {
+            const allActionDivs = document.querySelectorAll(
+                '[id^="actions-drop-down-"]'
+            );
+            allActionDivs.forEach((actionDiv) => {
+                const id = actionDiv.id.split("-")[3];
+                console.log(id);
+                actionDiv.style.display =
+                    id === activeButtonId ? "flex" : "none";
+            });
+        }
+    }, [activeButtonId]);
+
     useEffect(() => {
         setCurrentPage(1);
     }, [filterType]);
 
     return (
         <div className="services-list-container">
-            <span className="services-list-title">Services</span>
+            {!dataLoaded ? (
+                <BounceLoader
+                    cssOverride={loader}
+                    color="var(--color-compliment)"
+                />
+            ) : (
+                <>
+                    <span className="services-list-title">Services</span>
 
-            <div className="services-list-filters">
-                <label className="filters">
-                    Filter by Type:
-                    <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                    >
-                        <option value="">All</option>
-                        {serviceTypes.map((type, index) => (
-                            <option key={index} value={type}>
-                                {type}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-                <label className="filters">
-                    Order by Name:
-                    <select
-                        value={orderType}
-                        onChange={(e) => setOrderType(e.target.value)}
-                    >
-                        <option value="Ascending Order (A - Z)">
-                            Ascending Order (A - Z)
-                        </option>
-                        <option value="Descending Order (Z - A)">
-                            Descending Order (Z - A)
-                        </option>
-                    </select>
-                </label>
-            </div>
+                    <div className="services-list-filters">
+                        <label className="filters">
+                            <Selector
+                                options={[
+                                    { value: "All Types", label: "All Types" },
+                                    ...serviceTypes.map((type) => ({
+                                        value: type,
+                                        label: type,
+                                    })),
+                                ]}
+                                onSelect={(value) => setFilterType(value)}
+                                defaultSelect={"All Types"}
+                            />
+                        </label>
+                        <label className="filters">
+                            <Selector
+                                options={[
+                                    {
+                                        value: "Ascending Order",
+                                        label: "Ascending Order",
+                                    },
+                                    {
+                                        value: "Descending Order",
+                                        label: "Descending Order",
+                                    },
+                                ]}
+                                onSelect={(value) => setOrderType(value)}
+                                defaultSelect={"Ascending Order"}
+                            />
+                        </label>
+                    </div>
 
-            <div className="services-list-table">
-                <ul className="services-table-title">
-                    <li id="index-title">#</li>
-                    <li id="name-title">Name</li>
-                    <li id="desc-title">Description</li>
-                    <li id="type-title">Type</li>
-                    <li id="version-title">Version</li>
-                    <li id="action-title"> </li>
-                </ul>
-                <div className="services-table-content">
-                    {filteredServices.map((service, index) => (
-                        <ul key={index}>
-                            <li className="service-index-value">
-                                {(currentPage - 1) * servicesPerPage +
-                                    (index + 1)}
-                            </li>
-                            <li className="service-name-value">
-                                {service.name}
-                            </li>
-                            <li className="service-desc-value">
-                                {service.description}
-                            </li>
-                            <li className="service-type-value">
-                                {service.type}
-                            </li>
-                            <li className="service-version-value">
-                                {service.version}
-                            </li>
-                            <li className="service-action">
-                                <button>
-                                    <i className="fa-solid fa-ellipsis-vertical"></i>
-                                </button>
-                            </li>
+                    <div className="services-list-table">
+                        <ul className="services-table-title">
+                            <li id="index-title">#</li>
+                            <li id="name-title">Name</li>
+                            <li id="desc-title">Description</li>
+                            <li id="type-title">Type</li>
+                            <li id="version-title">Version</li>
+                            <li id="action-title"> </li>
                         </ul>
-                    ))}
-                </div>
-            </div>
-
-            <ul className="pagination">
-                {renderPaginationNumbers().map((pageNumber, index) => (
-                    <li key={index}>
-                        {Number.isInteger(pageNumber) ? (
-                            <button
-                                id={"pagination-btn-num-" + pageNumber}
-                                onClick={() => paginate(pageNumber)}
-                                className={
-                                    currentPage === pageNumber ? "active" : ""
-                                }
-                            >
-                                {pageNumber}
-                            </button>
+                        {filteredServices && filteredServices.length !== 0 ? (
+                            <div className="services-table-content">
+                                {filteredServices.map((service, index) => (
+                                    <ul key={index}>
+                                        <li className="service-index-value">
+                                            {(currentPage - 1) *
+                                                servicesPerPage +
+                                                (index + 1)}
+                                        </li>
+                                        <li
+                                            title={service.description}
+                                            className="service-name-value"
+                                        >
+                                            {service.name}
+                                        </li>
+                                        <li
+                                            title={service.description}
+                                            className="service-desc-value"
+                                        >
+                                            {service.description}
+                                        </li>
+                                        <li className="service-type-value">
+                                            {service.type}
+                                        </li>
+                                        <li className="service-version-value">
+                                            {service.version}
+                                        </li>
+                                        <li className="service-action">
+                                            <button
+                                                id={
+                                                    "action-button-" +
+                                                    (index + 1)
+                                                }
+                                                onClick={(e) =>
+                                                    handleActionDropDown(e)
+                                                }
+                                            >
+                                                <i className="fa-solid fa-ellipsis-vertical"></i>
+                                            </button>
+                                            <div
+                                                id={
+                                                    "actions-drop-down-" +
+                                                    (index + 1)
+                                                }
+                                                className="actions-drop-down"
+                                            >
+                                                {role === "admin" && (
+                                                    <button
+                                                        id={
+                                                            "remove-service-" +
+                                                            (index + 1)
+                                                        }
+                                                    >
+                                                        Remove service
+                                                    </button>
+                                                )}
+                                                <a
+                                                    id={
+                                                        "query-service-" +
+                                                        (index + 1)
+                                                    }
+                                                    href="/services"
+                                                >
+                                                    Query Service
+                                                </a>
+                                                <a
+                                                    id={
+                                                        "query-service-" +
+                                                        (index + 1)
+                                                    }
+                                                    href="/services"
+                                                >
+                                                    View Statistics
+                                                </a>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                ))}
+                            </div>
                         ) : (
-                            <span>{pageNumber}</span>
+                            <div className="no-result-display">
+                                <img src={noResultBg} />
+                                <span>
+                                    Oops! No fish in this sea. This seems
+                                    fishy... 🐟🎣
+                                </span>
+                            </div>
                         )}
-                    </li>
-                ))}
-            </ul>
+                    </div>
+
+                    <ul className="pagination">
+                        {renderPaginationNumbers().map((pageNumber, index) => (
+                            <li key={index}>
+                                {Number.isInteger(pageNumber) ? (
+                                    <button
+                                        id={"pagination-btn-num-" + pageNumber}
+                                        onClick={() => paginate(pageNumber)}
+                                        className={
+                                            currentPage === pageNumber
+                                                ? "active"
+                                                : ""
+                                        }
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ) : (
+                                    <span>{pageNumber}</span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            )}
         </div>
     );
 }

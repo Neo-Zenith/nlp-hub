@@ -13,8 +13,8 @@ export default function AccountDetails() {
     const loader = {
         position: "absolute",
         display: "flex",
-        marginLeft: "35rem",
-        marginTop: "20rem",
+        marginLeft: "45%",
+        marginTop: "25rem",
     };
 
     const dataLoaded = useSelector((state) => state.loaded);
@@ -143,7 +143,7 @@ export default function AccountDetails() {
                 {!dataLoaded ? (
                     <BounceLoader
                         cssOverride={loader}
-                        color="var(--color-secondary-red)"
+                        color="var(--color-compliment)"
                     />
                 ) : (
                     <ul>

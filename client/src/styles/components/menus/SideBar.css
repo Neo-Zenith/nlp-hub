@@ -94,7 +94,7 @@
 }
 
 .nav-section ul li a:hover {
-    color: var(--color-accent);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 
@@ -125,7 +125,7 @@
 }
 
 .sidebar-footer > button:hover {
-    color: var(--color-accent);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 

@@ -42,7 +42,7 @@
 
 .login-form-subtitle a {
     text-decoration: none;
-    color: var(--color-secondary);
+    color: var(--color-compliment);
 }
 
 .login-form > label {
@@ -72,7 +72,7 @@
 
 .login-form label span.on-active-text {
     animation: on-active-text 0.25s ease-in-out forwards;
-    color: var(--color-secondary);
+    color: var(--color-compliment);
 }
 
 .login-form label span.on-inactive-text {
@@ -82,7 +82,7 @@
 .login-form label input {
     border: none;
     border-bottom: 0.15rem solid var(--color-grey);
-    color: var(--color-secondary);
+    color: var(--color-compliment);
     font: 400 1.4rem 'Open Sans';
 }
 
@@ -100,7 +100,7 @@
     margin-bottom: 3rem;
     border: none;
     border-radius: 100px;
-    background-color: var(--color-secondary);
+    background-color: var(--color-compliment);
     color: white;
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
@@ -108,7 +108,7 @@
 }
 
 .login-btn:hover {
-    background-color: var(--color-secondary);
+    background-color: var(--color-compliment);
     box-shadow: 0 0 10px var(--color-tertiary);
     transform: scale(1.05);
 }
@@ -129,7 +129,7 @@
 
 .redirect-link a {
     text-decoration: none;
-    color: var(--color-secondary)
+    color: var(--color-compliment)
 }
 
 #password-visibility-toggle-signup {
@@ -147,7 +147,7 @@
 }
 
 #password-visibility-toggle-signup:hover {
-    color: var(--color-secondary);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 

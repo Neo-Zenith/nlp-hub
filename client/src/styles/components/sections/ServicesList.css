@@ -1,46 +1,33 @@
 .services-list-container {
     width: 100%;
     display: flex;
-    margin-left: 8rem;
+    padding-left: 5%;
     flex-direction: column;
+    position: relative;
 }
 
 .services-list-title {
     margin-top: 5rem;
-    font: 600 3rem 'Poppins'
+    font: 700 2.8rem 'Quicksand'
 }
 
 .services-list-filters {
+    margin-right: 10%;
     display: flex;
     flex-direction: row;
+    justify-content: flex-end;
 }
 
 .filters {
-    margin-right: 5rem;
+    margin-right: 2rem;
     display: flex;
     margin-top: 2rem;
-    font: 400 1.8rem 'Poppins';
-    align-items: center;
-}
-
-.filters > select {
-    margin-left: 1.5rem;
-    font: 400 1.4rem 'Poppins';
-    background-color: var(--color-light-grey);
-    border: none;
-    border-radius: 0.5rem;
-    padding: 0.5rem 1.5rem;
-    cursor: pointer;
-}
-
-.filters > select > option {
-    font: 400 1.4rem 'Poppins';
 }
 
 .services-list-table {
-    font: 400 1.8rem 'Poppins';
+    font: 400 1.5rem 'Open Sans';
     width: 90%;
-    margin-top: 5.5rem;
+    margin-top: 3.5rem;
 }
 
 .services-table-title {
@@ -49,36 +36,46 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    background-color: var(--color-light-grey);
+    background-color: var(--color-tertiary);
 }
 
-.service-type-value, .service-version-value, .service-action, .service-index-value,
+.service-type-value, .service-version-value, .service-action,
 .services-table-title > li {
     flex: 1;
-    font: 400 1.8rem 'Poppins';
+    text-align: center;
+}
+
+#index-title,
+.service-index-value {
+    flex: 0.5;
     text-align: center;
 }
 
 .services-table-title > li {
-    margin: 2rem 0;
-    font: 600 2rem 'Poppins';
+    margin: 1.25rem 0;
+    font: 600 1.6rem 'Poppins';
+    color: var(--color-primary);
+}
+
+.service-action {
+    position: relative;
 }
 
 .service-action > button {
-    font: 400 2.5rem 'Poppins';
+    font-size: 1.8rem;
     border: none;
     cursor: pointer;
     background-color: transparent;
 }
 
 .service-action > button:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 
 #name-title,
 .service-name-value {
-    margin-right: 3rem !important;
+    margin-right: 4rem !important;
     flex: 2;
     text-align: start;
     white-space: nowrap;
@@ -100,7 +97,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: 42rem;
+    min-height: 45rem;
 }
 
 .services-table-content > ul {
@@ -113,13 +110,46 @@
     align-items: center;
 }
 
-.services-table-content > ul:nth-child(even) {
-    background-color: var(--color-light-grey);
-    border-radius: 0.5rem;
-}
-
 .services-table-content > ul > li {
     margin: 2rem 0;
+}
+
+.actions-drop-down {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    padding: 1rem 1.6rem;
+    width: fit-content;
+    margin: 0;
+    margin-top: 1rem;
+    display: none;
+    flex-direction: column;
+    z-index: 1;
+    background-color: white;
+    box-shadow: 1px 1px 7px 1px rgba(0,0,0,0.13);
+    -webkit-box-shadow: 1px 1px 7px 1px rgba(0,0,0,0.13);
+    -moz-box-shadow: 1px 1px 7px 1px rgba(0,0,0,0.13);
+}
+
+.actions-drop-down > button {
+
+}
+
+.actions-drop-down > a {
+    text-decoration: none;
+    color: var(--color-compliment);
+    border-bottom: 0.15rem solid white;
+    padding-bottom: 0.3rem;
+    margin-right: 2rem;
+}
+
+.actions-drop-down > a:not(:last-child) {
+    margin-bottom: 1rem;
+}
+
+.actions-drop-down > a:hover {
+    border-color: var(--color-compliment);
 }
 
 .pagination {
@@ -138,19 +168,19 @@
     font: 400 1.8rem 'Poppins';
     padding: 0.5rem 1.3rem;
     background-color: var(--color-light-grey);
-    border: 0.15rem solid var(--color-primary-blue);
+    border: 0.15rem solid var(--color-primary);
     border-radius: 0.5rem;
     cursor: pointer;
 }
 
 .pagination > li > button:hover {
-    background-color: var(--color-secondary-red);
+    background-color: var(--color-compliment);
     color: white;
     transition: 0.2s all ease-in-out;
 }
 
 .pagination > li > button.active {
-    background-color: var(--color-secondary-red);
+    background-color: var(--color-compliment);
     color: white;
 }
 
@@ -158,9 +188,29 @@
     font: 400 2.5rem 'Poppins'
 }
 
+.no-result-display {
+    display: flex;
+    flex-direction: column;
+    margin-top: 3rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.no-result-display > img {
+    width: 40%;
+    mix-blend-mode: multiply;
+}
+
+.no-result-display > span {
+    width: 70%;
+    text-align: center;
+    font: 300 1.8rem 'Poppins';
+    color: var(--color-primary)
+}
+
 @media screen and (max-width: 1020px) {
     .services-list-container {
-        margin-left: 3rem;
+        padding-left: 3rem;
     }
 }
 
@@ -187,30 +237,20 @@
         font-size: 2rem;
     }
     
-    .filters {
-        font-size: 1.3rem;
-    }
-    
-    .filters > select {
-        font-size: 1.3rem;
-    }
-    
-    .filters > select > option {
-        font-size: 1.3rem;
-    }
     
     .service-type-value, .service-version-value, .service-action > button, .service-index-value,
     .services-table-title > li {
         font-size: 1.2rem;
     }
 
-    .services-table-content {
-        min-height: 35rem;
-    }
-
     #name-title,
     .service-name-value {
-        margin-right: 1rem !important;
+        margin-right: 1.8rem !important;
+    }
+
+    #desc-title,
+    .service-desc-value {
+        margin-right: 3rem !important;
     }
 
     .pagination > li > button {
@@ -218,6 +258,14 @@
     }
 
     .pagination > li > span {
+        font-size: 1.4rem;
+    }
+
+    .no-result-display > img {
+        width: 80%;
+    }
+
+    .no-result-display > span {
         font-size: 1.4rem;
     }
 }

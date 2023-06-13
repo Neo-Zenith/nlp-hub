@@ -21,15 +21,14 @@
 :root {
     --color-warning: #e7545b;
     --color-success: #379ca4;
-    --color-primary: #102E4A;
-    --color-secondary: #5887FF;
-    --color-tertiary: #55C1FF;
-    --color-compliment: #715AFF;
-    --color-accent: #A682FF;
+    --color-primary: #1e1d2c;
+    --color-secondary: #AC9FBB;
+    --color-tertiary: #efe1f5;
+    --color-compliment: #a33873;
 
-    --color-light-grey: #e2e0e4;
-    --color-grey: #bab8c0;
-    --color-dark-grey: #888692;
+    --color-light-grey: #e0e0e0;
+    --color-grey: #bbbbbb;
+    --color-dark-grey: #a5a5a5;
 
     font-size: 62.5%;
 }
@@ -42,7 +41,7 @@ body {
 .sidebar-wrapper {
     height: 100%;
     position: absolute;
-    z-index: 1;
+    z-index: 2;
     left: 0;
     bottom: 0;
 }
