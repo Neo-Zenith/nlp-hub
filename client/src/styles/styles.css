@@ -57,6 +57,13 @@ body {
     margin-top: 3.5rem;
 }
 
+@media screen and (max-width: 1020px) {
+    .quick-nav-wrapper {
+        margin-left: 2rem;
+        margin-top: 2rem;
+    }
+}
+
 @media screen and (min-width: 769px) {
     .custom-toast-container {
         width: 150%;

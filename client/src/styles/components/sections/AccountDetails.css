@@ -9,7 +9,6 @@
     padding: 0;
     margin: 3.5rem 0;
     width: 100%;
-    min-width: 75rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -21,7 +20,7 @@
     display: flex;
     flex-direction: row;
     margin: 0.7rem 0;
-    border: 0.1rem solid var(--color-primary-blue);
+    border: 0.1rem solid var(--color-primary);
     border-radius: 1rem;
 }
 
@@ -39,7 +38,7 @@
 }
 
 .action-btn > button {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     margin-right: 2rem;
     background-color: transparent;
     border: none;
@@ -64,7 +63,7 @@
 }
 
 .action-btn > button:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 
@@ -72,8 +71,8 @@
     padding-top: 1rem;
     padding-left: 1rem;
     width: 100%;
-    font: 600 1.8rem 'Poppins';
-    color: var(--color-primary-blue);
+    font: 600 1.6rem 'Open Sans';
+    color: var(--color-primary);
 }
 
 .details-field-value-wrapper {
@@ -91,28 +90,33 @@
     padding-bottom: 0.35rem;
     display: none;
     border-radius: 0.5rem;
-    border: 0.15rem solid var(--color-primary-blue);
-    font: 400 1.8rem 'Poppins';
+    border: 0.15rem solid var(--color-primary);
+    font: 400 1.8rem 'Open Sans';
 }
 
 .details-field-value-wrapper > input:focus {
     outline: none;
-    border: 0.15rem solid var(--color-secondary-red);
+    border: 0.15rem solid var(--color-compliment);
 }
 
 .details-field-value {
-    font: 300 2.2rem 'Poppins';
-    color: var(--color-primary-blue);
+    font: 300 2rem 'Open Sans';
+    color: var(--color-primary);
 }
 
 #password-ph > i{
     margin-right: 0.15rem;
     font-size: 1.2rem;
+    color: var(--color-primary)
 }
 
 @media screen and (max-width: 720px) {
     .account-details-container > ul {
         min-width: 40rem;
+    }
+
+    .account-details-container > ul > li {
+        width: 90%;
     }
 
     .details-field-title {

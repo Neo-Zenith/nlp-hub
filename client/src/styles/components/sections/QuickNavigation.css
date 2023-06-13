@@ -1,23 +1,23 @@
 .quick-navigation-container {
     display: flex;
     margin-left: 3rem;
-    font: 400 1.8rem 'Poppins';
+    font: 400 1.8rem 'Open Sans';
 }
 
 .quick-navigation-container > a {
     text-decoration: none;
-    color: var(--color-primary-blue);
+    color: var(--color-primary);
     display: flex;
     align-items: center;
 }
 
 .quick-navigation-container > a:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 
 .quick-navigation-container > a > span {
-    font: 400 1.8rem 'Poppins';
+    font: 500 1.8rem 'Open Sans';
     margin-top: 0.3rem;
 }
 
