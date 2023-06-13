@@ -57,9 +57,6 @@
     font-weight: 500;
     color: var(--color-secondary-red);
     border-bottom: 0.3rem solid var(--color-secondary-red);
-    box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
-    -webkit-box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
-    -moz-box-shadow: 0px 0px 9px 0px rgba(0,0,0,0.14);
 }
 
 .component-wrapper {
