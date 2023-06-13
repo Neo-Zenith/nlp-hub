@@ -1,7 +1,7 @@
 .sidebar-container {
     min-width: 35rem;
     height: 100%;
-    background-color: var(--color-primary-blue);
+    background-color: var(--color-primary);
     display: flex;
     flex-direction: column;
 }
@@ -27,13 +27,13 @@
 }
 
 #cancel-btn:hover {
-    color: var(--color-secondary-red)
+    color: var(--color-secondary)
 }
 
 .welcome-title {
     flex: 1;
     margin-top: 5rem;
-    font: 600 2rem 'Nunito';
+    font: 600 2rem 'Open Sans';
     margin-left: 3rem;
     color: var(--color-light-grey);
 }
@@ -42,7 +42,7 @@
     flex: 1;
     margin-left: 3rem;
     margin-top: -0.5rem;
-    font: 500 3.2rem 'Poppins';
+    font: 500 3.2rem 'Open Sans';
     font-style: italic;
     color: var(--color-light-grey);
 }
@@ -50,7 +50,7 @@
 .dashboard-title {
     flex: 1;
     margin-top: 5rem;
-    font: 600 1.8rem 'Poppins';
+    font: 700 1.8rem 'Open Sans';
     margin-left: 3rem;
     color: var(--color-light-grey);
 }
@@ -72,7 +72,7 @@
 }
 
 .nav-section span {
-    font: 400 1.8rem 'Poppins';
+    font: 500 1.8rem 'Open Sans';
     color: var(--color-grey)
 }
 
@@ -89,12 +89,12 @@
 
 .nav-section ul li a {
     text-decoration: none;
-    font: 400 1.6rem 'Poppins';
+    font: 400 1.6rem 'Open Sans';
     color: var(--color-light-grey)
 }
 
 .nav-section ul li a:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-accent);
     transition: 0.2s all ease-in-out;
 }
 
@@ -109,7 +109,7 @@
 
 .sidebar-footer > span {
     flex: 1.5;
-    font: 400 1.4rem 'Poppins';
+    font: 400 1.6rem 'Open Sans';
     color: var(--color-grey)
 }
 
@@ -125,7 +125,7 @@
 }
 
 .sidebar-footer > button:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-accent);
     transition: 0.2s all ease-in-out;
 }
 
@@ -135,11 +135,11 @@
     }
 
     .sidebar-container.sidebar-fade-in {
-        animation: sidebar-fade-in 0.5s forwards;
+        animation: sidebar-fade-in 0.3s forwards;
     }
 
     .sidebar-container.sidebar-fade-out {
-        animation: sidebar-fade-out 0.5s forwards;
+        animation: sidebar-fade-out 0.3s forwards;
     }
 
     #hamburger-btn {
@@ -149,15 +149,15 @@
         margin-top: 4rem;
         font-size: 2.5rem;
         background-color: transparent;
-        border: 0.15rem solid var(--color-primary-blue);
-        padding: 0.5rem;
+        border: none;
+        padding: 1rem;
         border-radius: 0.5rem;
         cursor: pointer;
     }
 
     #hamburger-btn:hover {
-        background-color: var(--color-primary-blue-light);
-        color: var(--color-light-grey);
+        background-color: var(--color-light-grey);
+        border-radius: 50%;
         transition: 0.2s all ease-in-out;
     }
 }

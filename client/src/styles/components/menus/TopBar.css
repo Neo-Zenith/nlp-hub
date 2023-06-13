@@ -21,18 +21,19 @@
 }
 
 .search-bar > input {
-    font: 400 1.6rem 'Poppins';
+    font: 400 1.6rem 'Open Sans';
     width: 50%;
     padding: 0.5rem 0;
     padding-left: 5.5rem;
     border: none;
     border: 0.1rem solid var(--color-grey);
+    color: var(--color-dark-grey);
     border-radius: 1rem;
 }
 
 .search-bar > input:focus {
     outline: none;
-    border-color: var(--color-secondary-red);
+    border-color: var(--color-compliment);
 }
 
 .topbar-links {
@@ -46,12 +47,12 @@
 
 .topbar-links a {
     font-size: 2.8rem;
-    color: var(--color-primary-blue);
+    color: var(--color-primary);
     cursor: pointer;
 }
 
 .topbar-links a:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-compliment);
     transition: 0.2s all ease-in-out;
 }
 
