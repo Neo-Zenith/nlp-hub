@@ -28,13 +28,13 @@
 }
 
 .login-form-title {
-    font: 600 4rem 'Quicksand';
+    font: 700 4rem 'Quicksand';
     text-align: center;
     margin-top: 10rem;
 }
 
 .login-form-subtitle {
-    font: 400 1.5rem 'Poppins';
+    font: 400 1.5rem 'Open Sans';
     text-align: center;
     margin-top: 1.5rem;
     margin-bottom: 2rem;
@@ -42,11 +42,11 @@
 
 .login-form-subtitle a {
     text-decoration: none;
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
 }
 
 .login-form > label {
-    font: 400 1.4rem 'Poppins';
+    font: 400 1.4rem 'Open Sans';
     display: flex;
     flex-direction: column-reverse;
 }
@@ -72,7 +72,7 @@
 
 .login-form label span.on-active-text {
     animation: on-active-text 0.25s ease-in-out forwards;
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
 }
 
 .login-form label span.on-inactive-text {
@@ -82,8 +82,8 @@
 .login-form label input {
     border: none;
     border-bottom: 0.15rem solid var(--color-grey);
-    color: var(--color-secondary-red);
-    font: 400 1.4rem 'Poppins';
+    color: var(--color-secondary);
+    font: 400 1.4rem 'Open Sans';
 }
 
 .login-form label input:focus {
@@ -100,20 +100,21 @@
     margin-bottom: 3rem;
     border: none;
     border-radius: 100px;
-    background-color: var(--color-secondary-red);
+    background-color: var(--color-secondary);
     color: white;
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
+    cursor: pointer;
 }
 
 .login-btn:hover {
-    background-color: var(--color-secondary-red);
-    box-shadow: 0 0 10px #c44d8c;
+    background-color: var(--color-secondary);
+    box-shadow: 0 0 10px var(--color-tertiary);
     transform: scale(1.05);
-  }
+}
   
 .login-btn:active {
-    background-color: var(--color-primary-blue-light);
+    background-color: var(--color-primary);
     transition: all 0.25s;
     -webkit-transition: all 0.25s;
     box-shadow: none;
@@ -122,13 +123,13 @@
 
 .redirect-link {
     margin-bottom: 10rem;
-    font: 400 1.3rem 'Poppins';
+    font: 400 1.5rem 'Open Sans';
     color: black;
 }
 
 .redirect-link a {
     text-decoration: none;
-    color: var(--color-secondary-red)
+    color: var(--color-secondary)
 }
 
 #password-visibility-toggle-signup {
@@ -140,20 +141,19 @@
     position: absolute;
     align-self: flex-end;
     margin-right: 2.5%;
-    margin-top: 34rem;
+    margin-top: 32.5rem;
     color: var(--color-grey);
     cursor: pointer;
 }
 
 #password-visibility-toggle-signup:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
     transition: 0.2s all ease-in-out;
 }
 
 @media screen and (max-width: 1000px) {
     .login-form-container {
-        width: 70%;
-        min-width: 60rem;
+        min-width: 50rem;
     }
 
     .login-form-bg {
@@ -163,7 +163,7 @@
     #password-visibility-toggle-signup {
         font-size: 1.4rem;
         margin-right: 8%;
-        margin-top: 33.5rem;
+        margin-top: 32.5rem;
     }
 }
 
@@ -177,12 +177,12 @@
     }
 
     .login-form-title {
-        margin-top: 5rem;
+        margin-top: 10rem;
         font-size: 3.5rem;
     }
 
     .login-form-subtitle {
-        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
     }
 
     .login-form > label {
@@ -203,14 +203,17 @@
     #password-visibility-toggle-signup {
         font-size: 1.4rem;
         margin-right: 12%;
-        margin-top: 29rem;
+        margin-top: 32rem;
     }
 
     .login-btn {
-        margin-top: 3rem;
         padding: 0.75rem 0.5rem;
         min-width: 12rem;
         font-size: 1.6rem;
+    }
+
+    .redirect-link {
+        margin-bottom: 10rem;
     }
 }
 

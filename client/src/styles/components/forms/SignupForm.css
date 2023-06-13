@@ -34,7 +34,7 @@
 }
 
 .signup-form-subtitle {
-    font: 400 1.5rem 'Poppins';
+    font: 400 1.5rem 'Open Sans';
     text-align: center;
     margin-top: 1.5rem;
     margin-bottom: 3rem;
@@ -42,7 +42,7 @@
 
 .signup-form-subtitle a {
     text-decoration: none;
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
 }
 
 .signup-form > div {
@@ -55,7 +55,7 @@
 
 .signup-form > div > label,
 .signup-form > label {
-    font: 400 1.4rem 'Poppins';
+    font: 400 1.4rem 'Open Sans';
     display: flex;
     flex-direction: column-reverse;
 }
@@ -95,7 +95,7 @@
 
 .signup-form label span.on-active-text {
     animation: on-active-text 0.25s ease-in-out forwards;
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
 }
 
 .signup-form label span.on-inactive-text {
@@ -105,8 +105,9 @@
 .signup-form label input {
     border: none;
     border-bottom: 0.15rem solid var(--color-grey);
-    color: var(--color-secondary-red);
-    font: 400 1.4rem 'Poppins';
+    color: var(--color-secondary);
+    font: 400 1.4rem 'Open Sans';
+    padding-bottom: 1rem;
 }
 
 .signup-form label input:focus {
@@ -123,20 +124,21 @@
     margin-bottom: 3.5rem;
     border: none;
     border-radius: 100px;
-    background-color: var(--color-secondary-red);
+    background-color: var(--color-secondary);
     color: white;
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
+    cursor: pointer;
 }
 
 .signup-btn:hover {
-    background-color: var(--color-secondary-red);
-    box-shadow: 0 0 10px #c44d8c;
+    background-color: var(--color-secondary);
+    box-shadow: 0 0 10px var(--color-tertiary);
     transform: scale(1.05);
   }
   
 .signup-btn:active {
-    background-color: var(--color-primary-blue-light);
+    background-color: var(--color-primary);
     transition: all 0.25s;
     -webkit-transition: all 0.25s;
     box-shadow: none;
@@ -152,13 +154,13 @@
     position: absolute;
     align-self: flex-end;
     margin-right: 2%;
-    margin-top: 48rem;
+    margin-top: 47.5rem;
     color: var(--color-grey);
     cursor: pointer;
 }
 
 #password-visibility-toggle:hover {
-    color: var(--color-secondary-red);
+    color: var(--color-secondary);
     transition: 0.2s all ease-in-out;
 }
 
@@ -188,14 +190,14 @@
 #password-req li {
     width: 100%;
     margin-top: 0.2rem;
-    font: 400 1.2rem 'Quicksand';
+    font: 400 1.2rem 'Open Sans';
     color: var(--color-warning)
 }
 
 #password-checker {
     flex: 1;
     margin-top: 0rem;
-    font: 450 1.4rem 'Poppins';
+    font: 400 1.4rem 'Open Sans';
     text-align: end;
     align-self: flex-start;
     opacity: 0;
@@ -231,7 +233,7 @@
     }
 
     .signup-form-subtitle {
-        font-size: 1.4rem;
+        margin-bottom: 1rem;
     }
 
     .signup-form > div,
@@ -244,11 +246,6 @@
     .signup-form > label > span,
     .signup-form > label > input {
         font-size: 1.4rem;
-    }
-
-    .signup-form > div > label > span,
-    .signup-form > label > span {
-        padding-bottom: 0.9rem;
     }
 
     .signup-form > div > label > span,
@@ -268,7 +265,7 @@
     #password-visibility-toggle {
         font-size: 1.4rem;
         margin-right: 12%;
-        margin-top: 48.5rem;
+        margin-top: 44rem;
     }
 
     .signup-btn {
@@ -276,6 +273,10 @@
         padding: 0.75rem 0.5rem;
         min-width: 12rem;
         font-size: 1.6rem;
+    }
+
+    .redirect-link {
+        margin-bottom: 5rem;
     }
 }
 

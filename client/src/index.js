@@ -22,7 +22,7 @@ root.render(
                     fontFamily: "Poppins",
                     fontWeight: "500",
                     fontSize: "1.8rem",
-                    borderLeft: "0.5rem solid var(--color-primary-red)",
+                    borderLeft: "0.5rem solid var(--color-warning)",
                     borderRadius: "0.5rem",
                 }}
                 toastClassName="custom-toast-container"
