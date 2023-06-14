@@ -7,9 +7,11 @@ import { setLoaded } from "../../store/actions";
 import Selector from "../utils/Selector";
 import noResultBg from "../../img/no-result-pic.png";
 import { BounceLoader } from "react-spinners";
+import { useNavigate } from "react-router-dom";
 
 export default function ServicesList() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const servicesService = useMemo(() => {
         return new ServicesService({ dispatch });
@@ -205,6 +207,21 @@ export default function ServicesList() {
         }
     }
 
+    function handleNavigate(e) {
+        const action = e.currentTarget.id.split("-")[0];
+        const id = e.currentTarget.id.split("-")[2];
+        console.log(document.getElementById("service-type-" + id));
+        const type = document.getElementById("service-type-" + id).textContent;
+        const version = document.getElementById(
+            "service-version-" + id
+        ).textContent;
+
+        if (action !== "remove") {
+            navigate("/" + action + "/" + type + "/" + version);
+        } else {
+        }
+    }
+
     useEffect(() => {
         if (activeButtonId) {
             const allActionDivs = document.querySelectorAll(
@@ -302,10 +319,26 @@ export default function ServicesList() {
                                                 {service.description}
                                             </span>
                                         </li>
-                                        <li className="service-type-value">
+                                        <li
+                                            id={
+                                                "service-type-" +
+                                                ((currentPage - 1) *
+                                                    servicesPerPage +
+                                                    (index + 1))
+                                            }
+                                            className="service-type-value"
+                                        >
                                             {service.type}
                                         </li>
-                                        <li className="service-version-value">
+                                        <li
+                                            id={
+                                                "service-version-" +
+                                                ((currentPage - 1) *
+                                                    servicesPerPage +
+                                                    (index + 1))
+                                            }
+                                            className="service-version-value"
+                                        >
                                             {service.version}
                                         </li>
                                         <li className="service-action">
@@ -339,32 +372,39 @@ export default function ServicesList() {
                                                                 servicesPerPage +
                                                                 (index + 1))
                                                         }
+                                                        onClick={(e) =>
+                                                            handleNavigate(e)
+                                                        }
                                                     >
                                                         Remove service
                                                     </button>
                                                 )}
-                                                <a
+                                                <button
                                                     id={
                                                         "query-service-" +
                                                         ((currentPage - 1) *
                                                             servicesPerPage +
                                                             (index + 1))
                                                     }
-                                                    href="/services"
+                                                    onClick={(e) =>
+                                                        handleNavigate(e)
+                                                    }
                                                 >
                                                     Query Service
-                                                </a>
-                                                <a
+                                                </button>
+                                                <button
                                                     id={
-                                                        "query-service-" +
+                                                        "stats-service-" +
                                                         ((currentPage - 1) *
                                                             servicesPerPage +
                                                             (index + 1))
                                                     }
-                                                    href="/services"
+                                                    onClick={(e) =>
+                                                        handleNavigate(e)
+                                                    }
                                                 >
                                                     View Statistics
-                                                </a>
+                                                </button>
                                             </div>
                                         </li>
                                     </ul>

@@ -136,7 +136,7 @@
     top: 100%;
     left: 0;
     width: 100%;
-    padding: 1rem 1.6rem;
+    padding: 1rem 1rem;
     width: fit-content;
     margin: 0;
     margin-top: 1rem;
@@ -150,24 +150,26 @@
 }
 
 .actions-drop-down > button {
-
-}
-
-.actions-drop-down > a {
-    text-decoration: none;
     color: var(--color-compliment);
-    border-bottom: 0.15rem solid white;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    border: none;
     padding-bottom: 0.3rem;
     margin-right: 2rem;
     text-align: start;
+    background-color: transparent;
+    cursor: pointer;
+    line-height: 2rem;
 }
 
-.actions-drop-down > a:not(:last-child) {
+.actions-drop-down > button:not(:last-child) {
     margin-bottom: 1rem;
 }
 
-.actions-drop-down > a:hover {
-    border-color: var(--color-compliment);
+.actions-drop-down > button:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.3rem;
 }
 
 .pagination {
