@@ -15,24 +15,20 @@ export default function SideBar() {
 
     const [sidebarActive, setSidebarActive] = useState(false);
     const [windowWidth, setWindowWidth] = useState(null);
-    const [windowHeight, setWindowHeight] = useState(null);
 
     function handleSidebarFade() {
+        var body = document.body;
+        var sidebarContainer = document.getElementById("sidebar-container");
+
         if (!sidebarActive) {
-            document
-                .getElementById("sidebar-container")
-                .classList.remove("sidebar-fade-out");
-            document
-                .getElementById("sidebar-container")
-                .classList.add("sidebar-fade-in");
+            body.classList.add("lock-scroll");
+            sidebarContainer.classList.remove("sidebar-fade-out");
+            sidebarContainer.classList.add("sidebar-fade-in");
             setSidebarActive(true);
         } else {
-            document
-                .getElementById("sidebar-container")
-                .classList.remove("sidebar-fade-in");
-            document
-                .getElementById("sidebar-container")
-                .classList.add("sidebar-fade-out");
+            body.classList.remove("lock-scroll");
+            sidebarContainer.classList.remove("sidebar-fade-in");
+            sidebarContainer.classList.add("sidebar-fade-out");
             setSidebarActive(false);
         }
     }
@@ -53,13 +49,10 @@ export default function SideBar() {
     useEffect(() => {
         function handleResize() {
             setWindowWidth(window.innerWidth);
-            setWindowHeight(document.documentElement.scrollHeight);
             handleDisplayCollapseBtn();
         }
 
         window.addEventListener("resize", handleResize);
-        document.getElementById("sidebar-container").style.height =
-            document.documentElement.scrollHeight.toString() + "px";
         return () => {
             window.removeEventListener("resize", handleResize);
         };
@@ -68,11 +61,6 @@ export default function SideBar() {
     useEffect(() => {
         handleDisplayCollapseBtn();
     }, [windowWidth]);
-
-    useEffect(() => {
-        document.getElementById("sidebar-container").style.height =
-            document.documentElement.scrollHeight.toString() + "px";
-    }, [windowHeight]);
 
     return (
         <>

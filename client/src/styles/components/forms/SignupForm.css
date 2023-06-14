@@ -133,7 +133,7 @@
 
 .signup-btn:hover {
     background-color: var(--color-compliment);
-    box-shadow: 0 0 10px var(--color-tertiary);
+    box-shadow: 0 0 10px var(--color-compliment);
     transform: scale(1.05);
   }
   

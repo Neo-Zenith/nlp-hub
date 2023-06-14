@@ -8,7 +8,7 @@ import QuickNavigation from "../components/sections/QuickNavigation";
 export default function ServiceDetailsPage() {
     return (
         <>
-            <div className="sidebar-wrapper">
+            <div id="sidebar-wrapper" className="sidebar-wrapper">
                 <SideBar />
             </div>
             <div className="top-bar-wrapper">

@@ -7,7 +7,7 @@
 }
 
 .services-list-title {
-    margin-top: 5rem;
+    margin-top: 3.5rem;
     font: 700 2.8rem 'Quicksand'
 }
 
@@ -27,7 +27,7 @@
 .services-list-table {
     font: 400 1.5rem 'Open Sans';
     width: 90%;
-    margin-top: 3.5rem;
+    margin-top: 3rem;
 }
 
 .services-table-title {
@@ -39,10 +39,17 @@
     background-color: var(--color-tertiary);
 }
 
-.service-type-value, .service-version-value, .service-action,
+.service-type-value, .service-version-value, 
 .services-table-title > li {
     flex: 1;
     text-align: center;
+}
+
+#action-title,
+.service-action {
+    flex: 0.3;
+    display: flex;
+    justify-content: center;
 }
 
 #index-title,
@@ -74,30 +81,40 @@
 }
 
 #name-title,
-.service-name-value {
-    margin-right: 4rem !important;
+.service-name-desc-value {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     flex: 2;
     text-align: start;
+    overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    overflow: hidden;
-    text-align: start;
 }
 
-#desc-title,
+.service-name-value {
+    flex: 1;
+    font: 700 1.6rem 'Open Sans';
+    padding-bottom: 0.5rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--color-compliment)
+}
+
 .service-desc-value {
-    flex: 3;
+    flex: 1;
+    font: 400 1.4rem 'Open Sans';
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    text-align: start;
 }
 
 .services-table-content {
     display: flex;
     flex-direction: column;
     width: 100%;
-    min-height: 45rem;
+    min-height: 55vh;
 }
 
 .services-table-content > ul {
@@ -111,7 +128,7 @@
 }
 
 .services-table-content > ul > li {
-    margin: 2rem 0;
+    margin: 2.5rem 0;
 }
 
 .actions-drop-down {
@@ -142,6 +159,7 @@
     border-bottom: 0.15rem solid white;
     padding-bottom: 0.3rem;
     margin-right: 2rem;
+    text-align: start;
 }
 
 .actions-drop-down > a:not(:last-child) {
@@ -237,20 +255,27 @@
         font-size: 2rem;
     }
     
-    
     .service-type-value, .service-version-value, .service-action > button, .service-index-value,
     .services-table-title > li {
         font-size: 1.2rem;
     }
 
     #name-title,
-    .service-name-value {
-        margin-right: 1.8rem !important;
+    .service-name-desc-value {
+        flex: 2;
+        margin-right: 2rem !important;
     }
 
-    #desc-title,
+    .service-name-value {
+        font-size: 1.4rem;
+    }
+
     .service-desc-value {
-        margin-right: 3rem !important;
+        font-size: 1.1rem;
+    }
+
+    .services-table-content {
+        min-height: 50vh;
     }
 
     .pagination > li > button {

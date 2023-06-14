@@ -4,6 +4,7 @@
     background-color: var(--color-primary);
     display: flex;
     flex-direction: column;
+    overflow-y: scroll;
 }
 
 #hamburger-btn {
@@ -27,7 +28,7 @@
 }
 
 #cancel-btn:hover {
-    color: var(--color-secondary)
+    color: var(--color-compliment)
 }
 
 .welcome-title {
@@ -162,9 +163,46 @@
     }
 }
 
-@media screen and (max-width: 720px) {
+@media screen and (max-width: 720px) {    
     #hamburger-btn {
+        font-size: 1.8rem;
+    }
+
+    #cancel-btn {
         font-size: 2rem;
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+    
+    .sidebar-username {
+        font-size: 2.8rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.6rem;
+    }
+    
+    .nav-section span {
+        font-size: 1.4rem;
+    }
+
+    .nav-section ul li a {
+        font-size: 1.5rem;
+    }
+    
+    .sidebar-footer > span {
+        font-size: 1.4rem;
+    }
+    
+    .sidebar-footer > button {
+        font-size: 2.5rem;
+    }
+    
+    .sidebar-footer > button:hover {
+        color: var(--color-compliment);
+        transition: 0.2s all ease-in-out;
     }
 }
 

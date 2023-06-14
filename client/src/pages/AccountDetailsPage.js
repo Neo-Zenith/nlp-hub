@@ -93,7 +93,7 @@ export default function AccountDetailsPage() {
 
     return (
         <div className="container">
-            <div className="sidebar-wrapper">
+            <div id="sidebar-wrapper" className="sidebar-wrapper">
                 <SideBar />
             </div>
             <div className="top-bar-wrapper">

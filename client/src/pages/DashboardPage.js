@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
     return (
         <>
-            <div className="sidebar-wrapper">
+            <div id="sidebar-wrapper" className="sidebar-wrapper">
                 <SideBar />
             </div>
             <div className="top-bar-wrapper">

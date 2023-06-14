@@ -23,12 +23,13 @@ export default function ServicesList() {
     const role = useSelector((state) => state.role);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [servicesPerPage] = useState(8);
+    const [servicesPerPage] = useState(5);
     const [filterType, setFilterType] = useState("All Types");
     const [orderType, setOrderType] = useState("");
     const [serviceTypes, setServiceTypes] = useState([]);
     const [services, setServices] = useState(null);
     const [filteredServices, setFilteredServices] = useState(null);
+    const [displayedServices, setDisplayedServices] = useState(null);
     const [activeButtonId, setActiveButtonId] = useState(null);
 
     const loader = {
@@ -65,7 +66,7 @@ export default function ServicesList() {
 
             switch (response[0]) {
                 case 200:
-                    setServices(response[1].services.concat({ name: "Test" }));
+                    setServices(response[1].services);
                     setFilteredServices(response[1].services);
                     break;
                 default:
@@ -75,7 +76,6 @@ export default function ServicesList() {
         };
         fetchServiceTypes();
         fetchServices();
-        console.log(dataLoaded);
     }, []);
 
     useEffect(() => {
@@ -110,10 +110,22 @@ export default function ServicesList() {
                 setFilteredServices(sortedServices);
             }
         }
-    }, [orderType, dataLoaded, filteredServices]);
+    }, [orderType, dataLoaded]);
+
+    useEffect(() => {
+        if (filteredServices !== null) {
+            const startIndex = (currentPage - 1) * servicesPerPage;
+            const endIndex = startIndex + servicesPerPage;
+            const currentServices = filteredServices.slice(
+                startIndex,
+                endIndex
+            );
+            setDisplayedServices(currentServices);
+        }
+    }, [filteredServices, currentPage, servicesPerPage]);
 
     const renderPaginationNumbers = () => {
-        if (!filteredServices) {
+        if (!services) {
             return [];
         }
         const totalPages = Math.ceil(filteredServices.length / servicesPerPage);
@@ -186,7 +198,7 @@ export default function ServicesList() {
         const id = e.currentTarget.id.split("-")[2];
         const div = "actions-drop-down-" + id;
         if (activeButtonId === id) {
-            setActiveButtonId(null);
+            setActiveButtonId(-1);
             document.getElementById(div).style.display = "none";
         } else {
             setActiveButtonId(id);
@@ -200,12 +212,17 @@ export default function ServicesList() {
             );
             allActionDivs.forEach((actionDiv) => {
                 const id = actionDiv.id.split("-")[3];
-                console.log(id);
+                console.log(id === activeButtonId, id, activeButtonId);
                 actionDiv.style.display =
                     id === activeButtonId ? "flex" : "none";
             });
         }
     }, [activeButtonId]);
+
+    useEffect(() => {
+        console.log(currentPage);
+        setActiveButtonId(-1);
+    }, [currentPage]);
 
     useEffect(() => {
         setCurrentPage(1);
@@ -257,32 +274,33 @@ export default function ServicesList() {
                     <div className="services-list-table">
                         <ul className="services-table-title">
                             <li id="index-title">#</li>
-                            <li id="name-title">Name</li>
-                            <li id="desc-title">Description</li>
+                            <li id="name-title">Service</li>
                             <li id="type-title">Type</li>
                             <li id="version-title">Version</li>
                             <li id="action-title"> </li>
                         </ul>
-                        {filteredServices && filteredServices.length !== 0 ? (
+                        {displayedServices && displayedServices.length !== 0 ? (
                             <div className="services-table-content">
-                                {filteredServices.map((service, index) => (
+                                {displayedServices.map((service, index) => (
                                     <ul key={index}>
                                         <li className="service-index-value">
                                             {(currentPage - 1) *
                                                 servicesPerPage +
                                                 (index + 1)}
                                         </li>
-                                        <li
-                                            title={service.description}
-                                            className="service-name-value"
-                                        >
-                                            {service.name}
-                                        </li>
-                                        <li
-                                            title={service.description}
-                                            className="service-desc-value"
-                                        >
-                                            {service.description}
+                                        <li className="service-name-desc-value">
+                                            <span
+                                                className="service-name-value"
+                                                title={service.name}
+                                            >
+                                                {service.name}
+                                            </span>
+                                            <span
+                                                className="service-desc-value"
+                                                title={service.description}
+                                            >
+                                                {service.description}
+                                            </span>
                                         </li>
                                         <li className="service-type-value">
                                             {service.type}
@@ -294,7 +312,9 @@ export default function ServicesList() {
                                             <button
                                                 id={
                                                     "action-button-" +
-                                                    (index + 1)
+                                                    ((currentPage - 1) *
+                                                        servicesPerPage +
+                                                        (index + 1))
                                                 }
                                                 onClick={(e) =>
                                                     handleActionDropDown(e)
@@ -305,7 +325,9 @@ export default function ServicesList() {
                                             <div
                                                 id={
                                                     "actions-drop-down-" +
-                                                    (index + 1)
+                                                    ((currentPage - 1) *
+                                                        servicesPerPage +
+                                                        (index + 1))
                                                 }
                                                 className="actions-drop-down"
                                             >
@@ -313,7 +335,9 @@ export default function ServicesList() {
                                                     <button
                                                         id={
                                                             "remove-service-" +
-                                                            (index + 1)
+                                                            ((currentPage - 1) *
+                                                                servicesPerPage +
+                                                                (index + 1))
                                                         }
                                                     >
                                                         Remove service
@@ -322,7 +346,9 @@ export default function ServicesList() {
                                                 <a
                                                     id={
                                                         "query-service-" +
-                                                        (index + 1)
+                                                        ((currentPage - 1) *
+                                                            servicesPerPage +
+                                                            (index + 1))
                                                     }
                                                     href="/services"
                                                 >
@@ -331,7 +357,9 @@ export default function ServicesList() {
                                                 <a
                                                     id={
                                                         "query-service-" +
-                                                        (index + 1)
+                                                        ((currentPage - 1) *
+                                                            servicesPerPage +
+                                                            (index + 1))
                                                     }
                                                     href="/services"
                                                 >

@@ -21,7 +21,7 @@
 :root {
     --color-warning: #e7545b;
     --color-success: #379ca4;
-    --color-primary: #1e1d2c;
+    --color-primary: #201f2c;
     --color-secondary: #AC9FBB;
     --color-tertiary: #efe1f5;
     --color-compliment: #a33873;
@@ -36,6 +36,10 @@
 html,
 body {
     margin: 0;
+}
+
+.lock-scroll {
+    overflow: hidden;
 }
 
 .sidebar-wrapper {
