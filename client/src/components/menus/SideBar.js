@@ -87,7 +87,7 @@ export default function SideBar() {
                                 </a>
                             </li>
                             <li>
-                                <a onClick={handleSidebarFade} href="/">
+                                <a onClick={handleSidebarFade} href="/query">
                                     <i className="fa-solid fa-comment"></i>
                                     &nbsp;&nbsp;&nbsp;Query Service
                                 </a>

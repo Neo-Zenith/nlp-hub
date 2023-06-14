@@ -27,4 +27,40 @@ export default class ServicesService extends Component {
         const payload = await response.json();
         return [response.status, payload];
     }
+
+    async retrieveServicesVersions(accessToken, type) {
+        const url =
+            "https://nlphub.azurewebsites.net/services/" +
+            type +
+            "/get-version";
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "content-type": "application/json",
+                authorization: "Bearer " + accessToken,
+            },
+        });
+
+        const payload = await response.json();
+        return [response.status, payload];
+    }
+
+    async retrieveServicesEndpoints(accessToken, type, version) {
+        const url =
+            "https://nlphub.azurewebsites.net/services/" +
+            type +
+            "/" +
+            version +
+            "/endpoints";
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "content-type": "application/json",
+                authorization: "Bearer " + accessToken,
+            },
+        });
+
+        const payload = await response.json();
+        return [response.status, payload];
+    }
 }

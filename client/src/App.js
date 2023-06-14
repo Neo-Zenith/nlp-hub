@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import AccountDetailsPage from "./pages/AccountDetailsPage";
 import ServiceDetailsPage from "./pages/ServiceDetailsPage";
+import QueryServicePage from "./pages/QueryServicePage";
 
 export default function App() {
     return (
@@ -16,6 +17,7 @@ export default function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/services" element={<ServiceDetailsPage />} />
+                    <Route path="/query" element={<QueryServicePage />} />
                 </Routes>
             </Router>
         </>

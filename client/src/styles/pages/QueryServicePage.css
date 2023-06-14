@@ -1,0 +1,6 @@
+.service-selection-wrapper {
+    margin-left: 35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

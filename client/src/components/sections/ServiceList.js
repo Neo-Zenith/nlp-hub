@@ -237,7 +237,6 @@ export default function ServicesList() {
     }, [activeButtonId]);
 
     useEffect(() => {
-        console.log(currentPage);
         setActiveButtonId(-1);
     }, [currentPage]);
 
