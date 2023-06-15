@@ -17,6 +17,7 @@ export default function QueryGUI({ options }) {
     return (
         <div className="query-gui-wrapper">
             <div className="query-gui-container">
+                <span>Query Payload</span>
                 {Object.entries(options).map(([field, type]) => {
                     if (type === "boolean") {
                         return (
@@ -64,7 +65,11 @@ export default function QueryGUI({ options }) {
                     }
                 })}
             </div>
-            <button className="query-btn" type="submit" onSubmit={handleSubmit}>
+            <button
+                className="query-btn-gui"
+                type="submit"
+                onSubmit={handleSubmit}
+            >
                 Submit
             </button>
         </div>

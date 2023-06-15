@@ -16,7 +16,7 @@
 .options > button {
     flex: 1;
     min-width: 15rem;
-    font: 600 2rem 'Poppins';
+    font: 400 2rem 'Poppins';
     border: none;
     background-color: transparent;
     cursor: pointer;
@@ -33,7 +33,7 @@
 }
 
 .options > button.active {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--color-compliment);
     border-bottom: 0.3rem solid var(--color-compliment);
 }

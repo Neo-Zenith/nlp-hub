@@ -14,6 +14,7 @@ export default function ServiceDetailsPage() {
     const dispatch = useDispatch();
 
     const accessToken = useSelector((state) => state.accessToken);
+    const error = useSelector((state) => state.error);
 
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
@@ -30,6 +31,12 @@ export default function ServiceDetailsPage() {
             navigate("/login");
         }
     }, [accessToken, uiService, usersSerivce, navigate]);
+
+    useEffect(() => {
+        if (error !== null) {
+            uiService.displayErrorMsg(error);
+        }
+    }, [error, uiService]);
 
     return (
         <>

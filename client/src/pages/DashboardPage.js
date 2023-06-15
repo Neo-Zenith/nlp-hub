@@ -12,6 +12,7 @@ export default function DashboardPage() {
     const navigate = useNavigate();
 
     const accessToken = useSelector((state) => state.accessToken);
+    const error = useSelector((state) => state.error);
 
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
@@ -28,6 +29,12 @@ export default function DashboardPage() {
             navigate("/login");
         }
     }, [accessToken, uiService, usersSerivce, navigate]);
+
+    useEffect(() => {
+        if (error !== null) {
+            uiService.displayErrorMsg(error);
+        }
+    }, [error, uiService]);
 
     return (
         <>

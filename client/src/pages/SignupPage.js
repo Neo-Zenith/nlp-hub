@@ -13,7 +13,7 @@ export function SignupPage() {
     const error = useSelector((state) => state.error);
     const accessToken = useSelector((state) => state.accessToken);
 
-    const uiServices = useMemo(() => {
+    const uiService = useMemo(() => {
         return new UIService({ dispatch });
     }, [dispatch]);
     const usersService = useMemo(() => {
@@ -27,8 +27,10 @@ export function SignupPage() {
     }, [accessToken, usersService, navigate]);
 
     useEffect(() => {
-        uiServices.displayErrorMsg(error);
-    }, [error, uiServices]);
+        if (error !== null) {
+            uiService.displayErrorMsg(error);
+        }
+    }, [error, uiService]);
 
     return (
         <>

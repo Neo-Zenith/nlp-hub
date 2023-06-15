@@ -26,7 +26,9 @@ export default function LoginPage() {
     }, [accessToken, usersService, navigate]);
 
     useEffect(() => {
-        uiService.displayErrorMsg(error);
+        if (error !== null) {
+            uiService.displayErrorMsg(error);
+        }
     }, [error, uiService]);
 
     return (

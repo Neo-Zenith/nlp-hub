@@ -1,41 +1,62 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import "../../styles/components/sections/QueryCLI.css";
+import { useDispatch } from "react-redux";
+import UIService from "../../services/UIServices";
 
 export default function QueryCLI({ options }) {
-    const [currentOptions, setCurrentOptions] = useState(null);
+    const dispatch = useDispatch();
 
-    // Function to handle form submission
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Handle form submission logic here
-    };
+    const uiService = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
+    const [currentOptions, setCurrentOptions] = useState(options);
+    const [jsonInput, setJsonInput] = useState("");
+    const [rerenderTrigger, setRerenderTrigger] = useState(Date.now());
 
     useEffect(() => {
         setCurrentOptions(options);
+        setRerenderTrigger(Date.now());
     }, [options]);
 
-    const handleInputChange = (event) => {
-        const inputValue = event.target.value;
-        try {
-            const parsedValue = JSON.parse(inputValue);
-            setCurrentOptions(parsedValue);
-        } catch (error) {
-            // Handle error when parsing invalid JSON input
-            setCurrentOptions(null);
+    // Function to handle form submission
+    function handleSubmit() {
+        // Handle form submission logic here
+        const payload = parseJSON();
+        if (!payload) {
+            uiService.setErrorMsg("Invalid payload format. Please try again.");
+        } else {
         }
-    };
+    }
+
+    function parseJSON() {
+        try {
+            return JSON.parse(jsonInput);
+        } catch (error) {
+            return null;
+        }
+    }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <label htmlFor="jsonInput">JSON Input:</label>
-            <textarea
-                id="jsonInput"
-                name="jsonInput"
-                rows="5"
-                cols="50"
-                value={JSON.stringify(currentOptions, null, 2)} // Render options literally as JSON
-                onChange={handleInputChange} // Update currentOptions state when input changes
-            />
-            <button type="submit">Submit</button>
-        </form>
+        <div className="query-cli-wrapper">
+            <div key={rerenderTrigger} className="query-cli-container">
+                <label htmlFor="jsonInput">Query Payload</label>
+                <textarea
+                    id="jsonInput"
+                    name="jsonInput"
+                    rows="5"
+                    cols="50"
+                    defaultValue={JSON.stringify(currentOptions, null, 2)}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                />
+            </div>
+            <button
+                type="submit"
+                className="query-btn-cli"
+                onClick={handleSubmit}
+            >
+                Submit
+            </button>
+        </div>
     );
 }

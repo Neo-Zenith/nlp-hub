@@ -15,6 +15,7 @@ export default function QueryServicePage() {
     const navigate = useNavigate();
 
     const accessToken = useSelector((state) => state.accessToken);
+    const error = useSelector((state) => state.error);
 
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
@@ -31,6 +32,10 @@ export default function QueryServicePage() {
             navigate("/login");
         }
     }, [accessToken, uiService, usersSerivce, navigate]);
+
+    useEffect(() => {
+        uiService.displayErrorMsg(error);
+    }, [error, uiService]);
 
     return (
         <>

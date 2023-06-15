@@ -1,0 +1,66 @@
+.query-cli-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 5.5rem;
+}
+
+.query-cli-container {
+    flex: 5;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding-left: 8rem;
+    overflow-y: scroll;
+}
+
+.query-cli-container > label {
+    margin-bottom: 1.5rem;
+    font: 500 1.8rem 'Open Sans'
+}
+
+.query-cli-container > textarea {
+    font: 400 1.7rem 'Courier New'
+}
+
+.query-btn-cli {
+    width: 10%;
+    min-width: 10rem;
+    align-self: flex-end;
+    margin-right: 10%;
+    font: 500 1.5rem 'Poppins';
+    padding: 0.5rem 1rem;
+    border: 0.1rem solid var(--color-compliment);
+    background-color: var(--color-compliment);
+    color: white;
+    border-radius: 0.8rem;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.query-btn-cli:hover {
+    background-color: white;
+    color: var(--color-compliment);
+    transition: 0.2s all ease-in-out;
+}
+
+@media screen and (max-width: 720px) {
+    .query-cli-container {
+        padding-left: 2rem;
+        width: 90%;
+    }
+
+    .query-cli-container > label {
+        font-size: 1.5rem;
+    }
+
+    .query-cli-container > textarea {
+        font-size: 1.3rem;
+    }
+
+    .query-btn-cli {
+        margin-right: 1rem;
+        font-size: 1.1rem;
+    }
+}
