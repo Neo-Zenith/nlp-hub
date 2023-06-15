@@ -44,26 +44,25 @@ body {
 
 .sidebar-wrapper {
     height: 100%;
-    position: absolute;
-    z-index: 2;
+    position: fixed;
+    z-index: 3;
     left: 0;
     bottom: 0;
 }
 
 .topbar-wrapper {
-    position: absolute;
+    position: fixed;
     top: 0;
 }
 
 .quick-nav-wrapper {
     margin-left: 35rem;
-    margin-top: 3.5rem;
+    margin-top: 12rem;
 }
 
 @media screen and (max-width: 1020px) {
     .quick-nav-wrapper {
         margin-left: 2rem;
-        margin-top: 2rem;
     }
 }
 

@@ -144,10 +144,11 @@
     }
 
     #hamburger-btn {
+        z-index: 3;
         display: flex;
         position: absolute;
         margin-left: 4rem;
-        margin-top: 4rem;
+        margin-top: 3.5rem;
         font-size: 2.5rem;
         background-color: transparent;
         border: none;
@@ -165,6 +166,7 @@
 
 @media screen and (max-width: 720px) {    
     #hamburger-btn {
+        margin-top: 4rem;
         font-size: 1.8rem;
     }
 

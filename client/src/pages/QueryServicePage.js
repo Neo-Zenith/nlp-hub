@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import UsersService from "../services/UsersService";
 import TopBar from "../components/menus/TopBar";
-import ServiceSelection from "../components/sections/ServiceSelection";
+import ServiceQuery from "../components/sections/ServiceQuery";
+import QuickNavigation from "../components/sections/QuickNavigation";
 import "../styles/pages/QueryServicePage.css";
 
 export default function QueryServicePage() {
@@ -39,8 +40,14 @@ export default function QueryServicePage() {
             <div className="top-bar-wrapper">
                 <TopBar />
             </div>
+            <div className="quick-nav-wrapper">
+                <QuickNavigation
+                    current="Query Service"
+                    url={window.location.href}
+                />
+            </div>
             <div className="service-selection-wrapper">
-                <ServiceSelection />
+                <ServiceQuery />
             </div>
         </>
     );

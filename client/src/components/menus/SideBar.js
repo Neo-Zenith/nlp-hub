@@ -51,7 +51,6 @@ export default function SideBar() {
             setWindowWidth(window.innerWidth);
             handleDisplayCollapseBtn();
         }
-
         window.addEventListener("resize", handleResize);
         return () => {
             window.removeEventListener("resize", handleResize);

@@ -6,7 +6,6 @@
     border: solid;
     border-width: 0 0.4rem 0.7rem 0.4rem;
     margin-left: 3rem;
-    margin-right: 1rem;
     border-color: transparent transparent #000000 transparent;
     transition: transform 0.3s ease;
     transform: rotate(180deg);
@@ -22,9 +21,9 @@
 }
 
 .selected-value {
-    padding: 0.8rem 1rem;
+    padding: 0.3rem 1rem;
     background-color: white;
-    border: 0.15rem solid var(--color-light-grey);
+    border: 0.15rem solid var(--color-grey);
     border-radius: 0.5rem;
     cursor: pointer;
     font: 600 1.5rem 'Open Sans';

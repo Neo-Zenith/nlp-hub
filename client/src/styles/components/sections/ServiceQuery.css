@@ -1,8 +1,18 @@
 .service-selection-container {
     width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.selections {
+    margin-top: 3rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .type-selection,
@@ -11,7 +21,8 @@
     width: 80%;
     display: flex;
     flex-direction: column;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+    margin-top: 0rem;
 }
 
 .type-selection > button,
@@ -27,6 +38,7 @@
     box-shadow: -1px 1px 5px 1px rgba(0,0,0,0.23);
     -webkit-box-shadow: -1px 1px 5px 1px rgba(0,0,0,0.23);
     -moz-box-shadow: -1px 1px 5px 1px rgba(0,0,0,0.23);
+    cursor: pointer;
 }
 
 .type-selection > button > span,
@@ -52,7 +64,7 @@
     color: var(--color-light-grey);
 }
 
-.caret {
+.caret-light {
     display: inline-block;
     width: 0;
     height: 0;
@@ -76,8 +88,7 @@
     margin-top: -5rem;
     opacity: 0;
     background-color: white;
-    min-height: 4rem;
-    padding: 2rem;
+    padding: 1.5rem;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -118,6 +129,97 @@
     align-self: center;
     font: 400 1.8rem 'Open Sans';
     color: var(--color-warning);
+}
+
+.query-container {
+    position: relative;
+    display: flex;
+    width: 80%;
+    min-height: 40rem;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: scroll;
+    box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.3);
+    -webkit-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.3);
+    -moz-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.3);
+    margin-bottom: 2rem;
+}
+
+.query-type-options {
+    margin-top: 2rem;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 6rem;
+}
+
+.query-type-options > button {
+    font: 400 2rem 'Poppins';
+    padding: 0.4rem 2rem;
+    border: none;
+    background-color: transparent;
+    border-bottom: 0.5rem solid white;
+    cursor: pointer;
+}
+
+.query-type-options > button.active {
+    font-weight: 500;
+    color: var(--color-compliment);
+    border-bottom: 0.5rem solid var(--color-compliment);
+}
+
+.query-type-options > button:hover {
+    color: var(--color-compliment);
+    border-bottom: 0.5rem solid var(--color-compliment);
+    transition: 0.2s all ease-in-out;
+}
+
+.query-wrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+
+.query-gui,
+.query-cli {
+    position: absolute;
+    display: flex;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 5rem;
+}
+
+.query-gui {
+    justify-content: flex-start;
+}
+
+.query-cli {
+    display: none;
+}
+
+@media screen and (max-width: 720px) {
+    .type-selection > button > span,
+    .version-selection > button > span,
+    .task-selection > button > span { 
+        font-size: 1.7rem;
+    }
+
+    .available-service-types > button,
+    .available-service-version > button,
+    .available-service-task > button {
+        font-size: 1.4rem;
+    }
+
+    .query-container {
+        min-height: 40rem;
+    }
+
+    .query-type-options > button {
+        font-size: 1.3rem;
+    }
 }
 
 @keyframes selection-fade-in {

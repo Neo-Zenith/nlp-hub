@@ -3,4 +3,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-top: 3rem;
+}
+
+@media screen and (max-width: 1020px) {
+    .service-selection-wrapper {
+        margin-left: 0rem;
+    }
 }
