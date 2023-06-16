@@ -21,8 +21,7 @@
     width: 80%;
     display: flex;
     flex-direction: column;
-    margin-bottom: 1rem;
-    margin-top: 0rem;
+    margin-bottom: 2rem;
 }
 
 .type-selection > button,
@@ -45,9 +44,9 @@
 .version-selection > button > span,
 .task-selection > button > span {
     width: 100%;
-    padding-left: 2rem;
+    padding-left: 1rem;
     text-align: start;
-    font: 600 2.5rem 'Quicksand';
+    font: 600 2.3rem 'Quicksand';
     color: var(--color-light-grey);
     display: flex;
 }
@@ -85,7 +84,7 @@
 .available-service-types,
 .available-service-version,
 .available-service-task {
-    margin-top: -5rem;
+    margin-top: -8rem;
     opacity: 0;
     background-color: white;
     padding: 1.5rem;
@@ -125,6 +124,21 @@
     padding: 0.7rem 1.5rem;
 }
 
+.available-service-types > button.active,
+.available-service-version > button.active,
+.available-service-task > button.active {
+    background-color: var(--color-compliment);
+    color: white;
+}
+
+.available-service-types > button:hover,
+.available-service-version > button:hover,
+.available-service-task > button:hover {
+    background-color: var(--color-compliment);
+    color: white;
+    transition: 0.2s all ease-in-out;
+}
+
 .no-valid-selection {
     align-self: center;
     font: 400 1.8rem 'Open Sans';
@@ -143,6 +157,7 @@
     -webkit-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.3);
     -moz-box-shadow: 0px 0px 5px 1px rgba(0,0,0,0.3);
     margin-bottom: 2rem;
+    margin-top: 1.5rem;
 }
 
 .query-type-options {
@@ -225,7 +240,7 @@
 @keyframes selection-fade-in {
     0% {
         opacity: 0;
-        margin-top: -5rem;
+        margin-top: -8rem;
     }
 
     100% {
@@ -242,6 +257,6 @@
 
     100% {
         opacity: 0;
-        margin-top: -5rem;
+        margin-top: -8rem;
     }
 }

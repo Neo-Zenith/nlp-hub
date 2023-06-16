@@ -11,6 +11,7 @@
     width: 60rem;
     justify-content: center;
     margin-bottom: 0rem;
+    gap: 5rem;
 }
 
 .options > button {

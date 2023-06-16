@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/components/sections/ServiceQuery.css";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import UIService from "../../services/UIServices";
 import ServicesService from "../../services/ServicesService";
 import { setLoaded } from "../../store/actions";
@@ -11,6 +11,7 @@ import QueryCLI from "./QueryCLI";
 export default function ServiceQuery() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const params = useParams();
 
     const servicesService = useMemo(() => {
         return new ServicesService({ dispatch });
@@ -60,6 +61,17 @@ export default function ServiceQuery() {
     }, []);
 
     useEffect(() => {
+        if (types.length !== 0) {
+            if (params.type && types.includes(params.type)) {
+                setSelectedType(params.type);
+                toggleType();
+            } else {
+                window.history.replaceState(null, null, "/query");
+            }
+        }
+    }, [types]);
+
+    useEffect(() => {
         const fetchServiceVersions = async () => {
             dispatch(setLoaded(false));
             const response = await servicesService.retrieveServicesVersions(
@@ -79,9 +91,25 @@ export default function ServiceQuery() {
         };
 
         if (selectedType !== null) {
+            window.history.replaceState(null, null, "/query/" + selectedType);
             fetchServiceVersions();
         }
     }, [selectedType]);
+
+    useEffect(() => {
+        if (versions.length !== 0) {
+            if (params.version && versions.includes(params.version)) {
+                setSelectedVersion(params.version);
+                toggleVersion();
+            } else {
+                window.history.replaceState(
+                    null,
+                    null,
+                    "/query/" + selectedType
+                );
+            }
+        }
+    }, [versions]);
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -108,12 +136,42 @@ export default function ServiceQuery() {
         };
 
         if (selectedType !== null && selectedVersion !== null) {
+            window.history.replaceState(
+                null,
+                null,
+                "/query/" + selectedType + "/" + selectedVersion
+            );
             fetchTasks();
         }
     }, [selectedType, selectedVersion]);
 
     useEffect(() => {
+        if (tasks.length !== 0) {
+            if (params.task && tasks.includes(params.task)) {
+                toggleTask();
+                setSelectedTask(params.task);
+            } else {
+                window.history.replaceState(
+                    null,
+                    null,
+                    "/query/" + selectedType + "/" + selectedVersion
+                );
+            }
+        }
+    }, [tasks]);
+
+    useEffect(() => {
         if (selectedTask !== null) {
+            window.history.replaceState(
+                null,
+                null,
+                "/query/" +
+                    selectedType +
+                    "/" +
+                    selectedVersion +
+                    "/" +
+                    selectedTask
+            );
             const endpoint = endpoints.filter(
                 (endpoint) => endpoint.task === selectedTask
             )[0];
@@ -240,19 +298,19 @@ export default function ServiceQuery() {
         setSelectedVersion(null);
         setSelectedTask(null);
         setSelectedEndpoint(null);
-        toggleType();
+        if (isVersionOpen) toggleVersion();
+        if (isTaskOpen) toggleTask();
     };
 
     const handleVersionSelection = (version) => {
         setSelectedVersion(version);
         setSelectedTask(null);
         setSelectedEndpoint(null);
-        toggleVersion();
+        if (isTaskOpen) toggleTask();
     };
 
     const handleTaskSelection = (task) => {
         setSelectedTask(task);
-        toggleTask();
     };
 
     const handleQueryTypeSelection = (queryType) => {
@@ -267,8 +325,6 @@ export default function ServiceQuery() {
                         id="type-selection-btn"
                         onClick={() => {
                             toggleType();
-                            if (isVersionOpen) toggleVersion();
-                            if (isTaskOpen) toggleTask();
                         }}
                     >
                         <span>
@@ -291,6 +347,9 @@ export default function ServiceQuery() {
                                 <button
                                     key={type}
                                     onClick={() => handleTypeSelection(type)}
+                                    className={
+                                        type === selectedType ? "active" : ""
+                                    }
                                 >
                                     {type}
                                 </button>
@@ -309,8 +368,6 @@ export default function ServiceQuery() {
                             id="version-selection-btn"
                             onClick={() => {
                                 toggleVersion();
-                                if (isTypeOpen) toggleType();
-                                if (isTaskOpen) toggleTask();
                             }}
                         >
                             <span>
@@ -335,6 +392,11 @@ export default function ServiceQuery() {
                                         onClick={() =>
                                             handleVersionSelection(version)
                                         }
+                                        className={
+                                            version === selectedVersion
+                                                ? "active"
+                                                : ""
+                                        }
                                     >
                                         {version}
                                     </button>
@@ -354,8 +416,6 @@ export default function ServiceQuery() {
                             id="task-selection-btn"
                             onClick={() => {
                                 toggleTask();
-                                if (isVersionOpen) toggleVersion();
-                                if (isTypeOpen) toggleType();
                             }}
                         >
                             <span>
@@ -379,6 +439,11 @@ export default function ServiceQuery() {
                                         key={task}
                                         onClick={() =>
                                             handleTaskSelection(task)
+                                        }
+                                        className={
+                                            task === selectedTask
+                                                ? "active"
+                                                : ""
                                         }
                                     >
                                         {task}

@@ -18,6 +18,9 @@ export default function App() {
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/services" element={<ServiceDetailsPage />} />
                     <Route path="/query" element={<QueryServicePage />} />
+                    <Route path="/query/:type" element={<QueryServicePage />} />
+                    <Route path="/query/:type/:version" element={<QueryServicePage />} />
+                    <Route path="/query/:type/:version/:task" element={<QueryServicePage />} />
                 </Routes>
             </Router>
         </>
