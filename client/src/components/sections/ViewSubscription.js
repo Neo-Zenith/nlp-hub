@@ -6,6 +6,9 @@ export default function ViewSubscription() {
     const expiry = useSelector((state) => state.expiry);
 
     function convertToUserTimezone(dateString) {
+        if (dateString === null) {
+            return;
+        }
         const updatedDateString = dateString.replace("T", " ");
         const date = new Date(updatedDateString);
         const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -26,10 +29,12 @@ export default function ViewSubscription() {
     return (
         <>
             <div className="subscription-card-container">
-                <div class="card">
-                    <div class="card-content">
-                        <p class="card-para">Your subscription expires at:</p>
-                        <p class="card-title">
+                <div className="card">
+                    <div className="card-content">
+                        <p className="card-para">
+                            Your subscription expires at:
+                        </p>
+                        <p className="card-title">
                             {convertToUserTimezone(expiry)}
                         </p>
                     </div>
