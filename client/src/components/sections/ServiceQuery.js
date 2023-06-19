@@ -51,6 +51,7 @@ export default function ServiceQuery() {
     const [versions, setVersions] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [endpoints, setEndpoints] = useState([]);
+    const [nonTextBasedQueryOption, setNonTextBasedQueryOption] = useState(1);
 
     useEffect(() => {
         const fetchServiceTypes = async () => {
@@ -525,7 +526,33 @@ export default function ServiceQuery() {
                         </div>
                     ) : (
                         <div className="query-type-options">
-                            <span id="query-upload-btn">Upload</span>
+                            {selectedEndpoint.supportedFormats.map(
+                                (supportedFormat, index) => (
+                                    <button
+                                        key={index}
+                                        id={"query-upload-btn-" + index}
+                                        className={
+                                            index === nonTextBasedQueryOption
+                                                ? "query-upload-btn active"
+                                                : "query-upload-btn"
+                                        }
+                                        onClick={(e) => {
+                                            document
+                                                .getElementById(
+                                                    e.currentTarget.id
+                                                )
+                                                .classList.add("active");
+                                            setNonTextBasedQueryOption(index);
+                                        }}
+                                    >
+                                        {"Upload " +
+                                            supportedFormat.substring(0, 1) +
+                                            supportedFormat
+                                                .substring(1)
+                                                .toLowerCase()}
+                                    </button>
+                                )
+                            )}
                         </div>
                     )}
                     <div className="query-wrapper">
@@ -547,11 +574,22 @@ export default function ServiceQuery() {
                             </>
                         ) : (
                             <div id="query-upload" className="query-upload">
-                                <QueryUpload
-                                    supportedFormats={
-                                        selectedEndpoint.supportedFormats
-                                    }
-                                />
+                                {selectedEndpoint.supportedFormats.map(
+                                    (supportedFormat, index) =>
+                                        index === nonTextBasedQueryOption && (
+                                            <div
+                                                key={index}
+                                                className="query-upload-wrapper"
+                                            >
+                                                <QueryUpload
+                                                    index={index}
+                                                    supportedFormats={[
+                                                        supportedFormat,
+                                                    ]}
+                                                />
+                                            </div>
+                                        )
+                                )}
                             </div>
                         )}
                     </div>
