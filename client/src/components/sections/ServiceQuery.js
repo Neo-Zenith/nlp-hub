@@ -7,11 +7,19 @@ import ServicesService from "../../services/ServicesService";
 import { setLoaded } from "../../store/actions";
 import QueryGUI from "./QueryGUI";
 import QueryCLI from "./QueryCLI";
+import { BounceLoader } from "react-spinners";
 
 export default function ServiceQuery() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const params = useParams();
+
+    const loader = {
+        position: "absolute",
+        display: "flex",
+        marginLeft: "45%",
+        marginTop: "1rem",
+    };
 
     const servicesService = useMemo(() => {
         return new ServicesService({ dispatch });
@@ -28,8 +36,11 @@ export default function ServiceQuery() {
     };
 
     const [isTypeOpen, setIsTypeOpen] = useState(false);
+    const [typeLoaded, setTypeLoaded] = useState(false);
     const [isVersionOpen, setIsVersionOpen] = useState(false);
+    const [versionLoaded, setVersionLoaded] = useState(false);
     const [isTaskOpen, setIsTaskOpen] = useState(false);
+    const [taskLoaded, setTaskLoaded] = useState(false);
     const [selectedType, setSelectedType] = useState(null);
     const [selectedVersion, setSelectedVersion] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -43,6 +54,7 @@ export default function ServiceQuery() {
     useEffect(() => {
         const fetchServiceTypes = async () => {
             dispatch(setLoaded(false));
+            setTypeLoaded(false);
             const response = await servicesService.retrieveServicesTypes(
                 accessToken
             );
@@ -56,15 +68,16 @@ export default function ServiceQuery() {
                     break;
             }
             dispatch(setLoaded(true));
+            setTypeLoaded(true);
         };
         fetchServiceTypes();
+        toggleType();
     }, []);
 
     useEffect(() => {
         if (types.length !== 0) {
             if (params.type && types.includes(params.type)) {
                 setSelectedType(params.type);
-                toggleType();
             } else {
                 window.history.replaceState(null, null, "/query");
             }
@@ -74,6 +87,7 @@ export default function ServiceQuery() {
     useEffect(() => {
         const fetchServiceVersions = async () => {
             dispatch(setLoaded(false));
+            setVersionLoaded(false);
             const response = await servicesService.retrieveServicesVersions(
                 accessToken,
                 selectedType
@@ -88,6 +102,7 @@ export default function ServiceQuery() {
                     break;
             }
             dispatch(setLoaded(true));
+            setVersionLoaded(true);
         };
 
         if (selectedType !== null) {
@@ -100,7 +115,6 @@ export default function ServiceQuery() {
         if (versions.length !== 0) {
             if (params.version && versions.includes(params.version)) {
                 setSelectedVersion(params.version);
-                toggleVersion();
             } else {
                 window.history.replaceState(
                     null,
@@ -108,12 +122,14 @@ export default function ServiceQuery() {
                     "/query/" + selectedType
                 );
             }
+            if (!isVersionOpen) toggleVersion();
         }
     }, [versions]);
 
     useEffect(() => {
         const fetchTasks = async () => {
             dispatch(setLoaded(false));
+            setTaskLoaded(false);
             const response = await servicesService.retrieveServicesEndpoints(
                 accessToken,
                 selectedType,
@@ -133,6 +149,7 @@ export default function ServiceQuery() {
                     break;
             }
             dispatch(setLoaded(true));
+            setTaskLoaded(true);
         };
 
         if (selectedType !== null && selectedVersion !== null) {
@@ -148,7 +165,6 @@ export default function ServiceQuery() {
     useEffect(() => {
         if (tasks.length !== 0) {
             if (params.task && tasks.includes(params.task)) {
-                toggleTask();
                 setSelectedTask(params.task);
             } else {
                 window.history.replaceState(
@@ -157,6 +173,7 @@ export default function ServiceQuery() {
                     "/query/" + selectedType + "/" + selectedVersion
                 );
             }
+            if (!isTaskOpen) toggleTask();
         }
     }, [tasks]);
 
@@ -298,7 +315,6 @@ export default function ServiceQuery() {
         setSelectedVersion(null);
         setSelectedTask(null);
         setSelectedEndpoint(null);
-        if (isVersionOpen) toggleVersion();
         if (isTaskOpen) toggleTask();
     };
 
@@ -306,7 +322,6 @@ export default function ServiceQuery() {
         setSelectedVersion(version);
         setSelectedTask(null);
         setSelectedEndpoint(null);
-        if (isTaskOpen) toggleTask();
     };
 
     const handleTaskSelection = (task) => {
@@ -316,6 +331,20 @@ export default function ServiceQuery() {
     const handleQueryTypeSelection = (queryType) => {
         setSelectedQueryType(queryType);
     };
+
+    async function handleQuery(payload) {
+        console.log("ran?");
+        const response = await servicesService.queryService(
+            accessToken,
+            selectedType,
+            selectedVersion,
+            selectedTask,
+            selectedEndpoint.textBased,
+            payload
+        );
+
+        console.log(response);
+    }
 
     return (
         <div className="service-selection-container">
@@ -342,7 +371,13 @@ export default function ServiceQuery() {
                         id="available-service-types"
                         className="available-service-types"
                     >
-                        {types.length !== 0 ? (
+                        {!typeLoaded ? (
+                            <BounceLoader
+                                cssOverride={loader}
+                                color="var(--color-compliment)"
+                                size="30px"
+                            />
+                        ) : types.length !== 0 ? (
                             types.map((type) => (
                                 <button
                                     key={type}
@@ -385,7 +420,13 @@ export default function ServiceQuery() {
                             id="available-service-version"
                             className="available-service-version"
                         >
-                            {versions.length !== 0 ? (
+                            {!versionLoaded ? (
+                                <BounceLoader
+                                    cssOverride={loader}
+                                    color="var(--color-compliment)"
+                                    size="30px"
+                                />
+                            ) : versions.length !== 0 ? (
                                 versions.map((version) => (
                                     <button
                                         key={version}
@@ -433,7 +474,13 @@ export default function ServiceQuery() {
                             id="available-service-task"
                             className="available-service-task"
                         >
-                            {tasks.length !== 0 ? (
+                            {!taskLoaded ? (
+                                <BounceLoader
+                                    cssOverride={loader}
+                                    color="var(--color-compliment)"
+                                    size="30px"
+                                />
+                            ) : tasks.length !== 0 ? (
                                 tasks.map((task) => (
                                     <button
                                         key={task}
@@ -492,7 +539,10 @@ export default function ServiceQuery() {
                     </div>
                     <div className="query-wrapper">
                         <div id="query-gui" className="query-gui">
-                            <QueryGUI options={selectedEndpoint.options} />
+                            <QueryGUI
+                                options={selectedEndpoint.options}
+                                onSubmit={(payload) => handleQuery(payload)}
+                            />
                         </div>
                         <div id="query-cli" className="query-cli">
                             <QueryCLI options={selectedEndpoint.options} />

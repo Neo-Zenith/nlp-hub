@@ -105,7 +105,7 @@ export class CreateQueryInterceptor implements NestInterceptor {
         }
 
         const serviceID = service.id
-        const endpoint = await ServiceEndpointModel.findOne({ serviceID, task }).exec()
+        const endpoint = await ServiceEndpointModel.findOne({ serviceID, task }).lean()
         if (!endpoint) {
             const message = 'Endpoint not found. The requested resource could not be found.'
             throw new HttpException(message, HttpStatus.NOT_FOUND)

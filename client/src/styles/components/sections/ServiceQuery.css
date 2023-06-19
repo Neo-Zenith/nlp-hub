@@ -84,12 +84,15 @@
 .available-service-types,
 .available-service-version,
 .available-service-task {
+    min-height: 5rem;
+    position: relative;
     margin-top: -8rem;
     opacity: 0;
     background-color: white;
     padding: 1.5rem;
     display: flex;
     flex-direction: row;
+    align-items: center;
     flex-wrap: wrap;
     gap: 5rem;
     border-bottom-left-radius: 1.5rem;
@@ -122,6 +125,7 @@
     border: 0.15rem solid var(--color-primary);
     border-radius: 1rem;
     padding: 0.7rem 1.5rem;
+    height: fit-content;
 }
 
 .available-service-types > button.active,

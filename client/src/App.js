@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AccountDetailsPage from "./pages/AccountDetailsPage";
 import ServiceDetailsPage from "./pages/ServiceDetailsPage";
 import QueryServicePage from "./pages/QueryServicePage";
+import UsageStatisticsPage from "./pages/UsageStatisticsPage";
 
 export default function App() {
     return (
@@ -19,8 +20,15 @@ export default function App() {
                     <Route path="/services" element={<ServiceDetailsPage />} />
                     <Route path="/query" element={<QueryServicePage />} />
                     <Route path="/query/:type" element={<QueryServicePage />} />
-                    <Route path="/query/:type/:version" element={<QueryServicePage />} />
-                    <Route path="/query/:type/:version/:task" element={<QueryServicePage />} />
+                    <Route
+                        path="/query/:type/:version"
+                        element={<QueryServicePage />}
+                    />
+                    <Route
+                        path="/query/:type/:version/:task"
+                        element={<QueryServicePage />}
+                    />
+                    <Route path="/usages" element={<UsageStatisticsPage />} />
                 </Routes>
             </Router>
         </>

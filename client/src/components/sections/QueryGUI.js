@@ -2,17 +2,12 @@ import React, { useEffect, useState } from "react";
 import Selector from "../utils/Selector.js";
 import "../../styles/components/sections/QueryGUI.css";
 
-export default function QueryGUI({ options }) {
+export default function QueryGUI({ options, onSubmit }) {
     const [fields, setFields] = useState({});
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Handle form submission logic here
+    const handleSubmit = () => {
+        onSubmit(fields);
     };
-
-    useEffect(() => {
-        console.log(fields);
-    }, [fields]);
 
     return (
         <div className="query-gui-wrapper">
@@ -38,7 +33,10 @@ export default function QueryGUI({ options }) {
                                         onSelect={(value) => {
                                             setFields((prevFields) => ({
                                                 ...prevFields,
-                                                [field]: value,
+                                                [field]:
+                                                    value === "true"
+                                                        ? true
+                                                        : false,
                                             }));
                                         }}
                                     />
@@ -68,7 +66,7 @@ export default function QueryGUI({ options }) {
             <button
                 className="query-btn-gui"
                 type="submit"
-                onSubmit={handleSubmit}
+                onClick={handleSubmit}
             >
                 Submit
             </button>

@@ -63,4 +63,30 @@ export default class ServicesService extends Component {
         const payload = await response.json();
         return [response.status, payload];
     }
+
+    async queryService(accessToken, type, version, task, textBased, payload) {
+        const url =
+            "https://nlphub.azurewebsites.net/query/" +
+            type +
+            "/" +
+            version +
+            "/" +
+            task;
+
+        const contentType = textBased
+            ? "application/json"
+            : "multipart/form-data";
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "content-type": contentType,
+                authorization: "Bearer " + accessToken,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const resPayload = await response.json();
+        return [response.status, resPayload];
+    }
 }
