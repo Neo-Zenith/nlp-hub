@@ -8,6 +8,7 @@ import { setLoaded } from "../../store/actions";
 import QueryGUI from "./QueryGUI";
 import QueryCLI from "./QueryCLI";
 import { BounceLoader } from "react-spinners";
+import QueryUpload from "./QueryUpload";
 
 export default function ServiceQuery() {
     const dispatch = useDispatch();
@@ -197,7 +198,7 @@ export default function ServiceQuery() {
     }, [selectedTask]);
 
     useEffect(() => {
-        if (selectedTask && selectedEndpoint) {
+        if (selectedTask && selectedEndpoint && selectedEndpoint.textBased) {
             if (selectedQueryType === QUERY_TYPE.CLI) {
                 document
                     .getElementById("query-cli-btn")
@@ -216,12 +217,9 @@ export default function ServiceQuery() {
 
     function toggleType() {
         if (!isTypeOpen) {
-            document.getElementById(
-                "type-selection-btn"
-            ).style.borderBottomLeftRadius = "0rem";
-            document.getElementById(
-                "type-selection-btn"
-            ).style.borderBottomRightRadius = "0rem";
+            document
+                .getElementById("type-selection-btn")
+                .classList.add("active");
             document
                 .getElementById("available-service-types")
                 .classList.remove("inactive");
@@ -230,12 +228,9 @@ export default function ServiceQuery() {
                 .classList.add("active");
             setIsTypeOpen(true);
         } else {
-            document.getElementById(
-                "type-selection-btn"
-            ).style.borderBottomLeftRadius = "1.5rem";
-            document.getElementById(
-                "type-selection-btn"
-            ).style.borderBottomRightRadius = "1.5rem";
+            document
+                .getElementById("type-selection-btn")
+                .classList.remove("active");
             document
                 .getElementById("available-service-types")
                 .classList.remove("active");
@@ -248,12 +243,9 @@ export default function ServiceQuery() {
 
     function toggleVersion() {
         if (!isVersionOpen) {
-            document.getElementById(
-                "version-selection-btn"
-            ).style.borderBottomLeftRadius = "0rem";
-            document.getElementById(
-                "version-selection-btn"
-            ).style.borderBottomRightRadius = "0rem";
+            document
+                .getElementById("version-selection-btn")
+                .classList.add("active");
             document
                 .getElementById("available-service-version")
                 .classList.remove("inactive");
@@ -262,9 +254,9 @@ export default function ServiceQuery() {
                 .classList.add("active");
             setIsVersionOpen(true);
         } else {
-            document.getElementById(
-                "version-selection-btn"
-            ).style.borderBottomLeftRadius = "1.5rem";
+            document
+                .getElementById("version-selection-btn")
+                .classList.remove("active");
             document.getElementById(
                 "version-selection-btn"
             ).style.borderBottomRightRadius = "1.5rem";
@@ -280,12 +272,9 @@ export default function ServiceQuery() {
 
     function toggleTask() {
         if (!isTaskOpen) {
-            document.getElementById(
-                "task-selection-btn"
-            ).style.borderBottomLeftRadius = "0rem";
-            document.getElementById(
-                "task-selection-btn"
-            ).style.borderBottomRightRadius = "0rem";
+            document
+                .getElementById("task-selection-btn")
+                .classList.add("active");
             document
                 .getElementById("available-service-task")
                 .classList.remove("inactive");
@@ -294,12 +283,9 @@ export default function ServiceQuery() {
                 .classList.add("active");
             setIsTaskOpen(true);
         } else {
-            document.getElementById(
-                "task-selection-btn"
-            ).style.borderBottomLeftRadius = "1.5rem";
-            document.getElementById(
-                "task-selection-btn"
-            ).style.borderBottomRightRadius = "1.5rem";
+            document
+                .getElementById("task-selection-btn")
+                .classList.remove("active");
             document
                 .getElementById("available-service-task")
                 .classList.remove("active");
@@ -506,46 +492,68 @@ export default function ServiceQuery() {
             </div>
             {selectedTask && selectedEndpoint && (
                 <div className="query-container">
-                    <div className="query-type-options">
-                        <button
-                            id="query-gui-btn"
-                            onClick={(e) => {
-                                document
-                                    .getElementById(e.currentTarget.id)
-                                    .classList.add("active");
-                                document
-                                    .getElementById("query-cli-btn")
-                                    .classList.remove("active");
-                                handleQueryTypeSelection(QUERY_TYPE.GUI);
-                            }}
-                        >
-                            GUI
-                        </button>
-                        <button
-                            id="query-cli-btn"
-                            onClick={(e) => {
-                                document
-                                    .getElementById(e.currentTarget.id)
-                                    .classList.add("active");
-                                document
-                                    .getElementById("query-gui-btn")
-                                    .classList.remove("active");
-                                handleQueryTypeSelection(QUERY_TYPE.CLI);
-                            }}
-                        >
-                            Manual
-                        </button>
-                    </div>
+                    {selectedEndpoint.textBased ? (
+                        <div className="query-type-options">
+                            <button
+                                id="query-gui-btn"
+                                onClick={(e) => {
+                                    document
+                                        .getElementById(e.currentTarget.id)
+                                        .classList.add("active");
+                                    document
+                                        .getElementById("query-cli-btn")
+                                        .classList.remove("active");
+                                    handleQueryTypeSelection(QUERY_TYPE.GUI);
+                                }}
+                            >
+                                GUI
+                            </button>
+                            <button
+                                id="query-cli-btn"
+                                onClick={(e) => {
+                                    document
+                                        .getElementById(e.currentTarget.id)
+                                        .classList.add("active");
+                                    document
+                                        .getElementById("query-gui-btn")
+                                        .classList.remove("active");
+                                    handleQueryTypeSelection(QUERY_TYPE.CLI);
+                                }}
+                            >
+                                Manual
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="query-type-options">
+                            <span id="query-upload-btn">Upload</span>
+                        </div>
+                    )}
                     <div className="query-wrapper">
-                        <div id="query-gui" className="query-gui">
-                            <QueryGUI
-                                options={selectedEndpoint.options}
-                                onSubmit={(payload) => handleQuery(payload)}
-                            />
-                        </div>
-                        <div id="query-cli" className="query-cli">
-                            <QueryCLI options={selectedEndpoint.options} />
-                        </div>
+                        {selectedEndpoint.textBased ? (
+                            <>
+                                <div id="query-gui" className="query-gui">
+                                    <QueryGUI
+                                        options={selectedEndpoint.options}
+                                        onSubmit={(payload) =>
+                                            handleQuery(payload)
+                                        }
+                                    />
+                                </div>
+                                <div id="query-cli" className="query-cli">
+                                    <QueryCLI
+                                        options={selectedEndpoint.options}
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <div id="query-upload" className="query-upload">
+                                <QueryUpload
+                                    supportedFormats={
+                                        selectedEndpoint.supportedFormats
+                                    }
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

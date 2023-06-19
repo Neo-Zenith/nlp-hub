@@ -249,7 +249,7 @@ export class ServiceController {
                 ...(endpoint.textBased && { options: endpoint.options }),
                 method: endpoint.method,
                 textBased: endpoint.textBased,
-                ...(endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
+                ...(!endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
             }
 
             returnData.push(endpointData)
@@ -281,7 +281,7 @@ export class ServiceController {
             ...(endpoint.textBased && { options: endpoint.options }),
             method: endpoint.method,
             textBased: endpoint.textBased,
-            ...(endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
+            ...(!endpoint.textBased && { supportedFormats: endpoint.supportedFormats }),
         }
 
         return endpointData

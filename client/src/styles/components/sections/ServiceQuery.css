@@ -38,6 +38,15 @@
     -webkit-box-shadow: -1px 1px 5px 1px rgba(0,0,0,0.23);
     -moz-box-shadow: -1px 1px 5px 1px rgba(0,0,0,0.23);
     cursor: pointer;
+    transition: 0.2s all ease-in-out;
+}
+
+.type-selection > button.active,
+.version-selection > button.active,
+.task-selection > button.active {
+    border-bottom-left-radius: 0rem;
+    border-bottom-right-radius: 0rem;
+    transition: 0.2s all ease-in-out;
 }
 
 .type-selection > button > span,
@@ -173,7 +182,8 @@
     gap: 6rem;
 }
 
-.query-type-options > button {
+.query-type-options > button,
+.query-type-options > span {
     font: 400 2rem 'Poppins';
     padding: 0.4rem 2rem;
     border: none;
@@ -182,10 +192,15 @@
     cursor: pointer;
 }
 
+.query-type-options > span,
 .query-type-options > button.active {
     font-weight: 500;
     color: var(--color-compliment);
     border-bottom: 0.5rem solid var(--color-compliment);
+}
+
+.query-type-options > span {
+    cursor: default;
 }
 
 .query-type-options > button:hover {
