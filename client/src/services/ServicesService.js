@@ -77,6 +77,7 @@ export default class ServicesService extends Component {
             ? "application/json"
             : "multipart/form-data";
 
+        payload = { options: payload };
         const response = await fetch(url, {
             method: "POST",
             headers: {

@@ -9,6 +9,10 @@ export default function QueryGUI({ options, onSubmit }) {
         onSubmit(fields);
     };
 
+    useEffect(() => {
+        setFields({});
+    }, [options]);
+
     return (
         <div className="query-gui-wrapper">
             <div className="query-gui-container">

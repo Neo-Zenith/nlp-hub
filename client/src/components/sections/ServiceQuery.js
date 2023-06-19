@@ -333,7 +333,6 @@ export default function ServiceQuery() {
     };
 
     async function handleQuery(payload) {
-        console.log("ran?");
         const response = await servicesService.queryService(
             accessToken,
             selectedType,
