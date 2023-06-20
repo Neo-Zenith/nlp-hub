@@ -4,7 +4,7 @@ import { SignupPage } from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import AccountDetailsPage from "./pages/AccountDetailsPage";
-import ServiceDetailsPage from "./pages/ServiceDetailsPage";
+import AvailableServicesPage from "./pages/AvailableServicesPage";
 import QueryServicePage from "./pages/QueryServicePage";
 import UsageStatisticsPage from "./pages/UsageStatisticsPage";
 
@@ -17,7 +17,10 @@ export default function App() {
                     <Route path="/signup" element={<SignupPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/" element={<DashboardPage />} />
-                    <Route path="/services" element={<ServiceDetailsPage />} />
+                    <Route
+                        path="/services"
+                        element={<AvailableServicesPage />}
+                    />
                     <Route path="/query" element={<QueryServicePage />} />
                     <Route path="/query/:type" element={<QueryServicePage />} />
                     <Route
@@ -28,7 +31,10 @@ export default function App() {
                         path="/query/:type/:version/:task"
                         element={<QueryServicePage />}
                     />
-                    <Route path="/usages" element={<UsageStatisticsPage />} />
+                    <Route
+                        path="/statistics"
+                        element={<UsageStatisticsPage />}
+                    />
                 </Routes>
             </Router>
         </>

@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import UIService from "../services/UIServices";
 import UsersService from "../services/UsersService";
 
-export default function ServiceDetailsPage() {
+export default function AvailableServicesPage() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -48,7 +48,7 @@ export default function ServiceDetailsPage() {
             </div>
             <div className="quick-nav-wrapper">
                 <QuickNavigation
-                    current="Services"
+                    current="Available Services"
                     url={window.location.href}
                 />
             </div>

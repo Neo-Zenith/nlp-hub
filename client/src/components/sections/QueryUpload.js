@@ -46,7 +46,7 @@ export default function QueryUpload({ supportedFormats, onSubmit, index }) {
     return (
         <div className="query-upload-wrapper">
             <div className="query-upload-container">
-                <span>Uplodable</span>
+                <span>Uploadable</span>
                 <div className="file-input">
                     <input
                         type="file"

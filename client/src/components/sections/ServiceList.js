@@ -266,8 +266,6 @@ export default function ServicesList() {
                 />
             ) : (
                 <>
-                    <span className="services-list-title">Services</span>
-
                     <div className="services-list-filters">
                         <label className="filters">
                             <Selector

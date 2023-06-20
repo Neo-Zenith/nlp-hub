@@ -105,13 +105,7 @@ export default function SideBar() {
                                 </a>
                             </li>
                             <li>
-                                <a onClick={handleSidebarFade} href="/">
-                                    <i className="fa-solid fa-circle-info"></i>
-                                    &nbsp;&nbsp;&nbsp;Usage Details
-                                </a>
-                            </li>
-                            <li>
-                                <a onClick={handleSidebarFade} href="/">
+                                <a onClick={handleSidebarFade} href="/statistics">
                                     <i className="fa-solid fa-chart-line"></i>
                                     &nbsp;&nbsp;&nbsp;Statistics
                                 </a>

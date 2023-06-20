@@ -6,11 +6,6 @@
     position: relative;
 }
 
-.services-list-title {
-    margin-top: 3.5rem;
-    font: 700 2.8rem 'Quicksand'
-}
-
 .services-list-filters {
     margin-right: 10%;
     display: flex;
@@ -247,14 +242,13 @@
         margin-top: 1.5rem;
     }
 
+    .filters:first-child {
+        margin-top: 4rem;
+    }
+
     .services-list-table {
         width: 95%;
         font-size: 1.2rem;
-    }
-
-    .services-list-title {
-        margin-top: 3rem;
-        font-size: 2.2rem;
     }
     
     .service-type-value, .service-version-value, .service-action > button, .service-index-value,
