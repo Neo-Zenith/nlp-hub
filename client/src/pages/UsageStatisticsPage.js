@@ -1,12 +1,13 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SideBar from "../components/menus/SideBar";
 import UIService from "../services/UIServices";
-import "../styles/pages/DashboardPage.css";
+import "../styles/pages/UsageStatisticsPage.css";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import UsersService from "../services/UsersService";
 import TopBar from "../components/menus/TopBar";
-import UsageStatistics from "../components/sections/UsageStatistics";
+import UsageTimeStats from "../components/sections/UsageTimeStats";
+import QuickNavigation from "../components/sections/QuickNavigation";
 
 export default function UsageStatisticsPage() {
     const dispatch = useDispatch();
@@ -14,6 +15,8 @@ export default function UsageStatisticsPage() {
 
     const accessToken = useSelector((state) => state.accessToken);
     const error = useSelector((state) => state.error);
+
+    const [activeChart, setActiveChart] = useState("Usage Trend");
 
     const uiService = useMemo(() => {
         return new UIService({ dispatch });
@@ -45,8 +48,20 @@ export default function UsageStatisticsPage() {
             <div className="top-bar-wrapper">
                 <TopBar />
             </div>
+            <div className="quick-nav-wrapper">
+                <QuickNavigation
+                    current="Usage Statistics"
+                    url={window.location.href}
+                />
+            </div>
             <div className="usage-stats-wrapper">
-                <UsageStatistics />
+                {activeChart === "Usage Trend" && (
+                    <div className="usage-time-stats-wrapper">
+                        <UsageTimeStats
+                            onChangeChart={(value) => setActiveChart(value)}
+                        />
+                    </div>
+                )}
             </div>
         </>
     );

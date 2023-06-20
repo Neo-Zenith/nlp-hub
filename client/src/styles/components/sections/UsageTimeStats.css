@@ -1,0 +1,59 @@
+.usage-stats-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+}
+
+.usage-header {
+    margin-top: 3rem;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.chart-title {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 1rem;
+    font: 400 2.5rem 'Quicksand';
+}
+
+.chart-title > span {
+    font: 700 2.5rem 'Quicksand'
+}
+
+.chart-title > button {
+    font: 400 1.8rem 'Quicksand';
+    padding-left: 0rem;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.chart-title > button:hover {
+    color: var(--color-compliment)
+}
+
+.usage-stats-filter {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 2rem;
+    margin-top: 3.5rem;
+}
+
+.chart-wrapper {
+    width: 90%;
+    display: flex;
+    margin-top: 10rem;
+}
+
+@media screen and (max-width: 720px) {
+    .chart-wrapper {
+        margin-top: 5rem;
+    }
+}

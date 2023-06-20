@@ -1,0 +1,20 @@
+.usage-stats-wrapper {
+    margin-left: 35rem;
+    width: 100vw - 35rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.usage-time-stats-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media screen and (max-width: 1020px) {
+    .usage-stats-wrapper {
+        margin-left: 0rem;
+    }
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import ServicesList from "../components/sections/ServiceList";
-import "../styles/pages/ServiceDetailsPage.css";
+import "../styles/pages/AvailableServicesPage.css";
 import TopBar from "../components/menus/TopBar.js";
 import SideBar from "../components/menus/SideBar.js";
 import QuickNavigation from "../components/sections/QuickNavigation";
