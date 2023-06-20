@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 export default class UIService extends Component {
     displayErrorMsg(error) {
         const { dispatch } = this.props;
+        dispatch(setError(null));
 
         const existingToast = toast.isActive(error);
 
@@ -16,9 +17,6 @@ export default class UIService extends Component {
         } else {
             toast.error(error, {
                 toastId: error,
-                onClose: () => {
-                    dispatch(setError(null));
-                },
                 autoClose: 1500,
             });
         }

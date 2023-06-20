@@ -3,6 +3,7 @@ import "../../styles/components/menus/SideBar.css";
 import { useDispatch, useSelector } from "react-redux";
 import UsersService from "../../services/UsersService";
 import { useNavigate } from "react-router-dom";
+import { setSidebarActive } from "../../store/actions";
 
 export default function SideBar() {
     const username = useSelector((state) => state.username);
@@ -13,23 +14,23 @@ export default function SideBar() {
         return new UsersService({ dispatch });
     }, [dispatch]);
 
-    const [sidebarActive, setSidebarActive] = useState(false);
+    const sideBarActive = useSelector((state) => state.sideBarActive);
     const [windowWidth, setWindowWidth] = useState(null);
 
     function handleSidebarFade() {
         var body = document.body;
         var sidebarContainer = document.getElementById("sidebar-container");
-
-        if (!sidebarActive) {
+        console.log(sideBarActive);
+        if (!sideBarActive) {
             body.classList.add("lock-scroll");
             sidebarContainer.classList.remove("sidebar-fade-out");
             sidebarContainer.classList.add("sidebar-fade-in");
-            setSidebarActive(true);
+            dispatch(setSidebarActive(true));
         } else {
             body.classList.remove("lock-scroll");
             sidebarContainer.classList.remove("sidebar-fade-in");
             sidebarContainer.classList.add("sidebar-fade-out");
-            setSidebarActive(false);
+            dispatch(setSidebarActive(false));
         }
     }
 
@@ -63,14 +64,9 @@ export default function SideBar() {
 
     return (
         <>
-            {windowWidth < 1020 && !sidebarActive && (
-                <button onClick={handleSidebarFade} id="hamburger-btn">
-                    <i className="fa-solid fa-bars"></i>
-                </button>
-            )}
             <div id="sidebar-container" className="sidebar-container">
                 <button onClick={handleSidebarFade} id="cancel-btn">
-                    <i className="fa-solid fa-chevron-left"></i>
+                    <i className="fa-solid fa-bars"></i>
                 </button>
                 <span className="welcome-title">Welcome back</span>
                 <span className="sidebar-username">{username}</span>

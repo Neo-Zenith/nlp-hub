@@ -27,3 +27,8 @@ export const setExpiry = (expiry) => ({
     type: "SET_EXPIRY",
     payload: expiry,
 });
+
+export const setSidebarActive = (sideBarActive) => ({
+    type: "SET_SIDEBAR",
+    payload: sideBarActive,
+});

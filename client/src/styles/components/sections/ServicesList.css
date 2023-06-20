@@ -253,13 +253,13 @@
     }
 
     .services-list-title {
-        margin-top: 5rem;
-        font-size: 2rem;
+        margin-top: 3rem;
+        font-size: 2.2rem;
     }
     
     .service-type-value, .service-version-value, .service-action > button, .service-index-value,
     .services-table-title > li {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
     }
 
     #name-title,
@@ -277,7 +277,23 @@
     }
 
     .services-table-content {
-        min-height: 50vh;
+        min-height: 30vh;
+    }
+
+    #action-title,
+    .service-action {
+        flex: 0.8;
+    }
+
+    .actions-drop-down {
+        width: 50%;
+        margin: 1rem auto
+    }
+
+    .actions-drop-down > button {
+        text-align: center;
+        font-size: 1.4rem;
+        width: 100%;
     }
 
     .pagination > li > button {

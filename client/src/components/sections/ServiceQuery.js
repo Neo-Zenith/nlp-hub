@@ -51,7 +51,7 @@ export default function ServiceQuery() {
     const [versions, setVersions] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [endpoints, setEndpoints] = useState([]);
-    const [nonTextBasedQueryOption, setNonTextBasedQueryOption] = useState(1);
+    const [nonTextBasedQueryOption, setNonTextBasedQueryOption] = useState(0);
 
     useEffect(() => {
         const fetchServiceTypes = async () => {

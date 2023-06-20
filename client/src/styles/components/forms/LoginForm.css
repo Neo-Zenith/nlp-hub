@@ -169,7 +169,7 @@
 
 @media screen and (max-width: 768px) {
     .login-form-container {
-        min-width: 40rem;
+        min-width: 35rem;
     }
 
     .login-form {
@@ -186,7 +186,7 @@
     }
 
     .login-form > label {
-        width: 70%;
+        width: 75%;
         align-self: center;
         margin-left: 5%;
     }

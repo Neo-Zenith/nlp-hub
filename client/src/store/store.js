@@ -10,6 +10,7 @@ const initialState = {
     error: null,
     loaded: false,
     expiry: null,
+    sideBarActive: false,
 };
 
 // Reducer function
@@ -27,6 +28,8 @@ const reducer = (state = initialState, action) => {
             return { ...state, loaded: action.payload };
         case "SET_EXPIRY":
             return { ...state, expiry: action.payload };
+        case "SET_SIDEBAR":
+            return { ...state, sideBarActive: action.payload };
         default:
             return state;
     }

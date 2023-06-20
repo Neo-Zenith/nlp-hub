@@ -4,6 +4,7 @@ import {
     setUsername,
     setRole,
     setExpiry,
+    setSidebarActive,
 } from "../store/actions";
 
 export default class UsersService extends Component {
@@ -123,6 +124,7 @@ export default class UsersService extends Component {
         dispatch(setUsername(null));
         dispatch(setRole(null));
         dispatch(setAccessToken(null));
+        dispatch(setSidebarActive(false));
         return true;
     }
 

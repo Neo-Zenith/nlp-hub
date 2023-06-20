@@ -33,6 +33,19 @@ export default function ServicesList() {
     const [filteredServices, setFilteredServices] = useState(null);
     const [displayedServices, setDisplayedServices] = useState(null);
     const [activeButtonId, setActiveButtonId] = useState(null);
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, []);
 
     const loader = {
         position: "absolute",
@@ -388,8 +401,13 @@ export default function ServicesList() {
                                                     onClick={(e) =>
                                                         handleNavigate(e)
                                                     }
+                                                    title="Query Service"
                                                 >
-                                                    Query Service
+                                                    {windowWidth >= 720 ? (
+                                                        "Query Service"
+                                                    ) : (
+                                                        <i className="fa-solid fa-comment"></i>
+                                                    )}
                                                 </button>
                                                 <button
                                                     id={
@@ -401,8 +419,13 @@ export default function ServicesList() {
                                                     onClick={(e) =>
                                                         handleNavigate(e)
                                                     }
+                                                    title="View Statistics"
                                                 >
-                                                    View Statistics
+                                                    {windowWidth >= 720 ? (
+                                                        "View Statistics"
+                                                    ) : (
+                                                        <i className="fa-solid fa-chart-line"></i>
+                                                    )}
                                                 </button>
                                             </div>
                                         </li>

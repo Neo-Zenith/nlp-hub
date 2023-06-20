@@ -7,18 +7,13 @@
     overflow-y: scroll;
 }
 
-#hamburger-btn {
-    display: none;
-    font-size: 2rem;
-}
-
 #cancel-btn {
     flex: 1;
-    margin-top: 4rem;
+    margin-top: 4.5rem;
     padding: 0;
     width: 3rem;
     height: 3rem;
-    margin-left: 3rem;
+    margin-left: 2.5rem;
     font-size: 2.5rem;
     background-color: transparent;
     color: var(--color-light-grey);
@@ -142,34 +137,9 @@
     .sidebar-container.sidebar-fade-out {
         animation: sidebar-fade-out 0.3s forwards;
     }
-
-    #hamburger-btn {
-        z-index: 3;
-        display: flex;
-        position: absolute;
-        margin-left: 4rem;
-        margin-top: 3.5rem;
-        font-size: 2.5rem;
-        background-color: transparent;
-        border: none;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        cursor: pointer;
-    }
-
-    #hamburger-btn:hover {
-        background-color: var(--color-light-grey);
-        border-radius: 50%;
-        transition: 0.2s all ease-in-out;
-    }
 }
 
 @media screen and (max-width: 720px) {    
-    #hamburger-btn {
-        margin-top: 4rem;
-        font-size: 1.8rem;
-    }
-
     #cancel-btn {
         font-size: 2rem;
     }

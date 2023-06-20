@@ -170,6 +170,17 @@
     align-items: center;
 }
 
+.redirect-link-signup {
+    margin-bottom: 10rem;
+    font: 400 1.5rem 'Open Sans';
+    color: black;
+}
+
+.redirect-link-signup > a {
+    text-decoration: none;
+    color: var(--color-compliment)
+}
+
 #password-req {
     flex: 1;
     display: flex;
@@ -220,7 +231,8 @@
 
 @media screen and (max-width: 768px) {
     .signup-form-container {
-        min-width: 40rem;
+        width: 80%;
+        min-width: 35rem;
     }
 
     .signup-form {
@@ -238,8 +250,8 @@
 
     .signup-form > div,
     .signup-form > label {
-        width: 80%;
-        align-self: flex-start;
+        width: 75%;
+        align-self: center;
         margin-left: 5%;
     }
 
@@ -275,7 +287,7 @@
         font-size: 1.6rem;
     }
 
-    .redirect-link {
+    .redirect-link-signup {
         margin-bottom: 5rem;
     }
 }

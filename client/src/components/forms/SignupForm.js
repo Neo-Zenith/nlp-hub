@@ -478,7 +478,7 @@ export default function SignupForm() {
                         Sign Up
                     </button>
 
-                    <span className="redirect-link">
+                    <span className="redirect-link-signup">
                         Already have an account? <a href="/login">Login now</a>.
                     </span>
                 </div>

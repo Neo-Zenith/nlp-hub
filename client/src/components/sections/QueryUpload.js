@@ -1,9 +1,18 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "../../styles/components/sections/QueryUpload.css";
+import { useDispatch, useSelector } from "react-redux";
+import UIService from "../../services/UIServices";
 
 export default function QueryUpload({ supportedFormats, onSubmit, index }) {
+    const dispatch = useDispatch();
+
+    const error = useSelector((state) => state.error);
+
+    const uiService = useMemo(() => {
+        return new UIService({ dispatch });
+    }, [dispatch]);
+
     const [selectedFile, setSelectedFile] = useState(null);
-    const [error, setError] = useState("");
 
     function convertFormatsToExtensions(supportedFormats) {
         const formatExtensions = {
@@ -23,7 +32,6 @@ export default function QueryUpload({ supportedFormats, onSubmit, index }) {
         const file = e.target.files[0];
         if (file) {
             setSelectedFile(file);
-            setError("");
         }
     };
 
@@ -31,7 +39,7 @@ export default function QueryUpload({ supportedFormats, onSubmit, index }) {
         if (selectedFile) {
             onSubmit(selectedFile);
         } else {
-            setError("Please select a file to upload.");
+            uiService.setErrorMsg("Please select a file to upload.");
         }
     };
 
@@ -47,7 +55,11 @@ export default function QueryUpload({ supportedFormats, onSubmit, index }) {
                         accept={convertFormatsToExtensions(supportedFormats)}
                         onChange={handleFileChange}
                     />
-                    <span>Upload a file:</span>
+                    <span>
+                        {!selectedFile
+                            ? "Attach a file:"
+                            : "Remove attachment:"}
+                    </span>
                     <div className="query-actions">
                         {!selectedFile ? (
                             <label htmlFor={"queryFile" + index}>
