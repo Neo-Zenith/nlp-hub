@@ -159,6 +159,8 @@ export class UsageController {
         for (const usage of usages) {
             const usageDetails = {
                 uuid: usage.uuid,
+                type: usage.type,
+                version: usage.version,
                 executionTime: usage.executionTime,
                 output: usage.output,
                 options: usage.options,
@@ -184,6 +186,8 @@ export class UsageController {
         const usage = await this.queryService.getUsage(uuid)
         const usageDetails = {
             uuid: usage.uuid,
+            type: usage.type,
+            version: usage.version,
             executionTime: usage.executionTime,
             output: usage.output,
             options: usage.options,

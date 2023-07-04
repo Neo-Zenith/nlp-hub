@@ -55,7 +55,12 @@ export class QueryService {
         const query = new this.queryModel({
             userID,
             serviceID,
+            type: service.type,
+            version: service.version,
             endpointID,
+            /**
+             * * response status code
+             */
             output: JSON.stringify(sanitizedData),
             options,
             executionTime: elapsedTime,
@@ -106,6 +111,8 @@ export class QueryService {
         const query = new this.queryModel({
             userID,
             serviceID,
+            type: service.type,
+            version: service.version,
             endpointID,
             output: JSON.stringify(sanitizedData),
             executionTime: elapsedTime,

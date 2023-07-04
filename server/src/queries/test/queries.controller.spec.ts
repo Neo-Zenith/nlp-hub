@@ -225,13 +225,12 @@ describe('QueriesController', () => {
             adminID = (await new adminModel(adminFixture1).save()).id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
-            const serviceID = (
-                await new serviceModel({ name, description, baseAddress, type }).save()
-            ).id
+            const service = await new serviceModel({ name, description, baseAddress, type }).save()
             let endpointID: string[] = []
             for (const endpoint of endpoints) {
                 endpointID.push(
-                    (await new serviceEndpointModel({ serviceID, ...endpoint }).save()).id,
+                    (await new serviceEndpointModel({ serviceID: service.id, ...endpoint }).save())
+                        .id,
                 )
             }
 
@@ -251,7 +250,9 @@ describe('QueriesController', () => {
 
             await new QueryModel({
                 userID: userID[0],
-                serviceID,
+                serviceID: service.id,
+                type: service.type,
+                version: service.version,
                 endpointID: endpointID[0],
                 options,
                 output: JSON.stringify(output),
@@ -261,7 +262,9 @@ describe('QueriesController', () => {
 
             await new QueryModel({
                 userID: userID[1],
-                serviceID,
+                serviceID: service.id,
+                type: service.type,
+                version: service.version,
                 endpointID: endpointID[0],
                 options,
                 output: JSON.stringify(output),
@@ -271,7 +274,9 @@ describe('QueriesController', () => {
 
             await new QueryModel({
                 userID: userID[2],
-                serviceID,
+                serviceID: service.id,
+                type: service.type,
+                version: service.version,
                 endpointID: endpointID[1],
                 options,
                 output: JSON.stringify(output),
@@ -705,13 +710,12 @@ describe('QueriesController', () => {
             adminID = (await new adminModel(adminFixture1).save()).id
 
             const { name, description, baseAddress, type, endpoints } = serviceFixture1
-            const serviceID = (
-                await new serviceModel({ name, description, baseAddress, type }).save()
-            ).id
+            const service = await new serviceModel({ name, description, baseAddress, type }).save()
             let endpointID: string[] = []
             for (const endpoint of endpoints) {
                 endpointID.push(
-                    (await new serviceEndpointModel({ serviceID, ...endpoint }).save()).id,
+                    (await new serviceEndpointModel({ serviceID: service.id, ...endpoint }).save())
+                        .id,
                 )
             }
 
@@ -734,7 +738,9 @@ describe('QueriesController', () => {
                 (
                     await new QueryModel({
                         userID: userID[0],
-                        serviceID,
+                        serviceID: service.id,
+                        type: service.type,
+                        version: service.version,
                         endpointID: endpointID[0],
                         options,
                         output: JSON.stringify(output),
@@ -748,7 +754,9 @@ describe('QueriesController', () => {
                 (
                     await new QueryModel({
                         userID: userID[1],
-                        serviceID,
+                        serviceID: service.id,
+                        type: service.type,
+                        version: service.version,
                         endpointID: endpointID[0],
                         options,
                         output: JSON.stringify(output),
@@ -762,7 +770,9 @@ describe('QueriesController', () => {
                 (
                     await new QueryModel({
                         userID: userID[2],
-                        serviceID,
+                        serviceID: service.id,
+                        type: service.type,
+                        version: service.version,
                         endpointID: endpointID[1],
                         options,
                         output: JSON.stringify(output),
