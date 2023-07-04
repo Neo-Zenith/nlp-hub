@@ -58,9 +58,7 @@ export class QueryService {
             type: service.type,
             version: service.version,
             endpointID,
-            /**
-             * * response status code
-             */
+            status: response.status.toString(),
             output: JSON.stringify(sanitizedData),
             options,
             executionTime: elapsedTime,
@@ -113,6 +111,7 @@ export class QueryService {
             serviceID,
             type: service.type,
             version: service.version,
+            status: response.status.toString(),
             endpointID,
             output: JSON.stringify(sanitizedData),
             executionTime: elapsedTime,

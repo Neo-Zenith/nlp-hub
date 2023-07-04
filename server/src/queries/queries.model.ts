@@ -27,6 +27,9 @@ export class Query extends Document {
     @Prop({ type: String, required: true })
     version: string
 
+    @Prop({ type: String, required: true })
+    status: string
+
     @Prop({ type: Types.ObjectId, required: true })
     endpointID: string
 
