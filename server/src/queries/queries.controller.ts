@@ -163,7 +163,7 @@ export class UsageController {
         for (const usage of usages) {
             let user: User | Admin
             if (!usage.userDeleted) {
-                if (role === 'user') {
+                if (!usage.isAdminQuery) {
                     user = await this.userService.getUser(undefined, undefined, usage.userID)
                 } else {
                     user = await this.userService.getAdmin(undefined, undefined, usage.userID)
