@@ -53,7 +53,7 @@ import {
 import { UserService } from '../users/users.service'
 import { ServiceService } from '../services/services.service'
 import { RetrieveEndpointSchema, RetrieveServiceSchema } from '../services/services.schema'
-import { User } from 'src/users/users.model'
+import { Admin, User } from 'src/users/users.model'
 
 @ApiTags('Queries')
 @Controller('query')
@@ -161,9 +161,13 @@ export class UsageController {
         let returnedUsages = []
 
         for (const usage of usages) {
-            let user: User
+            let user: User | Admin
             if (!usage.userDeleted) {
-                user = await this.userService.getUser(undefined, undefined, usage.userID)
+                if (role === 'user') {
+                    user = await this.userService.getUser(undefined, undefined, usage.userID)
+                } else {
+                    user = await this.userService.getAdmin(undefined, undefined, usage.userID)
+                }
             }
 
             const usageDetails = {
