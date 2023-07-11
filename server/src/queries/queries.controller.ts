@@ -53,6 +53,7 @@ import {
 import { UserService } from '../users/users.service'
 import { ServiceService } from '../services/services.service'
 import { RetrieveEndpointSchema, RetrieveServiceSchema } from '../services/services.schema'
+import { User } from 'src/users/users.model'
 
 @ApiTags('Queries')
 @Controller('query')
@@ -110,7 +111,10 @@ export class QueryController {
 @ApiTags('Queries')
 @Controller('usages')
 export class UsageController {
-    constructor(private readonly queryService: QueryService) {}
+    constructor(
+        private readonly queryService: QueryService,
+        private readonly userService: UserService,
+    ) {}
 
     @ApiOperation({ summary: 'Retrieves usages.' })
     @ApiSecurity('access-token')
@@ -157,6 +161,11 @@ export class UsageController {
         let returnedUsages = []
 
         for (const usage of usages) {
+            let user: User
+            if (!usage.userDeleted) {
+                user = await this.userService.getUser(undefined, undefined, usage.userID)
+            }
+
             const usageDetails = {
                 uuid: usage.uuid,
                 type: usage.type,
@@ -165,6 +174,7 @@ export class UsageController {
                 status: usage.status,
                 output: usage.output,
                 options: usage.options,
+                ...(!usage.userDeleted && { user: user.username }),
                 dateTime: this.queryService.convertTimeToUTC(usage.dateTime, timezone),
                 ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
                 ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
@@ -185,6 +195,10 @@ export class UsageController {
     @UseInterceptors(RetrieveUsageInterceptor)
     async retrieveUsage(@Param('uuid') uuid: string, @Query('timezone') timezone?: string) {
         const usage = await this.queryService.getUsage(uuid)
+        let user: User
+        if (!usage.userDeleted) {
+            user = await this.userService.getUser(undefined, undefined, usage.userID)
+        }
         const usageDetails = {
             uuid: usage.uuid,
             type: usage.type,
@@ -193,6 +207,7 @@ export class UsageController {
             output: usage.output,
             status: usage.status,
             options: usage.options,
+            ...(!usage.userDeleted && { user: user.username }),
             dateTime: this.queryService.convertUTCToLocal(usage.dateTime, timezone),
             ...(usage.userDeleted && { userDeleted: usage.userDeleted }),
             ...(usage.serviceDeleted && { serviceDeleted: usage.serviceDeleted }),
